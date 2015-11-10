@@ -1,0 +1,20 @@
+{
+  "name": "oma-runtime",
+  "description": "Common runtime system for JavaScript environments.",
+  "main": "index",
+  "version": "1.4.0",
+  "keywords": [
+    "JavaScript",
+    "class scripts",
+    "runtime system"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/open-mainframe-architecture/oma-runtime.git"
+  },
+  "author": "open.mainframe@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/open-mainframe-architecture/oma-runtime/issues"
+  }
+}
