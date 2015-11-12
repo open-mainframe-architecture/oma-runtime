@@ -6,7 +6,7 @@ function configure(module) {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Rt.Env,Rt.Worker': function(roleClass, required) {
+    'Rt.Worker': function(roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };

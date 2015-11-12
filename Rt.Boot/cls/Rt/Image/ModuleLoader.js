@@ -259,11 +259,9 @@
           this.loadClasses();
           // register configured service providers after all classes have been loaded
           var providers = config.provides, resolveService = I._.System._.resolveService;
-          for (var key in providers) {
-            var factory = providers[key];
-            var classes = key.split(',');
-            // the last class in the configuration key is the most specific service class
-            var serviceClass = resolveService(classes[classes.length - 1]) || this.bad(key);
+          for (var serviceName in providers) {
+            var serviceClass = resolveService(serviceName) || this.bad(serviceName);
+            var factory = providers[serviceName];
             var provider = factory(serviceClass, satisfactions);
             if (provider) {
               rt.register(provider);

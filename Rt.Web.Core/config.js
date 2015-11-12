@@ -6,7 +6,7 @@ function configure(module) {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Std.HTTP.Client,Rt.Web.Client': function(roleClass, required) {
+    'Rt.Web.Client': function(roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };
