@@ -1,6 +1,6 @@
-'Decorator'.subclass(function(I) {
+'Decorator'.subclass(function (I) {
   "use strict";
-  // I describe streams that filter items between other streams.
+  // I describe streams that filter items of other streams.
   I.am({
     Abstract: false
   });
@@ -11,24 +11,24 @@
     outputSelection: null
   });
   I.know({
-    build: function(stream, input, output) {
+    build: function (stream, input, output) {
       I.$super.build.call(this, stream);
       this.inputSelection = input || I.returnTrue;
       this.outputSelection = output || I.returnTrue;
     }
   });
   I.play({
-    read: function() {
+    read: function () {
       var agent = this.$agent, selection = this.inputSelection;
-      return I.$superRole.read.call(this).completes(function(event) {
-        var it = event.origin().get();
+      return this.decoratedStream.read().completion().triggers(function (ignition) {
+        var it = ignition.origin().get();
         return selection(it) ? it : agent.read();
       });
     },
-    write: function(it) {
+    write: function (it) {
       var selection = this.outputSelection;
       if (selection(it)) {
-        return I.$superRole.write.call(this, it);
+        return this.decoratedStream.write(it);
       }
     }
   });

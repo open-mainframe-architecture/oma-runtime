@@ -1,16 +1,17 @@
 function configure(module) {
   "use strict";
-  module.description = 'This module implements the runtime environment of a Node.js process.';
-  module.depends = ['Std.Core.Runtime'];
+  /*global process*/
+  module.description = 'This module implements core services in a Node.js environment.';
+  module.depends = ['Std.Core.HTTP'];
   module.requires = {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Rt.Node': function(roleClass, required) {
+    'Rt.Node.HTTP.Client': function (roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };
-  module.test = function() {
+  module.test = function () {
     return typeof process !== 'undefined';
   };
 }

@@ -1,15 +1,15 @@
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
+    describesValue: function (value) {
       return I.isBasicValue(value) ||
         I.isComposedValue(value) && value.$type.typespace === this.typespace;
     },
     marshalValue: I.shouldNotOccur,
-    unmarshalJSON: function(json, expression) {
+    unmarshalJSON: function (json, expression) {
       if (I.isBasicValue(json)) {
         return json;
       } else if (json) {

@@ -1,14 +1,14 @@
-'Container'.subclass(function(I) {
+'Container'.subclass(function (I) {
   "use strict";
   // I describe containers whose indices form a linear sequence.
   I.know({
-    walkUnsafe: function() {
+    walkUnsafe: function () {
       if (this.isEmpty()) {
         return I.Loop.Empty;
       }
       // inject first index and compute next index until last index has been iterated
       var self = this, last = this.lastIndex();
-      return I.Loop.inject(Sentinel, this.firstIndex(), function(ix) {
+      return I.Loop.inject(Sentinel, this.firstIndex(), function (ix) {
         return ix === last ? Sentinel : self.nextIndex(ix);
       });
     },

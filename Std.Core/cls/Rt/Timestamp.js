@@ -1,4 +1,4 @@
-'Object'.subclass(Date, function() {
+'Object'.subclass(Date, function () {
   "use strict";
   // I describe JavaScript dates.
 })

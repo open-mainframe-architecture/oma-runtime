@@ -1,4 +1,4 @@
-'BaseObject+Manager'.subclass(function(I) {
+'BaseObject+Manager'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false,
@@ -6,7 +6,7 @@
   });
   I.play({
     // loose exception handling
-    manageException: function(job, exception) {
+    manageException: function (job, exception) {
       console.log('loose', exception);
       // assume the troubled actor is still consistent and resume it in the same state
       job.getActor().resume();

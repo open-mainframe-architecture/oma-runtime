@@ -1,15 +1,15 @@
-'BaseObject+Indirect+Eventful'.subclass(function(I) {
+'BaseObject+Indirect+Eventful'.subclass(function (I) {
   "use strict";
+  // I describe clocks that tick independently from real-time. 
   I.am({
     Service: true
   });
   I.know({
     // get current clock time
-    get: function() {
+    get: function () {
       return this.$rt.getUptime();
     },
-    delays: function(seconds) {
-      return this.createEvent(seconds || 0);
-    }
+    // create event that fires after a delay in seconds
+    delay: I.burdenSubclass
   });
 })

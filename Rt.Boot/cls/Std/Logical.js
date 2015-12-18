@@ -1,4 +1,4 @@
-'Contextual'.subclass(function(I) {
+'Contextual'.subclass(function (I) {
   "use strict";
   // I describe logical objects whose definitions span one or more modules.
   I.have({
@@ -8,24 +8,24 @@
     logicName: null
   });
   I.know({
-    addModule: function(module) {
+    addModule: function (module) {
       if (this.logicModules.indexOf(module) < 0) {
         this.logicModules.push(module);
         // continue adding the module, possibly until the root namespace has been reached
         this.getContext().addModule(module);
       }
     },
-    buildLogical: function(context, key, module) {
+    buildLogical: function (context, key, module) {
       this.buildContextual(context, key);
       this.logicModules = [module];
       // make sure the context includes the module of this new logical 
       context.addModule(module);
     },
-    getModule: function() {
+    getModule: function () {
       // first module is also known as the defining module (as opposed to a refining module)
       return this.logicModules[0];
     },
-    getName: function() {
+    getName: function () {
       if (this.logicName) {
         return this.logicName;
       }
@@ -33,11 +33,11 @@
       this.logicName = home.isRootContext() ? key : home.getName() + '.' + key;
       return this.logicName;
     },
-    getNamespace: function() {
+    getNamespace: function () {
       var context = this.getContext();
       return I._.Logic._.Namespace.describes(context) ? context : context.getNamespace();
     },
-    resolve: function(path) {
+    resolve: function (path) {
       if (typeof path === 'string') {
         // split path string in separated elements
         path = path.split('.');

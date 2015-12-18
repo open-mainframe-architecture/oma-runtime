@@ -5,7 +5,7 @@ function configure(module) {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Std.IO.Mixer': function(roleClass, required) {
+    'Std.IO.Transfer': function (roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };

@@ -1,4 +1,4 @@
-'Std.BaseObject'.subclass(function(I) {
+'Std.BaseObject'.subclass(function (I) {
   "use strict";
   // I describe how the runtime system manages service providers.
   I.am({
@@ -14,25 +14,25 @@
     serviceRegistry: null
   });
   I.know({
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this._ = I._.Root._;
       this.serviceRegistry = I._.Std._.Dictionary.create();
       this.register(this);
     },
-    getBootTimestamp: function() {
+    getBootTimestamp: function () {
       return this.bootTimestamp;
     },
     // test whether this runtime system provides a service
-    provides: function(service) {
+    provides: function (service) {
       var serviceClass = I.resolveService(service);
       return !!serviceClass && this.serviceRegistry.containsIndex(serviceClass.getName());
     },
     // register new service provider
-    register: function(provider) {
+    register: function (provider) {
       var registry = this.serviceRegistry;
       // get concrete class of provider and enumerate its services
-      I.describe(provider).enumerateServices(provider, function(serviceClass) {
+      I.describe(provider).enumerateServices(provider, function (serviceClass) {
         var serviceName = serviceClass.getName();
         var providers = registry.lookup(serviceName);
         if (providers) {
@@ -44,7 +44,7 @@
       return provider;
     },
     // collect providers for service requirements
-    satisfy: function(requirements_) {
+    satisfy: function (requirements_) {
       var registry = this.serviceRegistry;
       var satisfactions_ = I.createTable();
       for (var key in requirements_) {
@@ -59,7 +59,7 @@
   });
   I.share({
     // resolve service description to class
-    resolveService: function(service) {
+    resolveService: function (service) {
       var logical = typeof service === 'string' ? I._.Root.resolve(service) : service;
       var serviceClass;
       if (I._.Std._.Logic._.Namespace.describes(logical)) {
@@ -72,8 +72,8 @@
       }
     }
   });
-  I.setup(function() {
+  I.setup(function () {
     // $rt instance constant conveys runtime system singleton
-    I._.Std._.BaseObject.lockInstanceConstants({$rt: I.$.create()});
+    I._.Std._.BaseObject.lockInstanceConstants({ $rt: I.$.create() });
   });
 })

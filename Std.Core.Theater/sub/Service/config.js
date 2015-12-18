@@ -5,7 +5,7 @@ function configure(module) {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Std.Theater.Extra': function(roleClass, required) {
+    'Std.Theater.Extra': function (roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };

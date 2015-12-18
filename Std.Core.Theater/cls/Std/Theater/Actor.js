@@ -1,4 +1,4 @@
-'BaseObject+Eventful+Ring._.Link'.subclass(function(I) {
+'BaseObject+Eventful+Ring._.Link'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false,
@@ -26,7 +26,7 @@
   });
   I.know({
     $theater: null,
-    build: function(role, manager) {
+    build: function (role, manager) {
       I.$super.build.call(this);
       this.actorRole = role;
       this.roleClass = role.$;
@@ -34,18 +34,18 @@
       this.actorManager = manager || this.actorAgent;
       this.managementDepth = this.actorManager.getActor().managementDepth + 1;
     },
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.assignedJobs = I._.Job._.Ring.create(this);
       this.busyJob = I._.Job._.Ring.create(this);
       this.postponedJobs = I._.Job._.Ring.create(this);
     },
-    testIgnition: function() {
+    testIgnition: function () {
       // fire when this actor is already dead
       return !this.actorRole;
     },
     // bury this troubled actor and quit all its jobs
-    bury: function() {
+    bury: function () {
       if (!this.inTrouble) {
         this.bad();
       }
@@ -65,43 +65,43 @@
         this.resched();
       }
     },
-    createJob: function(selector, parameters) {
+    createJob: function (selector, parameters) {
       // link new job to ring with assigned jobs, but do not post new job
       return I._.Job.create(this.assignedJobs, selector, parameters);
     },
-    dies: function() {
+    death: function () {
       return this.createEvent();
     },
-    getAgent: function() {
+    getAgent: function () {
       return this.actorAgent;
     },
-    getManagementDepth: function() {
+    getManagementDepth: function () {
       return this.managementDepth;
     },
-    getManager: function() {
+    getManager: function () {
       return this.actorManager;
     },
-    getRoleClass: function() {
+    getRoleClass: function () {
       return this.roleClass;
     },
     // does the agenda of this actor postpone future jobs?
-    hasAgenda: function() {
+    hasAgenda: function () {
       return !this.postponedJobs.isEmpty();
     },
     // is this actor ready to work on the next job?
-    hasWork: function() {
+    hasWork: function () {
       return !this.assignedJobs.isEmpty();
     },
     // a dead actor is in permanent trouble, because it can never perform again
-    isDead: function() {
+    isDead: function () {
       return !this.actorRole;
     },
     // is this actor in trouble and expecting a manager to solve the problem?
-    isInTrouble: function() {
+    isInTrouble: function () {
       return this.inTrouble;
     },
     // is this actor supervised by the manager, directly or indirectly?
-    isManagedBy: function(manager) {
+    isManagedBy: function (manager) {
       var actor = this, levels = this.managementDepth - manager.getManagementDepth();
       if (levels <= 0) {
         // this actor is not below the manager in the management hierarchy
@@ -119,7 +119,7 @@
     managePostMortem: I.shouldNotOccur,
     manageStageException: I.shouldNotOccur,
     // non-intrusive peek into state of actor role
-    peekState: function(selector, parameters) {
+    peekState: function (selector, parameters) {
       if (!this.inTrouble) {
         // role is unaware of peeking actor, because peek result must be the same for everyone
         return this.actorRole.peekState(selector, parameters);
@@ -127,7 +127,7 @@
       // leave undefined if this actor is in trouble
     },
     // post job to this actor
-    post: function(job) {
+    post: function (job) {
       if (!this.actorRole) {
         // post-mortem performance by manager
         job.setPerformance(this.managePostMortem(job));
@@ -140,10 +140,10 @@
       }
       this.resched();
     },
-    resched: function() {
+    resched: function () {
       this.$theater.reschedActor(this);
     },
-    resume: function(role) {
+    resume: function (role) {
       // this actor must be in trouble and still be alive
       if (!this.inTrouble || !this.actorRole) {
         this.bad();
@@ -159,15 +159,15 @@
       this.inTrouble = false;
       this.resched();
     },
-    takeStage: function(nextJob) {
+    takeStage: function (nextJob) {
       // work on the given job or on the first assigned job
       var job = nextJob || this.assignedJobs.firstIndex();
       this.busyJob.add(job);
       try {
         // perform on stage and register result of performance
-        job.setPerformance(job.performRole(this.actorRole));
+        job.setPerformance(job.performOnStage(this.actorRole));
       } catch (exception) {
-        // actor is in trouble and suspended from working, when it causes an exception on stage
+        // actor is in trouble and suspended from working, when it throws an exception on stage
         this.inTrouble = true;
         // delegate exception handling to actor manager
         job.setPerformance(this.manageStageException(job, exception));
@@ -177,20 +177,20 @@
       this.resched();
     },
     // iterate over actors that are managed by this actor, directly or indirectly
-    walkSubordinates: function() {
+    walkSubordinates: function () {
       if (this.isManaging()) {
         var self = this, manager = this.actorAgent;
-        return I.Loop.select(this.$theater.walkActors(), function(actor) {
+        return I.Loop.select(this.$theater.walkActors(), function (actor) {
           return actor !== self && actor.isManagedBy(manager);
         });
       }
       return I.Loop.Empty;
     },
     // iterate over actors that are directly managed by this actor
-    walkTeam: function() {
+    walkTeam: function () {
       if (this.isManaging()) {
         var self = this, manager = this.actorAgent;
-        return I.Loop.select(this.$theater.walkActors(), function(actor) {
+        return I.Loop.select(this.$theater.walkActors(), function (actor) {
           return actor !== self && actor.actorManager === manager;
         });
       }

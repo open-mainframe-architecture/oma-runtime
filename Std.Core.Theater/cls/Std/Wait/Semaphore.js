@@ -1,4 +1,4 @@
-'BaseObject+Eventful'.subclass(function(I) {
+'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
   // I describe counting semaphores.
   I.am({
@@ -9,12 +9,12 @@
     semaphoreCount: null
   });
   I.know({
-    build: function(count) {
+    build: function (count) {
       I.$super.build.call(this);
       this.semaphoreCount = count || 0;
     },
     // try to decrement
-    testIgnition: function() {
+    testIgnition: function () {
       if (this.semaphoreCount) {
         // no need to wait, decrement this semaphore right away
         --this.semaphoreCount;
@@ -22,12 +22,12 @@
       }
       return false;
     },
-    // acquisition event fires when this semaphore has been incremented
-    decrements: function() {
+    // decrement event fires upon charging or after this semaphore has been incremented
+    decrement: function () {
       return this.createEvent();
     },
-    // fire oldest acquisition or just increment count
-    increment: function() {
+    // fire oldest decrement event or just increment count
+    increment: function () {
       var event = this.getFirstCharge();
       if (event) {
         event.fire();

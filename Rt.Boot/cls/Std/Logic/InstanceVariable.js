@@ -1,4 +1,4 @@
-'InstanceField'.subclass(function(I) {
+'InstanceField'.subclass(function (I) {
   "use strict";
   // I describe fields that define variable data of objects.
   I.am({

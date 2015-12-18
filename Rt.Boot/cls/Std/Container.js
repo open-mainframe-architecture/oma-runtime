@@ -1,4 +1,4 @@
-'BaseObject+Indexable'.subclass(function(I, We) {
+'BaseObject+Indexable'.subclass(function (I) {
   "use strict";
   // I describe containers that store, retrieve and remove indexed elements.
   I.have({

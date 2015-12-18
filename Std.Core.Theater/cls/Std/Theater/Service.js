@@ -1,4 +1,4 @@
-'BaseObject+Eventful'.subclass(function(I) {
+'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
   // I describe the theater that schedules actors on stage.
   I.am({
@@ -34,7 +34,7 @@
     interruptTime: 0
   });
   I.know({
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.idleActors = I._.Ring.create();
       this.workingActors = I._.Ring.create();
@@ -44,7 +44,7 @@
       this.theaterClock = this.$rt.register(I.Clock.create(this.wakeUp.bind(this)));
     },
     // handle interrupt on theater stage
-    interrupt: function(job) {
+    interrupt: function (job) {
       if (this.curtainOpen || !job.isImmobile()) {
         this.bad();
       }
@@ -66,7 +66,7 @@
         this.curtainOpen = false;
       }
     },
-    reschedActor: function(actor) {
+    reschedActor: function (actor) {
       if (actor.isDead()) {
         // remove reference to dead actor, if any
         actor.unlinkFromRing();
@@ -89,11 +89,11 @@
       }
     },
     // create event that fires when this theater ends a time slice and goes back to sleep
-    sleeps: function() {
+    sleeps: function () {
       return this.createEvent();
     },
     // wake up to open curtain and to let actors work on theater stage until time's up
-    wakeUp: function() {
+    wakeUp: function () {
       if (this.curtainOpen) {
         this.bad();
       }
@@ -123,7 +123,7 @@
       this.curtainOpen = false;
     },
     // iterate over actors that live in this theater
-    walkActors: function() {
+    walkActors: function () {
       var active = this.activeActor.walk();
       var working = this.workingActors.walk();
       var waiting = this.waitingActors.walk();
@@ -132,7 +132,7 @@
     }
   });
   I.nest({
-    Clock: 'Wait.Clock'.subclass(function(I) {
+    Clock: 'Wait.Clock'.subclass(function (I) {
       I.am({
         Abstract: false
       });
@@ -146,14 +146,11 @@
         deadline: null
       });
       I.know({
-        build: function(wakeUp) {
+        build: function (wakeUp) {
           I.$super.build.call(this);
           this.wakeUp = wakeUp;
         },
-        createEvent: function(seconds) {
-          return I.$outer.Delay.create(this, seconds);
-        },
-        sortCharge: function(delays, delay) {
+        sortCharge: function (delays, delay) {
           var deadline = delay.deadline;
           var i = 0, j = delays.length;
           // binary search in sorted array of delays
@@ -171,7 +168,7 @@
             return i + 1;
           }
         },
-        testIgnition: function(delay) {
+        testIgnition: function (delay) {
           if (delay.seconds <= 0) {
             // fire immediately
             return true;
@@ -180,18 +177,21 @@
           delay.deadline = this.get() + delay.seconds;
           return false;
         },
+        delay: function (seconds) {
+          return I.$outer.Delay.create(this, seconds);
+        },
         // advance clock whilst awake
-        awake: function() {
+        awake: function () {
           this.resetAlarm(false);
           var uptime = this.get();
           // fire delay events whose deadline passed
-          for (var delay; (delay = this.getFirstCharge()) && delay.deadline <= uptime; ) {
+          for (var delay; (delay = this.getFirstCharge()) && delay.deadline <= uptime;) {
             delay.fire();
           }
           return uptime;
         },
         // schedule wake-up call as soon as possible
-        awakeSoon: function() {
+        awakeSoon: function () {
           if (this.sleeping !== null) {
             clearTimeout(this.sleeping);
             this.sleeping = this.deadline = null;
@@ -201,7 +201,7 @@
           // otherwise wake-up call is already scheduled
         },
         // clear pending alarm and continue with new sleeping status
-        resetAlarm: function(sleeping) {
+        resetAlarm: function (sleeping) {
           if (this.sleeping) {
             clearTimeout(this.sleeping);
             this.deadline = null;
@@ -209,7 +209,7 @@
           this.sleeping = sleeping;
         },
         // schedule wake-up call for deep sleep, otherwise wake up as soon as possible
-        sleep: function(deep) {
+        sleep: function (deep) {
           var delay = deep && this.getFirstCharge();
           var uptime = this.get();
           var seconds = delay ? delay.deadline - uptime : Infinity;
@@ -225,10 +225,10 @@
           }
           // else keep alarm of first deadline intact
           return uptime;
-        } 
+        }
       });
     }),
-    Delay: 'BaseEvent'.subclass(function(I) {
+    Delay: 'FullEvent'.subclass(function (I) {
       // I describe delay events of clocks.
       I.have({
         // seconds to wait
@@ -237,14 +237,14 @@
         deadline: null
       });
       I.know({
-        build: function(clock, seconds) {
+        build: function (clock, seconds) {
           I.$super.build.call(this, clock);
           this.seconds = seconds;
         }
       });
     })
   });
-  I.setup(function() {
-    I._.Actor.lockInstanceConstants({$theater: I.$.$rt.register(I.$.create())});
+  I.setup(function () {
+    I._.Actor.lockInstanceConstants({ $theater: I.$.$rt.register(I.$.create()) });
   });
 })

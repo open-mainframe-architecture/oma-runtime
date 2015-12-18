@@ -1,4 +1,4 @@
-'BaseObject+Role'.subclass(function(I) {
+'BaseObject+Role'.subclass(function (I) {
   "use strict";
   // I describe a role to perform extra work on stage, without a proper agent method.
   I.am({
@@ -7,7 +7,7 @@
   });
   I.play({
     // delegate stage performance to closure
-    performScene: function(closure) {
+    performScene: function (closure) {
       return closure();
     }
   });

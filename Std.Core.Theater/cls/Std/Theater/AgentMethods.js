@@ -1,4 +1,4 @@
-'Logic.SpecialMethods'.subclass(function(I) {
+'Logic.SpecialMethods'.subclass(function (I) {
   // I describe agent methods that delegate to actor roles.
   "use strict";
   I.have({
@@ -8,12 +8,12 @@
     agentConstructor: null
   });
   I.know({
-    build: function(parent, behavior) {
+    build: function (parent, behavior) {
       I.$super.build.call(this, parent, behavior);
       var parentPrototype = parent ? parent.agentPrototype : I._.Agent.getPrototype();
       this.agentPrototype = Object.create(parentPrototype);
     },
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.agentConstructor = function Agent(constructionArguments) {
         I.prepareNew(this);
@@ -21,13 +21,12 @@
       };
       this.agentConstructor.prototype = this.agentPrototype;
     },
-    createAgent: function() {
+    createAgent: function () {
       return new this.agentConstructor(arguments);
     },
     // add keywords to support peek and play methods in class scripts
-    prepareScript: function(scriptInst, scriptMeta) {
+    prepareScript: function (scriptInst, scriptMeta) {
       var parent = this.getParentMethods();
-      I.defineConstant(scriptInst, '$role', this._);
       if (parent) {
         I.defineConstant(scriptInst, '$superRole', parent._);
       }

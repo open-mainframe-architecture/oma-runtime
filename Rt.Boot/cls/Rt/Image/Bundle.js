@@ -1,4 +1,4 @@
-'Std.BaseObject'.subclass(function(I) {
+'Std.BaseObject'.subclass(function (I) {
   "use strict";
   // I am a bundle that distributes one or more modules.
   I.have({
@@ -10,16 +10,16 @@
     bundleHome: null
   });
   I.know({
-    build: function(id, home) {
+    build: function (id, home) {
       I.$super.build.call(this);
       this.bundleId = id;
       this.bundleHome = home;
     },
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.bundledModules = I._.Std._.Dictionary.create();
     },
-    addModule: function(module) {
+    addModule: function (module) {
       var modules = this.bundledModules;
       var name = module.getName();
       // module must be an addition to this bundle
@@ -28,10 +28,10 @@
       }
       modules.store(module, name);
     },
-    createModuleLoader: function(name, spec_) {
+    createModuleLoader: function (name, spec_) {
       return I._.ModuleLoader.create(this, name, spec_);
     },
-    getId: function() {
+    getId: function () {
       return this.bundleId;
     }
   });

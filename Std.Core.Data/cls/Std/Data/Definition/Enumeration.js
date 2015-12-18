@@ -1,4 +1,4 @@
-'Expression'.subclass(function(I) {
+'Expression'.subclass(function (I) {
   "use strict";
   // I describe ASTs for enumeration types.
   I.am({
@@ -8,11 +8,11 @@
     enumerationChoices: null
   });
   I.know({
-    build: function(source, choices) {
+    build: function (source, choices) {
       I.$super.build.call(this, source);
       this.enumerationChoices = choices;
     },
-    pushEvaluation: function(evaluator) {
+    pushEvaluation: function (evaluator) {
       return I._.Type._.Enumeration.create(evaluator.typespace, this, this.enumerationChoices);
     }
   });

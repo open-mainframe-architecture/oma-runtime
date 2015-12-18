@@ -5,10 +5,10 @@ function configure(module) {
     director: 'Std.Theater.Director'
   };
   module.provides = {
-    'Std.Supervision.Loose': function(roleClass, required) {
+    'Std.Supervision.Loose': function (roleClass, required) {
       return roleClass.spawn(required.director);
     },
-    'Std.Supervision.Strict': function(roleClass, required) {
+    'Std.Supervision.Strict': function (roleClass, required) {
       return roleClass.spawn(required.director);
     }
   };

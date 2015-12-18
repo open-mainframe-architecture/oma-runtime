@@ -1,21 +1,21 @@
-'Config'.subclass(function(I) {
+'Config'.subclass(function (I) {
   "use strict";
   // I describe module configurations.
   I.access({
     // names of modules that must be loaded
-    depends: function() {
+    depends: function () {
       return this.getArray('depends');
     },
     // factory code of service providers in module
-    provides: function() {
+    provides: function () {
       return this.getTable('provides');
     },
     // names of services that must be provided
-    requires: function() {
+    requires: function () {
       return this.getTable('requires');
     },
     // code to test precondition which returns false to abort load of module
-    test: function() {
+    test: function () {
       return this.getClosure('test');
     }
   });

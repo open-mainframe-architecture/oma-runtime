@@ -1,4 +1,4 @@
-'BaseObject+Immutable'.subclass(function(I, We) {
+'BaseObject+Immutable'.subclass(function (I, We) {
   "use strict";
   // I describe agents that represent actors.
   I.am({
@@ -9,56 +9,56 @@
     agentActor: null
   });
   I.know({
-    build: function(actor) {
+    build: function (actor) {
       I.$super.build.call(this);
       this.agentActor = actor;
     },
-    getActor: function() {
+    getActor: function () {
       return this.agentActor;
     },
-    getManagementDepth: function() {
+    getManagementDepth: function () {
       return this.agentActor.getManagementDepth();
     },
-    getManager: function() {
+    getManager: function () {
       return this.agentActor.getManager();
     },
-    getRoleClass: function() {
+    getRoleClass: function () {
       return this.agentActor.getRoleClass();
     },
-    isDead: function() {
+    isDead: function () {
       return this.agentActor.isDead();
     },
-    isInTrouble: function() {
+    isInTrouble: function () {
       return this.agentActor.isInTrouble();
     },
-    isManager: function() {
+    isManager: function () {
       return this.agentActor.isManaging();
     },
-    isManagedBy: function(manager) {
+    isManagedBy: function (manager) {
       return this.agentActor.isManagedBy(manager);
     },
-    walkSubordinates: function() {
+    walkSubordinates: function () {
       return I.Loop.collect(this.agentActor.walkSubordinates(), getAgent);
     },
-    walkTeam: function() {
+    walkTeam: function () {
       return I.Loop.collect(this.agentActor.walkTeam(), getAgent);
     }
   });
   We.know({
-    enumerateServices: function(agent, visit) {
+    enumerateServices: function (agent, visit) {
       return agent.getRoleClass().enumerateServices(agent, visit);
     }
   });
   I.share({
     // create closure for play method
-    createScenePerformer: function(selector) {
-      return function() {
+    createScenePerformer: function (selector) {
+      return function () {
         return this.agentActor.createJob(selector, I.slice(arguments));
       };
     },
     // create closure for peek method
-    createStatePeeker: function(selector) {
-      return function() {
+    createStatePeeker: function (selector) {
+      return function () {
         return this.agentActor.peekState(selector, I.slice(arguments));
       };
     }

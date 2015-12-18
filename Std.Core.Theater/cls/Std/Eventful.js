@@ -1,4 +1,4 @@
-'Trait'.subclass(function(I) {
+'Trait'.subclass(function (I) {
   "use strict";
   // I describe eventful objects that implement a strategy to create and to manage events.
   I.have({
@@ -6,7 +6,7 @@
     chargedEvents: null
   });
   I.know({
-    addCharge: function(event) {
+    addCharge: function (event) {
       // lazy initialization of array, because an eventful object might never charge an event
       var charged = this.chargedEvents || (this.chargedEvents = []);
       // find one-based sort index
@@ -19,27 +19,27 @@
         charged.push(event);
       }
     },
-    createEvent: function() {
-      return I._.BaseEvent.create(this);
+    createEvent: function () {
+      return I._.FullEvent.create(this);
     },
     // fire charged events
-    fireAll: function() {
+    fireAll: function () {
       var charged = this.chargedEvents;
       this.chargedEvents = false;
       if (charged) {
-        charged.forEach(function(event) { event.fire(); });
+        charged.forEach(function (event) { event.fire(); });
       }
     },
-    getFirstCharge: function() {
+    getFirstCharge: function () {
       var charged = this.chargedEvents;
       if (charged && charged.length) {
         return charged[0];
       }
     },
-    hasFiredAll: function() {
+    hasFiredAll: function () {
       return this.chargedEvents === false;
     },
-    removeCharge: function(event, discharged) {
+    removeCharge: function (event, discharged) {
       var charged = this.chargedEvents;
       if (charged !== false) {
         var index = charged.indexOf(event);

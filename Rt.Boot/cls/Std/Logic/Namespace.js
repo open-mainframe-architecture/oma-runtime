@@ -1,4 +1,4 @@
-'LogicalContainer'.subclass(function(I) {
+'LogicalContainer'.subclass(function (I) {
   "use strict";
   // I describe containers that hold classes, modules or other namespaces.
   I.am({
@@ -6,16 +6,16 @@
     Final: true
   });
   I.know({
-    build: function(parentNamespace, key, module) {
+    build: function (parentNamespace, key, module) {
       I.$super.build.call(this, parentNamespace, parentNamespace, key, module);
       parentNamespace.store(this, key);
     },
-    checkStorage: function(it, ix) {
+    checkStorage: function (it, ix) {
       return I.$super.checkStorage.call(this, it, ix) &&
         (I._.Class.describes(it) || I.$.describes(it) || I._.Module.describes(it));
     },
     // evaluate an expression that designates a class, e.g. BaseObject+Indirect
-    evaluateClassExpression: function(classExpr) {
+    evaluateClassExpression: function (classExpr) {
       var parts = classExpr.split('+');
       var n = parts.length;
       var i;

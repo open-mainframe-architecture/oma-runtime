@@ -1,11 +1,11 @@
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(function (I) {
   "use strict";
   I.have({
     valueConstructor: null
   });
   I.know({
     createPrototype: I.burdenSubclass,
-    createValue: function(expression, values) {
+    createValue: function (expression, values) {
       if (!this.valueConstructor) {
         var prototype = this.createPrototype();
         I.defineConstant(prototype, '$type', this);

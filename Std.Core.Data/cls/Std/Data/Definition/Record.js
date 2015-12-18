@@ -1,4 +1,4 @@
-'Expression'.subclass(function(I) {
+'Expression'.subclass(function (I) {
   "use strict";
   // I describe ASTs of record types.
   I.am({
@@ -8,11 +8,11 @@
     fieldDefinitions_: null
   });
   I.know({
-    build: function(source, definitions_) {
+    build: function (source, definitions_) {
       I.$super.build.call(this, source);
       this.fieldDefinitions_ = definitions_;
     },
-    popEvaluation: function(evaluator, fieldTypes, preliminary) {
+    popEvaluation: function (evaluator, fieldTypes, preliminary) {
       var definitions_ = this.fieldDefinitions_;
       var sorted = Object.getOwnPropertyNames(definitions_).sort();
       var descriptors_ = I.createTable();
@@ -24,7 +24,7 @@
       }
       preliminary.setDescriptors(descriptors_);
     },
-    pushEvaluation: function(evaluator) {
+    pushEvaluation: function (evaluator) {
       var definitions_ = this.fieldDefinitions_;
       var sorted = Object.getOwnPropertyNames(definitions_).sort();
       for (var i = 0, n = sorted.length; i < n; ++i) {
@@ -33,7 +33,7 @@
       evaluator.pushExpressions(sorted);
       return I._.Type._.Record.create(evaluator.typespace, this);
     },
-    substitute: function(variables_) {
+    substitute: function (variables_) {
       var fields_ = I.createTable();
       var distinct = false;
       for (var key in this.fieldDefinitions_) {
@@ -47,13 +47,13 @@
     }
   });
   I.nest({
-    Field: 'BaseObject'.subclass(function(I) {
+    Field: 'BaseObject'.subclass(function (I) {
       I.have({
         expression: null,
         annotations_: null
       });
       I.know({
-        build: function(expression, annotations_) {
+        build: function (expression, annotations_) {
           I.$super.build.call(this);
           this.expression = expression;
           this.annotations_ = I.hasEnumerables(annotations_) ? annotations_ : I.EmptyTable;

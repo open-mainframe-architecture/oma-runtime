@@ -1,6 +1,6 @@
-'Decorator'.subclass(function(I) {
+'Decorator'.subclass(function (I) {
   "use strict";
-  // I describe streams that convert items between other streams.
+  // I describe streams that convert items of other streams.
   I.am({
     Abstract: false
   });
@@ -11,22 +11,23 @@
     outputConversion: null
   });
   I.know({
-    build: function(stream, input, output) {
+    build: function (stream, input, output) {
       I.$super.build.call(this, stream);
-      this.inputConversion = input || I.returnArgument;
+      var conversion = input || I.returnArgument;
+      this.inputConversion = function (ignition) {
+        var it = ignition.origin().get();
+        return conversion(it);
+      };
       this.outputConversion = output || I.returnArgument;
     }
   });
   I.play({
-    read: function() {
-      var conversion = this.inputConversion;
-      return I.$superRole.read.call(this).completes(function(event) {
-        return conversion(event.origin().get());
-      });
+    read: function () {
+      return this.decoratedStream.read().completion().triggers(this.inputConversion);
     },
-    write: function(it) {
+    write: function (it) {
       var conversion = this.outputConversion;
-      return I.$superRole.write.call(this, conversion(it));
+      return this.decoratedStream.write(conversion(it));
     }
   });
 })

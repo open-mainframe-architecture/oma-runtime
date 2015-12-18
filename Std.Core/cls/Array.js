@@ -1,34 +1,34 @@
-'Object'.subclass(Array, function(I) {
+'Object'.subclass(Array, function (I) {
   "use strict";
   I.know({
-    accumulate: function(iterator) {
+    accumulate: function (iterator) {
       for (; iterator.has(); iterator.step()) {
         this.push(iterator.get());
       }
       return this;
     },
-    enumerate: function(visit, oneBased) {
-      return I.enumerate(this, visit, oneBased);
+    enumerate: function (visit, firstIndex) {
+      return I.enumerate(this, visit, firstIndex);
     },
-    walk: function() {
+    walk: function () {
       return I.walk(this);
     }
   });
   I.share({
-    enumerate: function(arrayLike, visit, oneBased) {
-      for (var i = 0, n = arrayLike.length, offset = oneBased ? 1 : 0; i < n; ++i) {
+    enumerate: function (arrayLike, visit, firstIndex) {
+      for (var i = 0, n = arrayLike.length, offset = firstIndex || 0; i < n; ++i) {
         if (visit(arrayLike[i], i + offset) === false) {
           return false;
         }
       }
       return true;
     },
-    walk: function(arrayLike) {
+    walk: function (arrayLike) {
       return arrayLike.length ? I.Iterator.create(arrayLike) : I.Loop.Empty;
     }
   });
   I.nest({
-    Iterator: 'Std.Iterator'.subclass(function(I) {
+    Iterator: 'Std.Iterator'.subclass(function (I) {
       // I describe iterators that walk over elements in an array (or array-like object).
       I.have({
         // iterated array
@@ -37,17 +37,17 @@
         index: 0
       });
       I.know({
-        build: function(array) {
+        build: function (array) {
           I.$super.build.call(this);
           this.array = array;
         },
-        get: function() {
+        get: function () {
           return this.array[this.index];
         },
-        has: function() {
+        has: function () {
           return this.index < this.array.length;
         },
-        step: function() {
+        step: function () {
           ++this.index;
         }
       });

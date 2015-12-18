@@ -1,4 +1,4 @@
-'Dictionary'.subclass(function(I) {
+'Dictionary'.subclass(function (I) {
   "use strict";
   // I describe dictionaries with instance method closures that cannot be invoked directly.
   I.have({
@@ -6,12 +6,12 @@
     enhancedBehavior: null
   });
   I.know({
-    build: function(parent, behavior) {
+    build: function (parent, behavior) {
       I.$super.build.call(this, parent);
       this.enhancedBehavior = behavior;
     },
     // add closures of special methods
-    addMethods: function(module, specialMethods_) {
+    addMethods: function (module, specialMethods_) {
       var methods_ = {};
       var prefix = this.$_.SelectorPrefix;
       for (var key in specialMethods_) {
@@ -24,14 +24,14 @@
       }
       this.enhancedBehavior.addInstanceKnowledge(module, methods_);
     },
-    getBehavior: function() {
+    getBehavior: function () {
       return this.enhancedBehavior;
     },
-    getParentMethods: function() {
+    getParentMethods: function () {
       return this.baseDictionary;
     },
     // refine closures of special methods
-    refineMethods: function(module, refinedSpecials_, formerSpecials_) {
+    refineMethods: function (module, refinedSpecials_, formerSpecials_) {
       var refinedMethods_ = {};
       var formerMethods_ = Object.create(this.enhancedBehavior.getParentPrototype());
       var prefix = this.$_.SelectorPrefix;

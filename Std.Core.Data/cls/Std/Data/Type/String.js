@@ -1,10 +1,10 @@
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
+    describesValue: function (value) {
       return typeof value === 'string';
     },
     marshalValue: I.returnArgument,

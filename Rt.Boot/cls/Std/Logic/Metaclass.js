@@ -1,4 +1,4 @@
-'Behavior'.subclass(function(I) {
+'Behavior'.subclass(function (I) {
   "use strict";
   // I describe how classes behave.
   I.am({

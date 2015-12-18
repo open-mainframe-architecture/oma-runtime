@@ -1,4 +1,4 @@
-'LogicalContainer'.subclass(function(I) {
+'LogicalContainer'.subclass(function (I) {
   "use strict";
   // I describe modules that contain definitions and refinements of logicals.
   I.am({
@@ -14,14 +14,14 @@
     fullyLoaded: null
   });
   I.know({
-    build: function(home, key, bundle, configure) {
+    build: function (home, key, bundle, configure) {
       // is home parameter logical name of the new module?
       if (typeof home === 'string') {
         var self = this;
         var keys = home.split('.');
         key = keys.pop();
         // if necessary, create ancestor module or namespace of new module
-        home = I._.Root.makeContexts(keys, function(ancestorHome, ancestorKey) {
+        home = I._.Root.makeContexts(keys, function (ancestorHome, ancestorKey) {
           if (I.$.describes(ancestorHome)) {
             return I.$.create(ancestorHome, ancestorKey, bundle);
           }
@@ -34,32 +34,32 @@
       this.logicConfig = I._.Config.create(configure);
       home.store(this, key);
     },
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.assetBundle.addModule(this);
     },
-    checkStorage: function(module, ix) {
+    checkStorage: function (module, ix) {
       return I.$super.checkStorage.call(this, module, ix) && I.$.describes(module);
     },
-    beLoaded: function(flag) {
+    beLoaded: function (flag) {
       if (this.fullyLoaded !== null) {
         this.bad();
       }
       this.fullyLoaded = !!flag;
     },
-    getBundle: function() {
+    getBundle: function () {
       return this.assetBundle;
     },
-    getConfig: function() {
+    getConfig: function () {
       return this.logicConfig;
     },
-    isLoaded: function() {
+    isLoaded: function () {
       return this.fullyLoaded === true;
     },
-    isLoading: function() {
+    isLoading: function () {
       return this.fullyLoaded === null;
     },
-    isUnloadable: function() {
+    isUnloadable: function () {
       return this.fullyLoaded === false;
     }
   });

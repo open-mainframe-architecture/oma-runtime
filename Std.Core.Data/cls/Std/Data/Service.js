@@ -1,4 +1,4 @@
-'Typespace'.subclass(function(I) {
+'Typespace'.subclass(function (I) {
   "use strict";
   I.am({
     Service: true

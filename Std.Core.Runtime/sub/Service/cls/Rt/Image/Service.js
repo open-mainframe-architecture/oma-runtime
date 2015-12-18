@@ -1,7 +1,7 @@
 'Std.BaseObject+Std.Role'.subclass({
   $data: 'Std.Data',
   $env: 'Rt.Env'
-}, function(I) {
+}, function (I) {
   "use strict";
   // I describe runtime images that load modules from bundles.
   I.am({
@@ -12,14 +12,14 @@
     launchValue: null
   });
   I.play({
-    launch: function(json) {
+    launch: function (json) {
       if (this.launchValue) {
         this.bad();
       }
       this.launchValue = I.$data.unmarshal(json, 'App.Launch');
     },
-    loadBundle: function(name, moduleSpecs_) {
-      
+    loadBundle: function (name, moduleSpecs_) {
+
     },
   });
 })

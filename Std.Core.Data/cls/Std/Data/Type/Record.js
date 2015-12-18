@@ -1,4 +1,4 @@
-'Composition'.subclass(function(I) {
+'Composition'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
@@ -7,33 +7,33 @@
     fieldDescriptors_: null
   });
   I.know({
-    describesValue: function(value) {
+    describesValue: function (value) {
       if (I._.Value._.Record.describes(value) && value.$type.typespace === this.typespace) {
         var fields_ = value._;
-        return this.enumerateDataDescriptors(function(descriptor, key) {
+        return this.enumerateDataDescriptors(function (descriptor, key) {
           return descriptor.describesValue(fields_[key]);
         });
       }
       return false;
     },
-    isPreliminary: function() {
+    isPreliminary: function () {
       return !this.fieldDescriptors_;
     },
-    marshalValue: function(value, expression) {
+    marshalValue: function (value, expression) {
       var json = expression === value.$expr ? {} : { $: value.$expr.unparse() };
-      this.enumerateDataDescriptors(function(descriptor, key) {
+      this.enumerateDataDescriptors(function (descriptor, key) {
         descriptor.marshalField(json, value, key);
       });
       return json;
     },
-    unmarshalJSON: function(json, expression) {
+    unmarshalJSON: function (json, expression) {
       var values_ = I.createTable();
-      this.enumerateDataDescriptors(function(descriptor, key) {
+      this.enumerateDataDescriptors(function (descriptor, key) {
         descriptor.unmarshalField(values_, json, key);
       });
       return this.createValue(expression, values_);
     },
-    createPrototype: function() {
+    createPrototype: function () {
       var descriptors_ = this.fieldDescriptors_;
       var prototype = Object.create(I._.Value._.Record.getPrototype());
       for (var key in descriptors_) {
@@ -41,7 +41,7 @@
       }
       return prototype;
     },
-    enumerateDataDescriptors: function(visit) {
+    enumerateDataDescriptors: function (visit) {
       var descriptors_ = this.fieldDescriptors_;
       for (var key in descriptors_) {
         var descriptor = descriptors_[key];
@@ -51,7 +51,7 @@
       }
       return true;
     },
-    setDescriptors: function(descriptors_) {
+    setDescriptors: function (descriptors_) {
       if (this.fieldDescriptors_) {
         this.bad();
       }
@@ -59,9 +59,9 @@
     }
   });
   I.share({
-    merge: function(cascade) {
+    merge: function (cascade) {
       var mergure_ = I.createTable();
-      for (var n = cascade.length; n--; ) {
+      for (var n = cascade.length; n--;) {
         var descriptors_ = cascade[n].fieldDescriptors_;
         for (var key in descriptors_) {
           if (!mergure_[key]) {

@@ -1,4 +1,4 @@
-'BaseObject+Logical+Context'.subclass(function(I) {
+'BaseObject+Logical+Context'.subclass(function (I) {
   "use strict";
   // I describe how instances behave.
   I.have({
@@ -18,13 +18,13 @@
     behaviorFlags_: null,
     // container for instance fields of this behavior
     instanceFields: null,
-    // container for package fields or package field substances of this behavior
+    // container for package fields or package field substances
     behaviorPackage: null,
     // expose table of behavior package for easy access
     _: null
   });
   I.know({
-    unveil: function() {
+    unveil: function () {
       // preparation of basic behavior object copies uninitialized variables and seals it
       I.prepareNew(this);
       I.$super.unveil.call(this);
@@ -34,7 +34,7 @@
         this.instanceConstructor.prototype = this.instancePrototype;
       }
     },
-    buildLogical: function(context, key, module) {
+    buildLogical: function (context, key, module) {
       I.$super.buildLogical.call(this, context, key, module);
       var parent = this.parentBehavior;
       // instance fields and behavior package belong to same module as this behavior 
@@ -43,13 +43,13 @@
       this._ = this.behaviorPackage._;
     },
     // enumerate behavior package, meta behavior and instance fields of this behavior
-    enumerate: function(visit) {
+    enumerate: function (visit) {
       return visit(this.behaviorPackage, '_') !== false &&
         visit(this.$, '$') !== false &&
         visit(this.instanceFields, '#') !== false;
     },
     // lookup behavior package, meta behavior or instance fields of this behavior
-    lookup: function(ix) {
+    lookup: function (ix) {
       switch (ix) {
         case '_': return this.behaviorPackage;
         case '$': return this.$;
@@ -57,13 +57,13 @@
       }
     },
     // add new instance getters and setters to this behavior
-    addInstanceAccessors: function(module, accessors_) {
+    addInstanceAccessors: function (module, accessors_) {
       var fields = this.instanceFields;
-      var descriptor = {configurable: true, enumerable: false};
+      var descriptor = { configurable: true, enumerable: false };
       for (var key in accessors_) {
         var it = accessors_[key];
         // field substance is JavaScript object with get and set closure
-        var substance = {get: typeof it === 'function' ? it : it.get, set: it.set};
+        var substance = { get: typeof it === 'function' ? it : it.get, set: it.set };
         fields.store(I._.InstanceAccessor.create(fields, key, module, substance), key);
         descriptor.get = substance.get;
         descriptor.set = substance.set;
@@ -71,9 +71,9 @@
       }
     },
     // add new instance methods and constants to this behavior
-    addInstanceKnowledge: function(module, fields_) {
+    addInstanceKnowledge: function (module, fields_) {
       var fields = this.instanceFields;
-      var descriptor = {configurable: true, enumerable: false, writable: false};
+      var descriptor = { configurable: true, enumerable: false, writable: false };
       for (var key in fields_) {
         var substance = fields_[key];
         var Field = substance ? I._.InstanceMethod : I._.InstanceConstant;
@@ -86,9 +86,9 @@
       }
     },
     // add new instance variables to this behavior
-    addInstanceVariables: function(module, vars_) {
+    addInstanceVariables: function (module, vars_) {
       var fields = this.instanceFields;
-      var descriptor = {configurable: false, enumerable: true, writable: true};
+      var descriptor = { configurable: false, enumerable: true, writable: true };
       for (var key in vars_) {
         var substance = vars_[key];
         // demand initial basic value, because it can be safely shared by all instances
@@ -101,7 +101,7 @@
       }
     },
     // add new child behavior that inherits from this behavior
-    addNewChildBehavior: function(behaviorClass, legacy) {
+    addNewChildBehavior: function (behaviorClass, legacy) {
       var childBehavior = Object.create(behaviorClass.instancePrototype);
       var prototype = legacy ? legacy.prototype : Object.create(this.instancePrototype);
       childBehavior.instancePrototype = prototype;
@@ -114,7 +114,7 @@
       return childBehavior;
     },
     // create instance of this concrete behavior
-    create: function() {
+    create: function () {
       if (this.behaviorFlags_.Abstract) {
         this.bad('creation');
       }
@@ -123,14 +123,14 @@
     // create instance constructor of this concrete behavior
     createConstructor: I.shouldNotOccur,
     // test whether it is an instance of this behavior
-    describes: function(it) {
+    describes: function (it) {
       return this.instanceConstructor ? it instanceof this.instanceConstructor :
         !this.instancePrototype ||
-          Object.prototype.isPrototypeOf.call(this.instancePrototype, it);
+        Object.prototype.isPrototypeOf.call(this.instancePrototype, it);
     },
     // find most specific behavior for an instance of this behavior
-    downcast: function(instance) {
-      var children = this.childBehaviors, isPrototypeOf = Object.prototype.isPrototypeOf; 
+    downcast: function (instance) {
+      var children = this.childBehaviors, isPrototypeOf = Object.prototype.isPrototypeOf;
       for (var i = 0, n = children.length; i < n; ++i) {
         if (isPrototypeOf.call(children[i].instancePrototype, instance)) {
           return children[i].downcast(instance);
@@ -139,24 +139,24 @@
       return this;
     },
     // enumerate all service behaviors from this behavior up to the root
-    enumerateServices: function(it, visit) {
+    enumerateServices: function (it, visit) {
       if (this.behaviorFlags_.Service && !this.traitBehavior && visit(this) === false) {
         return false;
       }
       return this.parentBehavior === this || this.parentBehavior.enumerateServices(it, visit);
     },
-    getInheritanceDepth: function() {
+    getInheritanceDepth: function () {
       return this.inheritanceDepth;
     },
     // determine base for mixin operation that might have created this behavior
-    getMixedBase: function(traitBehavior) {
+    getMixedBase: function (traitBehavior) {
       if (this.traitBehavior !== (traitBehavior.traitBehavior || traitBehavior)) {
         return this;
       }
       return this.parentBehavior.getMixedBase(traitBehavior.parentBehavior);
     },
     // find child of this behavior that was created with a trait
-    getMixedChild: function(traitBehavior) {
+    getMixedChild: function (traitBehavior) {
       var children = this.childBehaviors;
       for (var i = 0, n = children.length; i < n; ++i) {
         if (children[i].traitBehavior === traitBehavior) {
@@ -164,44 +164,44 @@
         }
       }
     },
-    getPackage: function() {
+    getPackage: function () {
       return this.behaviorPackage;
     },
-    getParentBehavior: function() {
+    getParentBehavior: function () {
       return this.parentBehavior;
     },
-    getParentPrototype: function() {
+    getParentPrototype: function () {
       return this.parentBehavior.instancePrototype;
     },
-    getPrototype: function() {
+    getPrototype: function () {
       return this.instancePrototype;
     },
-    getTraitBehavior: function() {
+    getTraitBehavior: function () {
       return this.traitBehavior;
     },
     // test whether this behavior cannot create instances
-    isAbstract: function() {
+    isAbstract: function () {
       return this.behaviorFlags_.Abstract;
     },
     // test whether this behavior cannot create children
-    isFinal: function() {
+    isFinal: function () {
       return this.behaviorFlags_.Final;
     },
     // test whether this behavior inherits the definitions of a trait
-    isMixedBy: function(traitBehavior) {
+    isMixedBy: function (traitBehavior) {
       if (this.traitBehavior === traitBehavior) {
         return true;
       }
       return this.parentBehavior !== this && this.parentBehavior.isMixedBy(traitBehavior);
     },
-    isRootBehavior: function() {
+    isRootBehavior: function () {
       return this.parentBehavior === this;
     },
     // test whether this behavior is a service with providing instances
-    isService: function() {
+    isService: function () {
       return this.behaviorFlags_.Service;
     },
-    lockInstanceConstants: function(constants_) {
+    lockInstanceConstants: function (constants_) {
       for (var key in constants_) {
         if (!I._.InstanceConstant.describes(this.instanceFields.find(key))) {
           this.bad('lock', key);
@@ -209,9 +209,9 @@
         I.defineConstant(this.instancePrototype, key, constants_[key]);
       }
     },
-    refineInstanceMethods: function(module, methods_, formers_) {
+    refineInstanceMethods: function (module, methods_, formers_) {
       var fields = this.instanceFields;
-      var descriptor = {configurable: true, enumerable: false, writable: false};
+      var descriptor = { configurable: true, enumerable: false, writable: false };
       for (var key in methods_) {
         var substance = methods_[key];
         var method = fields.lookup(key);
@@ -227,7 +227,7 @@
         Object.defineProperty(this.instancePrototype, key, descriptor);
       }
     },
-    setBehaviorFlags: function(flags_) {
+    setBehaviorFlags: function (flags_) {
       var behaviorFlags_ = this.behaviorFlags_;
       for (var key in flags_) {
         var value = flags_[key];

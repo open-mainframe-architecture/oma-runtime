@@ -1,12 +1,13 @@
 {
   "name": "oma-runtime",
-  "description": "Common runtime system for JavaScript environments.",
+  "description": "Archive with runtime system for JavaScript environments.",
   "main": "self",
   "version": "1.4.0",
   "keywords": [
     "JavaScript",
     "class scripts",
-    "runtime system"
+    "runtime system",
+    "runtime environment"
   ],
   "repository": {
     "type": "git",

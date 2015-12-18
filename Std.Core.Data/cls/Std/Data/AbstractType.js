@@ -1,4 +1,4 @@
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(function (I) {
   "use strict";
   // I describe datatypes that know how to compose their members.
   I.am({
@@ -11,7 +11,7 @@
     typeExpression: null
   });
   I.know({
-    build: function(typespace, expression) {
+    build: function (typespace, expression) {
       I.$super.build.call(this);
       this.typespace = typespace;
       this.typeExpression = expression;
@@ -29,19 +29,19 @@
   });
   I.share({
     // deep equality if necessary
-    equalValues: function(lhs, rhs) {
+    equalValues: function (lhs, rhs) {
       return lhs === rhs ? I.isValue(lhs) :
         I.isComposedValue(lhs) && I.isComposedValue(rhs) &&
-          lhs.$expr === rhs.$expr && lhs.$type === rhs.$type && lhs.$equals(rhs);
+        lhs.$expr === rhs.$expr && lhs.$type === rhs.$type && lhs.$equals(rhs);
     },
     // is it a basic boolean, number or string value?
-    isBasicValue: function(it) {
+    isBasicValue: function (it) {
       return it === false || it === true || typeof it === 'string' || I.isFiniteNumber(it);
     },
     // is it a composed dictionary, list or record value?
     isComposedValue: I._.AbstractValue.describes.bind(I._.AbstractValue),
     // is it any typed value, including null?
-    isValue: function(it) {
+    isValue: function (it) {
       return it === null || I.isBasicValue(it) || I.isComposedValue(it);
     }
   });

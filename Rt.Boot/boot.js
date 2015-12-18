@@ -4,8 +4,8 @@ function boot(bundleId, bootName) {
   var t0 = new Date();
   // create subclass method for strings, e.g. 'Std.BaseObject'.subclass(function(I) { ... })
   Object.defineProperty(String.prototype, 'subclass', {
-    configurable: true, enumerable: false, writable: false, value: function() {
-      var n = arguments.length - 1, clsSpec = {$super: this, script: arguments[n]};
+    configurable: true, enumerable: false, writable: false, value: function () {
+      var n = arguments.length - 1, clsSpec = { $super: this, script: arguments[n] };
       for (var i = 0; i < n; ++i) {
         var argument = arguments[i];
         if (typeof argument === 'function') {
@@ -30,13 +30,13 @@ function boot(bundleId, bootName) {
     var push = Array.prototype.push;
     var seal = Object.seal;
     // add constant property (non-configurable, non-enumerable and non-writable)
-    function defineConstant(it, key, constant) {
-      var descriptor = {value: constant, configurable: false, enumerable: false, writable: false};
+    function defineConstant(it, key, value) {
+      var descriptor = { value: value, configurable: false, enumerable: false, writable: false };
       defineProperty(it, key, descriptor);
     }
     // runtime tables are not polluted with properties from Object.prototype
     var protoTable = freeze(create(null));
-    // create tables that holds namespace entries
+    // create tables that hold namespace entries
     var Root_ = create(protoTable), Std_ = create(Root_);
     var Rt_ = create(Root_), Logic_ = create(Std_);
     // create chain of prototypes to Class and Metaclass
@@ -129,7 +129,7 @@ function boot(bundleId, bootName) {
     function basicCreate(instCls) {
       return create(instCls.instancePrototype);
     }
-    // create (and collect) namespace object that might wrap an existing table
+    // create (and collect) namespace object
     var bootNamespaces = [];
     function createNamespace(parentNs, key, ns_) {
       var ns = basicCreate(Namespace);
@@ -141,7 +141,7 @@ function boot(bundleId, bootName) {
       ns.contextKey = key;
       if (ns_) {
         // claim ownership of logicals in existing table
-        Object.getOwnPropertyNames(ns._ = ns_).forEach(function(key) {
+        Object.getOwnPropertyNames(ns._ = ns_).forEach(function (key) {
           ns_[key].homeContext = ns;
         });
       }
@@ -162,13 +162,13 @@ function boot(bundleId, bootName) {
       if (visitFirst && !bottomUp) {
         visit(behavior);
       }
-      children.forEach(function(child) { enumerateBehaviors(child, true, bottomUp, visit); });
+      children.forEach(function (child) { enumerateBehaviors(child, true, bottomUp, visit); });
       if (visitFirst && bottomUp) {
         visit(behavior);
       }
     }
     // bottom-up construction of metaclass hierarchy
-    enumerateBehaviors(Void, true, true, function(instCls) {
+    enumerateBehaviors(Void, true, true, function (instCls) {
       var metacls = instCls.$;
       var parentBehavior = instCls.parentBehavior;
       // metaclass hierarchy mirrors class hierarchy, except in the root class
@@ -192,7 +192,7 @@ function boot(bundleId, bootName) {
       behavior._ = addBehaviorDictionary(behavior, 'behaviorPackage', '_', packageClass)._;
     }
     // top-down initialization of metaclass packages and flags
-    enumerateBehaviors(Class, false, false, function(metacls) {
+    enumerateBehaviors(Class, false, false, function (metacls) {
       addBehaviorPackage(metacls, MetaclassPackage);
       metacls.behaviorFlags_ = create(metacls.parentBehavior.behaviorFlags_);
     });
@@ -222,7 +222,7 @@ function boot(bundleId, bootName) {
       return logical.logicName;
     }
     // top-down initialization of instance side
-    enumerateBehaviors(Class, false, false, function(metacls) {
+    enumerateBehaviors(Class, false, false, function (metacls) {
       var instCls = metacls.homeContext;
       var mixin = instCls.traitBehavior;
       addInstanceFieldContainer(instCls);
@@ -383,7 +383,7 @@ function boot(bundleId, bootName) {
     }
     function scriptHave(variables_) { //jshint validthis:true
       var behavior = this.$, proto = behavior.instancePrototype;
-      var descriptor = {configurable: false, enumerable: true, writable: true};
+      var descriptor = { configurable: false, enumerable: true, writable: true };
       for (var key in variables_) {
         descriptor.value = variables_[key];
         defineProperty(proto, key, descriptor);
@@ -392,16 +392,16 @@ function boot(bundleId, bootName) {
     }
     function scriptAccess(getters_) { //jshint validthis:true
       var behavior = this.$, proto = behavior.instancePrototype;
-      var descriptor = {configurable: true, enumerable: false};
+      var descriptor = { configurable: true, enumerable: false };
       for (var key in getters_) {
         var getter = descriptor.get = getters_[key];
         defineProperty(proto, key, descriptor);
-        addInstanceField(behavior, InstanceAccessor, key, {get: getter});
+        addInstanceField(behavior, InstanceAccessor, key, { get: getter });
       }
     }
     function scriptKnow(knowledge_) { //jshint validthis:true
       var behavior = this.$, proto = behavior.instancePrototype;
-      var descriptor = {configurable: true, enumerable: false, writable: false};
+      var descriptor = { configurable: true, enumerable: false, writable: false };
       for (var key in knowledge_) {
         var substance = descriptor.value = knowledge_[key];
         defineProperty(proto, key, descriptor);
@@ -411,7 +411,7 @@ function boot(bundleId, bootName) {
     function scriptShare(substances_) { //jshint validthis:true
       var instCls = this.$, metacls = instCls.$, packageFields = metacls.behaviorPackage;
       var fieldSubstances_ = instCls.behaviorPackage._;
-      var descriptor = {configurable: false, enumerable: true, writable: false};
+      var descriptor = { configurable: false, enumerable: true, writable: false };
       for (var key in substances_) {
         var substance = substances_[key];
         var field = basicCreate(typeof substance === 'function' ? Subroutine : PackageConstant);
@@ -465,7 +465,7 @@ function boot(bundleId, bootName) {
     function loadClasses(bootModule, bootSpec_) {
       // add loaders for bootstrapped classes
       var bootLoading_ = {}, loaders = [];
-      enumerateBehaviors(Class, false, false, function(metacls) {
+      enumerateBehaviors(Class, false, false, function (metacls) {
         var instCls = metacls.homeContext, mixin = instCls.traitBehavior;
         var name = logicName(instCls);
         bootLoading_[name] = new Loader(instCls, bootSpec_[mixin ? logicName(mixin) : name]);
@@ -535,12 +535,12 @@ function boot(bundleId, bootName) {
     // unveil all objects built by boot module so far
     Void.inheritanceDepth = -1;
     enumerateBehaviors(Void, true, false, unveilBehavior);
-    enumerateBehaviors(Class, false, false, function(metacls) {
+    enumerateBehaviors(Class, false, false, function (metacls) {
       metacls.behaviorPackage.enumerate(unveilLogical);
     });
-    bootNamespaces.forEach(function(ns) { unveilLogical(ns); });
+    bootNamespaces.forEach(function (ns) { unveilLogical(ns); });
     // run setup routines and complete initialization of boot module
-    bootSetup.forEach(function(closure) { closure(); });
+    bootSetup.forEach(function (closure) { closure(); });
     Boot.assetBundle = Rt_.Image._.Bundle.create(bundleId);
     Boot.logicConfig = Logic_.Config.create(bootSpec_['']);
     unveilLogical(Boot);
@@ -549,7 +549,7 @@ function boot(bundleId, bootName) {
   }
   // return object with bundle method (like strings do when runtime system has been loaded)
   return {
-    bundle: function(moduleSpecs_) {
+    bundle: function (moduleSpecs_) {
       delete this.bundle;
       // boot module creates runtime system
       var Boot = loadBootModule(moduleSpecs_[bootName]), bundle = Boot.getBundle();
@@ -558,7 +558,7 @@ function boot(bundleId, bootName) {
       delete moduleSpecs_[bootName];
       var loading, loaders = [], names = Object.keys(moduleSpecs_), limit = names.length;
       // sorted names ensure a child module is created after its parent
-      names.sort().forEach(function(name) {
+      names.sort().forEach(function (name) {
         loaders.push(bundle.createModuleLoader(name, moduleSpecs_[name]));
       });
       // attempt to load modules until it's no longer possible
@@ -576,7 +576,7 @@ function boot(bundleId, bootName) {
       if (loading) {
         throw 'Unbootable bundle.';
       }
-      return function() { return bundle; }.play();
+      return function () { return bundle; }.play();
     }
   };
 }

@@ -1,4 +1,4 @@
-'Std.BaseObject'.subclass(function(I) {
+'Std.BaseObject'.subclass(function (I) {
   "use strict";
   // I describe a loader that defines or redefines a class.
   I.have({
@@ -20,7 +20,7 @@
     superParts: null
   });
   I.know({
-    build: function(loader, module, namespace, context, key, spec, subject) {
+    build: function (loader, module, namespace, context, key, spec, subject) {
       I.$super.build.call(this);
       this.moduleLoader = loader;
       this.classModule = module;
@@ -32,12 +32,12 @@
       this.classSubject = subject || context.lookup(key);
     },
     // add class loader that runs specification of this loader against alternative subject
-    addClassLoader: function(subject) {
+    addClassLoader: function (subject) {
       var module = this.classModule;
       this.moduleLoader.addClassLoader(module, this.classNamespace, this.classSpec, subject);
     },
     // attempt to create class of this loader
-    finishCreation: function() {
+    finishCreation: function () {
       if (this.classSubject) {
         this.bad();
       }
@@ -63,7 +63,7 @@
           }
           // first part is class and any other part is also a mixin
           if (!I._.Std._.Logic._.Class.describes(part) || (i && !part.isMixin())) {
-              this.bad('part');
+            this.bad('part');
           }
           superParts[i] = part;
         }
@@ -84,20 +84,20 @@
       this.classSubject = instCls;
       return true;
     },
-    getInheritanceDepth: function() {
+    getInheritanceDepth: function () {
       return this.classSubject.getInheritanceDepth();
     },
-    getModule: function() {
+    getModule: function () {
       return this.classModule;
     },
-    getSpec: function() {
+    getSpec: function () {
       return this.classSpec;
     },
-    hasClass: function() {
+    hasClass: function () {
       return !!this.classSubject;
     },
     // run class script to define or redefine the class of this loader
-    loadClass: function() {
+    loadClass: function () {
       var instCls = this.classSubject;
       var spec = this.classSpec;
       var script = spec.script || spec;
@@ -147,11 +147,11 @@
       }
     },
     // prepare subject to run script of this loader in the near future
-    prepareLoad: function() {
+    prepareLoad: function () {
       this.classSubject.prepareLoad(this);
     },
     // prepare script arguments of this loader
-    prepareScript: function(scriptInst, scriptMeta) {
+    prepareScript: function (scriptInst, scriptMeta) {
       var instCls = this.classSubject;
       // I.$ for class and We.$ for metaclass
       I.defineConstant(scriptInst, '$', instCls);
@@ -194,7 +194,7 @@
       scriptInst.nest = scriptNest;
       // I.setup for a setup routine
       scriptInst.setup = scriptSetup;
-      // add nonstandard keywords to simplify scripts in particular domains of classes
+      // add nonstandard keywords to simplify scripts in particular domain of classes
       instCls.prepareScript(scriptInst, scriptMeta);
     }
   });
@@ -226,7 +226,7 @@
     var loader = this[''];
     // obtain mutable scriptInst from this immutable
     var scriptInst = Object.getPrototypeOf(this);
-    this[''].moduleLoader.addSetupRoutine(function() {
+    this[''].moduleLoader.addSetupRoutine(function () {
       // reinstall share functionality while setup routine is running
       scriptInst[''] = loader;
       scriptInst.share = scriptShare;

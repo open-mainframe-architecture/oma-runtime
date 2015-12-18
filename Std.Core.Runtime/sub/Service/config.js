@@ -5,7 +5,7 @@ function configure(module) {
     loose: 'Std.Supervision.Loose'
   };
   module.provides = {
-    'Rt.Image': function(roleClass, required) {
+    'Rt.Image': function (roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };

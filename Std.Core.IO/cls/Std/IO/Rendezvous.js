@@ -1,4 +1,4 @@
-'BaseObject+Stream'.subclass(function(I) {
+'BaseObject+Stream'.subclass(function (I) {
   "use strict";
   // I describe streams that synchronize readers and writers.
   I.am({
@@ -10,7 +10,7 @@
     writeProtection: null
   });
   I.know({
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       // binary semaphores to synchronize one reader and one writer
       this.readProtection = I._.Wait._.Semaphore.create(0);
@@ -22,19 +22,19 @@
     isWritable: I.returnTrue
   });
   I.play({
-    read: function() {
+    read: function () {
       var self = this;
       // announce arrival of this read job
       this.writeProtection.increment();
       // wait for write job to complete
-      return this.readProtection.decrements().yields(function() {
+      return this.readProtection.decrement().triggers(function () {
         return self.writtenItem;
       });
     },
-    write: function(it) {
+    write: function (it) {
       var self = this, readProtection = this.readProtection;
       // wait for read job to arrive
-      return this.writeProtection.decrements().yields(function() {
+      return this.writeProtection.decrement().triggers(function () {
         // complete this write job
         readProtection.increment();
         self.writtenItem = it;

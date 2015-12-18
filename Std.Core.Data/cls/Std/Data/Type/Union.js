@@ -1,4 +1,4 @@
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
@@ -10,10 +10,10 @@
     recordAlternative: null
   });
   I.know({
-    build: function(typespace, expression, alternatives) {
+    build: function (typespace, expression, alternatives) {
       I.$super.build.call(this, typespace, expression);
       this.alternativeTypes = alternatives;
-      var dictionary = true, list= true, record= true;
+      var dictionary = true, list = true, record = true;
       for (var i = 0, n = alternatives.length; i < n && (dictionary || list || record); ++i) {
         var alternative = alternatives[i];
         if (dictionary && I._.Dictionary.describes(alternative)) {
@@ -28,7 +28,7 @@
       this.listAlternative = typeof list === 'boolean' ? null : list;
       this.recordAlternative = typeof record === 'boolean' ? null : record;
     },
-    describesValue: function(value) {
+    describesValue: function (value) {
       var alternatives = this.alternativeTypes;
       for (var i = 0, n = alternatives.length; i < n; ++i) {
         if (alternatives[i].describesValue(value)) {
@@ -38,21 +38,21 @@
       return false;
     },
     marshalValue: I.shouldNotOccur,
-    unmarshalJSON: function(json, expression) {
+    unmarshalJSON: function (json, expression) {
       if (I.isBasicValue(json)) {
         return json;
       } else {
         var alternative = json && (
           Array.isArray(json._ || json) ? this.listAlternative :
-          json._ ? this.dictionaryAlternative :
-          this.recordAlternative
-        );
+            json._ ? this.dictionaryAlternative :
+              this.recordAlternative
+          );
         return alternative ? alternative.unmarshalJSON(json, expression) : this.bad(json);
       }
     }
   });
   I.share({
-    normalize: function(typespace, expression, alternatives) {
+    normalize: function (typespace, expression, alternatives) {
       var flat = [];
       var i, j, n, optional, wildcard, boolean, number, integer, string, enumerations;
       for (i = 0, n = alternatives.length; i < n; ++i) {
@@ -69,7 +69,7 @@
         }
         else {
           optional = optional || I._.Optional.describes(flat[i]);
-          flat[j++] =  flat[i].asMandatory();
+          flat[j++] = flat[i].asMandatory();
         }
       }
       for (wildcard = false, i = 0; i < j; ++i) {
@@ -79,7 +79,7 @@
         }
       }
       if (!wildcard) {
-        boolean = number = integer = string = false; 
+        boolean = number = integer = string = false;
         for (n = j, i = 0, j = 0; i < n; ++i) {
           if (I._.Boolean.describes(flat[i])) {
             boolean = flat[i];
@@ -132,8 +132,8 @@
       }
       var union = wildcard ? wildcard :
         !flat.length ? typespace.noneType :
-        flat.length === 1 ? flat[0] :
-        I.$.create(typespace, expression, flat);
+          flat.length === 1 ? flat[0] :
+            I.$.create(typespace, expression, flat);
       return optional ? I._.Optional._.normalize(typespace, expression, union) : union;
     }
   });

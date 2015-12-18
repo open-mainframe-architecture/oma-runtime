@@ -1,4 +1,4 @@
-'AbstractDefinition'.subclass(function(I) {
+'AbstractDefinition'.subclass(function (I) {
   "use strict";
   // I describe ASTs of type expressions that can be evaluated, unless they contain variables.
   I.know({
@@ -15,7 +15,7 @@
   });
   I.share({
     // substitute variables in array with expressions
-    substituteExpressions: function(expressions, variables_) {
+    substituteExpressions: function (expressions, variables_) {
       var subs = [];
       var distinct = false;
       for (var i = 0, n = expressions.length; i < n; ++i) {

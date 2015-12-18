@@ -1,4 +1,4 @@
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(function (I) {
   "use strict";
   // I describe typespaces with data types.
   I.have({
@@ -20,7 +20,7 @@
     wildcardType: null
   });
   I.know({
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.typeDefinitions = I._.Dictionary.create();
       this.typeEvaluator = I.Evaluator.create(this);
@@ -33,7 +33,7 @@
       this.wildcardType = I._.Type._.Wildcard.create(this, Definitions.createWildcard());
     },
     // add type definition to this typespace
-    defineType: function(name, source) {
+    defineType: function (name, source) {
       if (this.typeDefinitions.containsIndex(name)) {
         this.bad('name', name);
       }
@@ -42,25 +42,25 @@
       return definition;
     },
     // evaluate (source of) type expression
-    evaluate: function(input) {
+    evaluate: function (input) {
       return this.typeEvaluator.reduceExpression(this.express(input));
     },
     // turn source input into a type expression that can be evaluated
-    express: function(input) {
+    express: function (input) {
       return typeof input === 'string' ? this.parseDefinition(input).express() : input.express();
     },
     // represent data value in JSON
-    marshal: function(value, inferred) {
+    marshal: function (value, inferred) {
       var type = this.type(value) || this.bad(value);
       var expression = this.express(inferred || '*?');
       return type.marshalValue(value, expression);
     },
     // parse source string to build AST of type definition
-    parseDefinition: function(source) {
+    parseDefinition: function (source) {
       return I._.AbstractDefinition._.Cache.parse(source);
     },
     // type of value is none, boolean, string, number, dictionary, list or record
-    type: function(value) {
+    type: function (value) {
       if (value === null) {
         return this.noneType;
       } else if (value === false || value === true) {
@@ -75,14 +75,14 @@
       // else type is undefined
     },
     // construct value from JSON representation
-    unmarshal: function(json, inferred) {
+    unmarshal: function (json, inferred) {
       var type = this.evaluate(json && json.$ || inferred || '*?');
       var expression = this.express(inferred || '*?');
       return type.unmarshalJSON(json, expression);
     },
   });
   I.nest({
-    Evaluator: 'BaseObject'.subclass(function(I) {
+    Evaluator: 'BaseObject'.subclass(function (I) {
       // I describe stack-based evaluators for type expressions.
       I.have({
         // typespace that owns this evaluator
@@ -97,18 +97,18 @@
         cyclic_: null
       });
       I.know({
-        build: function(typespace) {
+        build: function (typespace) {
           I.$super.build.call(this);
           this.typespace = typespace;
         },
-        unveil: function() {
+        unveil: function () {
           I.$super.unveil.call(this);
           this.cache = I._.Dictionary.create();
           this.stack = [];
           this.sorted = [];
         },
         // cache reduction of top expression
-        cacheTopReduction: function(depth) {
+        cacheTopReduction: function (depth) {
           var cache = this.cache, stack = this.stack;
           var top = stack.length;
           var expression = stack[top - 1];
@@ -147,10 +147,10 @@
           return type;
         },
         // lookup definition, i.e. a macro or expression, with given type name
-        lookupDefinition: function(name) {
+        lookupDefinition: function (name) {
           return this.typespace.typeDefinitions.lookup(name);
         },
-        pushExpressions: function(expressions) {
+        pushExpressions: function (expressions) {
           var stack = this.stack;
           if (Array.isArray(expressions)) {
             stack.push.apply(stack, expressions);
@@ -158,7 +158,7 @@
             stack.push(expressions);
           }
         },
-        reduce: function(depth, expected) {
+        reduce: function (depth, expected) {
           if (depth > 100) {
             // assume infinite recursion after 100 nested reductions
             this.bad('recursion');
@@ -185,7 +185,7 @@
           }
           return expected === 1 ? results[0] : results;
         },
-        reduceExpression: function(expression) {
+        reduceExpression: function (expression) {
           var type = this.cache.lookup(expression.unparse());
           // skip stack-based evaluation if expression has already been evaluated
           if (!type) {
@@ -203,8 +203,8 @@
           return type;
         },
         // add callback in sorted array with dependencies
-        sortCallback: function(types, preliminary, callback) {
-          var dependencies = false;
+        sortCallback: function (types, preliminary, callback) {
+          var dependencies = null;
           for (var i = 0, n = types.length; i < n; ++i) {
             if (types[i].isPreliminary()) {
               dependencies = dependencies || [];
@@ -220,7 +220,7 @@
           }
         },
         // add preliminary type after preliminary dependencies
-        sortPreliminary: function(dependencies, preliminary) {
+        sortPreliminary: function (dependencies, preliminary) {
           var sorted = this.sorted;
           var position = sorted.indexOf(preliminary);
           if (position < 0) {

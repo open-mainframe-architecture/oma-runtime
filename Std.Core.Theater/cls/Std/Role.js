@@ -1,12 +1,13 @@
-'Trait'.subclass(function(I, We) {
+'Trait'.subclass(function (I, We) {
   "use strict";
+  // I describe roles that perform asynchronous scenes with actors/agents.
   I.have({
     // theater job when this role is busy performing a scene on stage 
     theaterJob: null
   });
   I.access({
     // agent representation when this role is busy
-    $agent: function() {
+    $agent: function () {
       return this.theaterJob.getAgent();
     }
   });
@@ -14,11 +15,11 @@
     // initialize new agent/actor/role triple
     initialize: I.doNothing,
     // nonintrusive peek into state
-    peekState: function(selector, parameters) {
+    peekState: function (selector, parameters) {
       return this.$.agentMethods._[selector].apply(this, parameters);
     },
     // play next scene on stage
-    playScene: function(job, selector, parameters) {
+    playScene: function (job, selector, parameters) {
       if (this.theaterJob) {
         this.bad();
       }
@@ -28,22 +29,18 @@
       } finally {
         this.theaterJob = null;
       }
-    },
-    // proceed scene with installed effect of ignition
-    proceedScene: function(job, ignition) {
-      return ignition.proceed();
     }
   });
   We.have({
     agentMethods: null
   });
   We.know({
-    prepareScript: function(scriptInst, scriptMeta) {
+    prepareScript: function (scriptInst, scriptMeta) {
       We.$super.prepareScript.call(this, scriptInst, scriptMeta);
       // add keywords to define and refine agent methods
       this.getAgentMethods().prepareScript(scriptInst, scriptMeta);
     },
-    getAgentMethods: function() {
+    getAgentMethods: function () {
       if (this.agentMethods) {
         return this.agentMethods;
       }
@@ -53,7 +50,7 @@
       return this.agentMethods;
     },
     // create new agent/actor/role triple that is supervised by a manager
-    spawn: function(manager) {
+    spawn: function (manager) {
       var role = this.create.apply(this, I.slice(arguments, 1));
       var actor = I._.Theater._.Actor.create(role, manager);
       var agent = actor.getAgent();

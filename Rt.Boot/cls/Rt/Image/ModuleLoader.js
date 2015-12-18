@@ -1,4 +1,4 @@
-'Std.BaseObject'.subclass(function(I) {
+'Std.BaseObject'.subclass(function (I) {
   "use strict";
   // I describe a loader that runs all scripts of a new module.
   I.have({
@@ -20,7 +20,7 @@
     moduleSetup: null
   });
   I.know({
-    build: function(bundle, name, spec_) {
+    build: function (bundle, name, spec_) {
       I.$super.build.call(this);
       if (name) {
         // create module with given name
@@ -33,13 +33,13 @@
       }
       this.moduleSpec_ = spec_;
     },
-    unveil: function() {
+    unveil: function () {
       I.$super.unveil.call(this);
       this.newClasses = [];
       this.moduleSetup = [];
     },
     // add new class loader in current round of this module loader
-    addClassLoader: function(module, namespace, spec, instCls) {
+    addClassLoader: function (module, namespace, spec, instCls) {
       var home = instCls.getContext();
       var key = instCls.getKey();
       var loader = I._.ClassLoader.create(this, module, namespace, home, key, spec, instCls);
@@ -47,7 +47,7 @@
       return loader;
     },
     // if required, add new loader for mixed-in class in current round of this module loader
-    addMixin: function(superCls, mixin) {
+    addMixin: function (superCls, mixin) {
       var instCls = mixin.getMixedClass(superCls);
       if (instCls) {
         // mixed-in class already exists
@@ -65,14 +65,14 @@
       var self = this, loadingClasses = this.loadingClasses;
       mixin.addMixedClass(newCls);
       // run defining and refining scripts of mixin against the mixed-in class
-      mixin.enumerateSpecs(function(spec, module) {
+      mixin.enumerateSpecs(function (spec, module) {
         var loader = I._.ClassLoader.create(self, module, namespace, home, key, spec, newCls);
         loadingClasses.push(loader);
       });
       return newCls;
     },
     // add loaders for nested classes in current round of this module loader
-    addNestedLoaders: function(module, namespace, instCls, nestedSpecs_) {
+    addNestedLoaders: function (module, namespace, instCls, nestedSpecs_) {
       var home = instCls.$.getPackage(), loadingClasses = this.loadingClasses;
       for (var key in nestedSpecs_) {
         // lookup existing nested class, if any
@@ -82,16 +82,16 @@
         loadingClasses.push(loader);
       }
     },
-    addSetupRoutine: function(closure) {
+    addSetupRoutine: function (closure) {
       this.moduleSetup.push(closure);
     },
-    addSubclass: function(module, superCls, context, key, legacyConstructor) {
+    addSubclass: function (module, superCls, context, key, legacyConstructor) {
       var newCls = superCls.subclass(context, key, module, legacyConstructor);
       this.newClasses.push(newCls);
       return newCls;
     },
     // create initial class loaders for first round of this module loader
-    createLoaders: function() {
+    createLoaders: function () {
       var loaders = [], module = this.subjectModule, spec_ = this.moduleSpec_;
       var Namespace = I._.Std._.Logic._.Namespace;
       function createAncestor(home, key) {
@@ -110,12 +110,12 @@
       return loaders;
     },
     // module dependencies or undefined if dependencies cannot be resolved
-    getDependencies: function() {
+    getDependencies: function () {
       if (this.moduleDependencies) {
         return this.moduleDependencies;
       }
       var modules = [];
-      this.getDependencyNames().forEach(function(name) { modules.push(I._.Root.resolve(name)); });
+      this.getDependencyNames().forEach(function (name) { modules.push(I._.Root.resolve(name)); });
       if (modules.every(I.isDefined)) {
         // if all names resolves to logicals, the logicals must be modules
         var isModule = I._.Std._.Logic._.Module.describes.bind(I._.Std._.Logic._.Module);
@@ -132,11 +132,11 @@
       }
     },
     // names of modules on which the subject module depends
-    getDependencyNames: function() {
+    getDependencyNames: function () {
       if (this.dependencyNames) {
         return this.dependencyNames;
       }
-      var addDependency = function(dependency) { accu_[dependency] = true; };
+      var addDependency = function (dependency) { accu_[dependency] = true; };
       var accu_ = {}, spec_ = this.moduleSpec_;
       for (var name in spec_) {
         if (name) {
@@ -150,11 +150,11 @@
       this.dependencyNames = Object.keys(accu_);
       return this.dependencyNames;
     },
-    getModule: function() {
+    getModule: function () {
       return this.subjectModule;
     },
     // get names of required services
-    getRequirements: function() {
+    getRequirements: function () {
       var requirements = this.moduleRequirements;
       if (requirements) {
         return requirements;
@@ -175,7 +175,7 @@
       this.moduleRequirements = Object.keys(accu_);
       return this.moduleRequirements;
     },
-    isReady: function() {
+    isReady: function () {
       if (!this.subjectModule.isLoading()) {
         // if subject module is not loading, this loader is not ready anymore
         return false;
@@ -185,8 +185,8 @@
         // wait for creation of more modules
         return false;
       }
-      if (!dependencies.every(function(module) { return module.isLoaded(); })) {
-        if (dependencies.every(function(module) { return !module.isUnloadable(); })) {
+      if (!dependencies.every(function (module) { return module.isLoaded(); })) {
+        if (dependencies.every(function (module) { return !module.isUnloadable(); })) {
           // wait for other modules to load first
           return false;
         }
@@ -197,9 +197,9 @@
       }
       var rt = this.$rt;
       // ready when all requirements are satisfied, otherwise wait for future satisfaction
-      return this.getRequirements().every(function(service) { return rt.provides(service); });
+      return this.getRequirements().every(function (service) { return rt.provides(service); });
     },
-    loadClasses: function() {
+    loadClasses: function () {
       if (this.loadingClasses) {
         this.bad();
       }
@@ -216,7 +216,7 @@
       while (this.loadingClasses.length) {
         var round = this.loadingClasses;
         // create classes for loaders of this round until creation is no longer possible
-        while (!round.every(cannotCreate)) {}
+        while (!round.every(cannotCreate)) { }
         // fail if a loader cannot create its class
         if (!round.every(hasClass)) {
           this.bad('classes');
@@ -229,22 +229,22 @@
         round.forEach(loadClass);
       }
       // unveil new classes (parent behavior must be unveiled before children are unveiled)
-      this.newClasses.sort(compareDepth).forEach(function(instCls) {
+      this.newClasses.sort(compareDepth).forEach(function (instCls) {
         instCls.unveil();
         instCls.$.unveil();
       });
       // run setup routines of class scripts
-      this.moduleSetup.forEach(function(closure) { closure(); });
+      this.moduleSetup.forEach(function (closure) { closure(); });
       this.loadingClasses = this.newClasses = this.moduleSetup = null;
     },
     // when this loader is ready, either load module or mark module as permanently unloadable
-    loadModule: function() {
+    loadModule: function () {
       var subject = this.subjectModule;
       if (!subject.isLoading()) {
         // cannot load module twice
         this.bad();
       }
-      if (this.getDependencies().some(function(module) { return module.isUnloadable(); })) {
+      if (this.getDependencies().some(function (module) { return module.isUnloadable(); })) {
         // subject module is unloadable when some dependency is unloadable
         subject.beLoaded(false);
       } else {
@@ -262,16 +262,16 @@
           for (var serviceName in providers) {
             var serviceClass = resolveService(serviceName) || this.bad(serviceName);
             var factory = providers[serviceName];
-            var provider = factory(serviceClass, satisfactions);
+            var provider = factory.call(subject, serviceClass, satisfactions);
             if (provider) {
               rt.register(provider);
             }
           }
-          // subject module has been loaded
+          // last step installs subject module
           config.installModule(subject);
           subject.beLoaded(true);
         }
       }
     }
-  });  
+  });
 })

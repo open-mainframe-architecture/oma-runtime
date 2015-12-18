@@ -1,4 +1,4 @@
-'Trait'.subclass(function(I) {
+'Trait'.subclass(function (I) {
   "use strict";
   // I describe contextual objects that are part of a context hierarchy.
   I.have({
@@ -8,37 +8,37 @@
     contextKey: null
   });
   I.know({
-    buildContextual: function(context, key) {
+    buildContextual: function (context, key) {
       this.homeContext = context;
       this.contextKey = key;
     },
-    getContext: function() {
+    getContext: function () {
       return this.homeContext;
     },
-    getContextualDepth: function() {
+    getContextualDepth: function () {
       var home = this.homeContext;
       return this === home ? 0 : home.getContextualDepth() + 1;
     },
-    getKey: function() {
+    getKey: function () {
       return this.contextKey;
     },
-    isRootContext: function() {
+    isRootContext: function () {
       return this === this.homeContext;
     },
-    // produce resolution result of this contextual
-    resolution: I.returnThis,
+    // default contextual resolves to itself
+    resolutionResult: I.returnThis,
     // produce resolution context of this contextual that resolves more path elements
     resolutionContext: I.doNothing,
     // resolve array with path elements
-    resolve: function(path) {
+    resolve: function (path) {
       var contextual = this;
       for (var i = 0, n = path.length; contextual && i < n; ++i) {
-        var context = contextual.resolution().resolutionContext();
+        var context = contextual.resolutionResult().resolutionContext();
         // relaxed find for first path element and strict lookup for subsequent path elements
         contextual = context && (i ? context.lookup(path[i]) : context.find(path[i]));
       }
       if (contextual) {
-        return contextual.resolution();
+        return contextual.resolutionResult();
       }
     }
   });

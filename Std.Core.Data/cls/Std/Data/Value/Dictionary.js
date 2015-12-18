@@ -1,3 +1,3 @@
-'AbstractValue'.subclass(function(I) {
+'AbstractValue'.subclass(function () {
   "use strict";
 })

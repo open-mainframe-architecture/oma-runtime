@@ -1,4 +1,4 @@
-'SeqContainer+Growable'.subclass(function(I) {
+'SeqContainer+Growable'.subclass(function (I) {
   // I describe exclusive, set-like containers whose doubly-linked elements form a circular ring.
   "use strict";
   I.am({
@@ -11,15 +11,15 @@
     firstLink: null
   });
   I.know({
-    contains: function(it) {
+    contains: function (it) {
       return this.containsIndex(it);
     },
-    containsIndex: function(ix) {
+    containsIndex: function (ix) {
       return !!ix && !!ix.prevInRing && ix.linkingRing === this;
     },
-    enumerate: function(visit) {
+    enumerate: function (visit) {
       var link = this.firstLink;
-      if (link)  {
+      if (link) {
         do {
           if (visit(link, link) === false) {
             return false;
@@ -29,18 +29,18 @@
       }
       return true;
     },
-    indexOf: function(it) {
+    indexOf: function (it) {
       return this.lookup(it);
     },
-    lookup: function(ix) {
+    lookup: function (ix) {
       if (ix && ix.prevInRing && ix.linkingRing === this) {
         return ix;
       }
     },
-    size: function() {
+    size: function () {
       return this.ringLength;
     },
-    clear: function() {
+    clear: function () {
       var link = this.firstLink;
       if (link) {
         ++this.modificationCount;
@@ -54,7 +54,7 @@
       }
       return this;
     },
-    remove: function(ix) {
+    remove: function (ix) {
       var prevLink = ix && ix.prevInRing;
       if (!prevLink || ix.linkingRing !== this) {
         this.bad(ix);
@@ -69,7 +69,7 @@
       }
       return this;
     },
-    replace: function(it, ix) {
+    replace: function (it, ix) {
       if (!ix || !ix.prevInRing || ix.linkingRing !== this) {
         this.bad(ix);
       }
@@ -91,7 +91,7 @@
       }
       return this;
     },
-    store: function(it, ix) {
+    store: function (it, ix) {
       if (!it || it !== ix) {
         this.bad(ix);
       }
@@ -110,27 +110,27 @@
       }
       return this;
     },
-    walk: function() {
+    walk: function () {
       return this.walkIndices();
     },
-    firstIndex: function() {
+    firstIndex: function () {
       return this.firstLink;
     },
-    lastIndex: function() {
+    lastIndex: function () {
       // make sure first and last index are identical if ring is empty
       return this.firstLink && this.firstLink.prevInRing;
     },
-    nextIndex: function(ix) {
+    nextIndex: function (ix) {
       return ix.nextInRing;
     },
-    add: function() {
+    add: function () {
       for (var i = 0, n = arguments.length; i < n; ++i) {
         this.store(arguments[i], arguments[i]);
       }
       return this;
     },
     // rotate ring left or right
-    rotate: function(steps) {
+    rotate: function (steps) {
       var n = this.ringLength;
       if (steps && n > 1 && (steps = steps % n)) {
         if (steps > n / 2) {
@@ -146,7 +146,7 @@
           } while (--steps);
         } else {
           do {
-            link = link.prevInRing; 
+            link = link.prevInRing;
           } while (++steps);
         }
         this.firstLink = link;
@@ -155,7 +155,7 @@
     }
   });
   I.nest({
-    Link: 'Trait'.subclass(function(I) {
+    Link: 'Trait'.subclass(function (I) {
       // I describe doubly-linked elements that are contained in at most one ring.
       I.have({
         // ring container of this link
@@ -167,15 +167,15 @@
       });
       I.know({
         // initialize ring of this link without adding it to the ring 
-        buildRingLink: function(ring) {
+        buildRingLink: function (ring) {
           this.linkingRing = ring;
         },
         // get current ring of this link (or most recent ring if this link has been removed)
-        getLinkingRing: function() {
+        getLinkingRing: function () {
           return this.linkingRing;
         },
         // remove this link from current ring or leave link untouched if it's not part of a ring
-        unlinkFromRing: function() {
+        unlinkFromRing: function () {
           if (this.prevInRing) {
             this.linkingRing.remove(this);
           }

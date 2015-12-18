@@ -1,4 +1,4 @@
-'Void'.subclass(function(I) {
+'Void'.subclass(function (I) {
   "use strict";
   // I am the root class Void whose two instances are null and undefined.
   I.am({
@@ -8,7 +8,7 @@
   });
   I.share({
     // like Object.assign, although it copies all enumerable properties of source objects
-    assign: function(target) {
+    assign: function (target) {
       for (var i = 1, n = arguments.length; i < n; ++i) {
         var source = arguments[i];
         for (var key in source) {
@@ -18,44 +18,44 @@
       return target;
     },
     // runtime table creation
-    createTable: function() {
+    createTable: function () {
       return I._.Rt._.Table.create();
     },
     // define immutable property value
-    defineConstant: function(it, key, constant) {
-      var descriptor = {value: constant, configurable: false, enumerable: false, writable: false};
+    defineConstant: function (it, key, value) {
+      var descriptor = { value: value, configurable: false, enumerable: false, writable: false };
       Object.defineProperty(it, key, descriptor);
     },
     // determine most specific class that describes it
-    describe: function(it) {
+    describe: function (it) {
       return it === null || it === void 0 ? I.$ : I.$.downcast(Object(it));
     },
     // do and return nothing
-    doNothing: function() {},
+    doNothing: function () { },
     // is it null, undefined, a boolean, a number or a string?
-    isBasic: function(it) {
+    isBasic: function (it) {
       switch (typeof it) {
         case 'undefined': case 'boolean': case 'number': case 'string':
           return true;
         case 'object':
           return it === null;
       }
-      return false; 
+      return false;
     },
     // it is defined, if it's not null and not undefined
-    isDefined: function(it) {
+    isDefined: function (it) {
       return it !== null && it !== void 0;
     },
     // test property ownership when owner might not have hasOwnProperty method
-    isPropertyOwner: function(it, key) {
+    isPropertyOwner: function (it, key) {
       return it !== null && it !== void 0 && Object.prototype.hasOwnProperty.call(it, key);
     },
     // reuse closure that always returns false
-    returnFalse: function() {
+    returnFalse: function () {
       return false;
     },
     // reuse method closure that always returns receiver
-    returnThis: function() {
+    returnThis: function () {
       return this;
     },
     // slice closure arguments

@@ -1,4 +1,4 @@
-'Object'.subclass(function(I, We) {
+'Object'.subclass(function (I, We) {
   "use strict";
   // I describe objects that enrich plain JavaScript objects.
   I.know({
@@ -9,7 +9,7 @@
     // runtime system singleton
     $rt: null,
     // abort execution with a failure
-    bad: function() {
+    bad: function () {
       throw I._.Failure.create(this, I.slice(arguments));
     },
     // build this new object from construction arguments
@@ -18,35 +18,35 @@
     unveil: I.doNothing
   });
   We.know({
-    unveil: function() {
+    unveil: function () {
       We.$super.unveil.call(this);
       // every class installs $ and $_ constants for its own instances
-      this.lockInstanceConstants({$: this, $_: this._});
+      this.lockInstanceConstants({ $: this, $_: this._ });
     },
     // create constructor that initializes new instances of this concrete class
-    createConstructor: function() {
+    createConstructor: function () {
       return function BaseObject(constructionArgs) {
         I.prepareNew(this);
         I.initializeNew(this, constructionArgs);
       };
     },
-    downcast: function(object) {
+    downcast: function (object) {
       // every object knows its concrete class
       return object.$;
     }
   });
   I.share({
     // method closure for an abstract method
-    burdenSubclass: function() {
+    burdenSubclass: function () {
       this.bad('abstraction');
     },
     // invoke build and unveil methods to initialize new object
-    initializeNew: function(object, constructionArgs) {
+    initializeNew: function (object, constructionArgs) {
       object.build.apply(object, constructionArgs);
       object.unveil();
     },
     // copy uninitialized instance variables to new object
-    prepareNew: function(object) {
+    prepareNew: function (object) {
       for (var key in object) {
         // this is either a no-op or it copies default value of instance variable from prototype
         object[key] = object[key];
@@ -55,7 +55,7 @@
       Object.seal(object);
     },
     // method closure for situation that should not have occurred
-    shouldNotOccur: function() {
+    shouldNotOccur: function () {
       this.bad('state');
     }
   });

@@ -1,32 +1,32 @@
-'BaseObject+Eventful'.subclass(function(I) {
+'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
   I.have({
     entranceOpen: null
   });
   I.know({
-    build: function(initiallyOpen) {
+    build: function (initiallyOpen) {
       I.$super.build.call(this);
       this.entranceOpen = !!initiallyOpen;
     },
-    testIgnition: function() {
+    testIgnition: function () {
       return this.entranceOpen;
-    },    
-    enters: function() {
+    },
+    enter: function () {
       return this.createEvent();
     },
-    inviteEntrants: function() {
+    inviteEntrants: function () {
       this.fireAll();
     },
-    isOpen: function() {
+    isOpen: function () {
       return this.entranceOpen;
     },
-    openEntrance: function() {
+    openEntrance: function () {
       if (!this.entranceOpen) {
         this.entranceOpen = true;
         this.inviteEntrants();
       }
     },
-    shutEntrance: function() {
+    shutEntrance: function () {
       this.entranceOpen = false;
     }
   });

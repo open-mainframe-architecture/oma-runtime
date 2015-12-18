@@ -1,4 +1,4 @@
-'PackageField'.subclass(function(I) {
+'PackageField'.subclass(function (I) {
   "use strict";
   // I describes fields that resolve to another logical.
   I.am({
@@ -6,8 +6,8 @@
     Final: true
   });
   I.know({
-    resolution: function() {
-      // resolution of this alias exposes logical substance, for example a nested class
+    // resolution of this alias exposes logical substance, for example a nested class
+    resolutionResult: function () {
       return this.getSubstance();
     }
   });

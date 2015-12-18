@@ -1,4 +1,4 @@
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false

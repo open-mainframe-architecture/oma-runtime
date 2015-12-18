@@ -1,4 +1,4 @@
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(function (I) {
   "use strict";
   // I describe situations where things have gone bad.
   I.have({
@@ -10,7 +10,7 @@
     failureTrace: null
   });
   I.know({
-    build: function(origin, reasons) {
+    build: function (origin, reasons) {
       I.$super.build.call(this);
       this.failureOrigin = origin;
       this.failureReasons = reasons;
