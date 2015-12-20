@@ -226,14 +226,13 @@
     var loader = this[''];
     // obtain mutable scriptInst from this immutable
     var scriptInst = Object.getPrototypeOf(this);
-    this[''].moduleLoader.addSetupRoutine(function () {
+    loader.moduleLoader.addSetupRoutine(function () {
       // reinstall share functionality while setup routine is running
       scriptInst[''] = loader;
       scriptInst.share = scriptShare;
       closure();
-      for (var keyword in scriptInst) {
-        delete scriptInst[keyword];
-      }
+      delete scriptInst.share;
+      delete scriptInst[''];
     });
   }
 })

@@ -62,7 +62,7 @@
       }
     },
     countdown: function (count) {
-      return I.Countdown.create(count);
+      return I.Countdown.create(count || 0);
     },
     one: function (events) {
       var n = events.length;
@@ -243,12 +243,11 @@
       I.know({
         build: function (count) {
           I.$super.build.call(this);
-          // convert negative count to zero
-          this.count = count > 0 ? count : 0;
+          this.count = count;
         },
         charge: function (parent) {
           I.$super.charge.call(this, parent);
-          if (!this.count) {
+          if (this.count <= 0) {
             // zero count fires immediately upon charging
             return this;
           }

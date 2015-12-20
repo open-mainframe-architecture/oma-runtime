@@ -25,13 +25,11 @@
         .triggers(function (completions) {
           completions.enumerate(function (completion) {
             var responseBody = completion.origin().get().getBody();
-            // defer script execution in global scope to mimic browser semantics 
-            I.$.$rt.asap(function () { new GlobalEval(responseBody)(); });
+            // defer script compilation and execution in global scope to mimic browser semantics
+            I.$.$rt.asap(function () { I.compileClosure(responseBody)(); });
           });
         })
         ;
     }
   });
-  // prevent jshint from complaining about a form of eval.
-  var GlobalEval = Function;
 })

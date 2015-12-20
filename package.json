@@ -1,8 +1,8 @@
 {
   "name": "oma-runtime",
   "description": "Archive with runtime system for JavaScript environments.",
-  "main": "self",
-  "version": "1.4.0",
+  "main": "directory",
+  "version": "1.4.1",
   "keywords": [
     "JavaScript",
     "class scripts",

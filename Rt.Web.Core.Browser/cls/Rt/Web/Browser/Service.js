@@ -7,13 +7,12 @@
   I.know({
     initialize: function (agent) {
       I.$super.initialize.call(this, agent);
-      var bundle = I.$module.getBundle();
-      if (!bundle.bundleHome) {
-        // this works when bundle script is executing, but not when initialize scene is performing
-        var scripts = document.getElementsByTagName('script');
-        var bundleScript = scripts[scripts.length - 1].getAttribute('src');
-        bundle.bundleHome = bundleScript.substring(0, bundleScript.lastIndexOf('/'));
-      }
+      var scripts = document.getElementsByTagName('script');
+      var activeScript = scripts[scripts.length - 1];
+      var location = activeScript.getAttribute('src');
+      I.$module.getBundle().bundleHome = location.substring(0, location.lastIndexOf('/'));
+      // compile and execute the textual body of the script tag
+      this.$rt.asap(I.compileClosure(activeScript.textContent));
     }
   });
   I.peek({

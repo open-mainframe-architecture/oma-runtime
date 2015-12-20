@@ -5,6 +5,10 @@ function refine(I) {
     EmptyTable: I._.Rt._.Table.getPrototype(),
     // convenient access to iterator subroutines
     Loop: I._.Std._.Iterator._,
+    // compile the source of a JavaScript closure body
+    compileClosure: function (body) {
+      return new GlobalEval(body);
+    },
     // define property whose value is obtained with getter closure
     defineGetter: function (it, key, getter) {
       var descriptor = { configurable: true, enumerable: false, get: getter };
@@ -67,4 +71,6 @@ function refine(I) {
       return true;
     }
   });
+  // prevent jshint from complaining about a form of eval
+  var GlobalEval = Function;
 }
