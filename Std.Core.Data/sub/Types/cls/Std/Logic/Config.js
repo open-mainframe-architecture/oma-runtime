@@ -1,16 +1,16 @@
 'super'.subclass({
-  $data: 'Std.Data'
+  data$: 'Std.Data'
 }, function(I) {
   "use strict";
   I.access({
-    datatype: function() {
-      return this.getTable('datatype');
+    datatypes: function() {
+      return this.getTable('datatypes');
     }
   });
   I.refine({
     installModule: function(module) {
       I.$former.installModule.call(this, module);
-      I.$data.defineTypes('', this.datatype);
+      I.data$.defineTypes('', this.datatypes);
     }
   });
 })

@@ -7,16 +7,6 @@
     Service: false
   });
   I.share({
-    // like Object.assign, although it copies all enumerable properties of source objects
-    assign: function (target) {
-      for (var i = 1, n = arguments.length; i < n; ++i) {
-        var source = arguments[i];
-        for (var key in source) {
-          target[key] = source[key];
-        }
-      }
-      return target;
-    },
     // runtime table creation
     createTable: function () {
       return I._.Rt._.Table.create();

@@ -1,6 +1,6 @@
 'Collection'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for list types.
+  // I describe an AST for list types.
   I.am({
     Abstract: false
   });

@@ -1,12 +1,15 @@
-'Env.Service'.subclass(function (I) {
+'Env.Service'.subclass(['Std.Core.Runtime'], function (I) {
   "use strict";
-  /*global global*/
+  /*global global,process*/
   I.am({
     Abstract: false
   });
   I.peek({
     globalScope: function () {
       return global;
+    },
+    isSubsidiary: function() {
+      return !!process.send;
     }
   });
   I.play({

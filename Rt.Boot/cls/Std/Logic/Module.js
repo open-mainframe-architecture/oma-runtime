@@ -1,6 +1,6 @@
 'LogicalContainer'.subclass(function (I) {
   "use strict";
-  // I describe modules that contain definitions and refinements of logicals.
+  // I describe a module that contains definitions and refinements of logicals.
   I.am({
     Abstract: false,
     Final: true

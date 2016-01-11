@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of wildcard types.
+  // I describe an AST for wildcard types.
   I.am({
     Abstract: false
   });

@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of none types.
+  // I describe an AST for none types.
   I.am({
     Abstract: false
   });

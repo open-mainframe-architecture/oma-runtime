@@ -1,6 +1,6 @@
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe streams that delegate item production and consumption to closures.
+  // I describe a stream that delegate item production and consumption to closures.
   I.am({
     Abstract: false
   });

@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of number types.
+  // I describe an AST for number types.
   I.am({
     Abstract: false
   });

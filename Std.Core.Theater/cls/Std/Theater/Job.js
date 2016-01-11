@@ -1,6 +1,6 @@
 'BaseObject+Indirect+Eventful+Ring._.Link'.subclass(function (I) {
   "use strict";
-  // I describe jobs for actors that span one or more scenes.
+  // I describe a job that spans one or more actor scenes.
   I.am({
     Abstract: false,
     Final: true
@@ -162,7 +162,7 @@
   });
   I.nest({
     Ring: 'Ring'.subclass(function (I) {
-      // I describe rings that hold jobs of actors.
+      // I describe a ring that holds jobs of actors.
       I.have({
         actor: null
       });
@@ -174,7 +174,7 @@
       });
     }),
     Success: 'FullEvent'.subclass(function (I) {
-      // I describe fallible events that fire when jobs complete successfully. 
+      // I describe a fallible event that fires when a job completes successfully. 
       I.have({
         // blooper fails with unsuccessful job result
         blooper: null

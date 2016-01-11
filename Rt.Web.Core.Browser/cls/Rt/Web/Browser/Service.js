@@ -1,4 +1,4 @@
-'Env.Service'.subclass(function (I) {
+'Env.Service'.subclass(['Std.Core.Runtime', 'Std.Core.HTTP'], function (I) {
   "use strict";
   /*global window,document*/
   I.am({
@@ -8,28 +8,23 @@
     initialize: function (agent) {
       I.$super.initialize.call(this, agent);
       var scripts = document.getElementsByTagName('script');
+      // active script must be part of document source (not dynamically added to the DOM)
       var activeScript = scripts[scripts.length - 1];
-      var location = activeScript.getAttribute('src');
-      I.$module.getBundle().bundleHome = location.substring(0, location.lastIndexOf('/'));
-      // compile and execute the textual body of the script tag
+      // script locates loader of runtime bundle
+      I.$module.getBundle().bundleURL = I._.Std._.HTTP._.URL._.decode(activeScript.src);
+      // compile and execute textual body of active script tag
       this.$rt.asap(I.compileClosure(activeScript.textContent));
     }
   });
   I.peek({
     globalScope: function () {
       return window;
-    }
+    },
+    isSubsidiary: I.returnFalse
   });
   I.play({
-    initialize: function () {
-      I.$superRole.initialize.call(this);
-      var rt = this.$rt, tick = rt.getUptime();
-      return this.$rt.provide('Std.Wait.Clock').delay(0.5).triggers(function () {
-        var tack = rt.getUptime();
-        console.log(tick);
-        console.log(tack);
-        console.log(tack - tick);
-      });
+    loadScript: function (location) {
+      return this.$agent.loadScripts([location]);
     },
     loadScripts: function (locations) {
       if (locations.length) {
@@ -40,7 +35,7 @@
   });
   I.nest({
     Load: 'Std.Event'.subclass(function (I) {
-      // I describe events that fire when browsers load scripts in the document head.
+      // I describe an event that fires when browsers load scripts in the document head.
       I.have({
         locations: null,
         remaining: null,

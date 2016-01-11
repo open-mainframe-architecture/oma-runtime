@@ -27,7 +27,7 @@
       }
       var choices_ = I.createTable();
       for (var i = 0, n = enumerations.length; i < n; ++i) {
-        I.assign(choices_, enumerations[i].enumeratedChoices_);
+        Object.assign(choices_, enumerations[i].enumeratedChoices_);
       }
       return I.$.create(typespace, expression, Object.getOwnPropertyNames(choices_));
     }

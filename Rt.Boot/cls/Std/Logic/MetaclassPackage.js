@@ -1,6 +1,6 @@
 'FieldContainer'.subclass(function (I) {
   "use strict";
-  // I describe containers that hold package fields.
+  // I describe a container that holds package fields.
   I.am({
     Abstract: false,
     Final: true

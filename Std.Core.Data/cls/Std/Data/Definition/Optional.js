@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of optional types.
+  // I describe an AST for optional types.
   I.am({
     Abstract: false
   });

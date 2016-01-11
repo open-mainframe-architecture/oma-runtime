@@ -1,14 +1,14 @@
 'Object'.subclass(function (I, We) {
   "use strict";
-  // I describe objects that enrich plain JavaScript objects.
+  // I describe a standard object.
   I.know({
     // class of this object
     $: null,
-    // table with package field substances (foo.$_ is shortcut for foo.$._)
+    // table with package field substances (object.$_ is shortcut for object.$._)
     $_: null,
     // runtime system singleton
     $rt: null,
-    // abort execution with a failure
+    // abort execution with a failure from this object
     bad: function () {
       throw I._.Failure.create(this, I.slice(arguments));
     },

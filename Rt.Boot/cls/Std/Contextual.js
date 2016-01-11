@@ -1,6 +1,6 @@
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe contextual objects that are part of a context hierarchy.
+  // I describe a contextual object that's part of a context hierarchy.
   I.have({
     // context where this contextual is situated
     homeContext: null,

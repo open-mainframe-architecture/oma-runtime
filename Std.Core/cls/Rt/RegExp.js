@@ -1,4 +1,4 @@
 'Object'.subclass(RegExp, function () {
   "use strict";
-  // I describe JavaScript regular expressions.
+  // I describe a JavaScript regular expression.
 })

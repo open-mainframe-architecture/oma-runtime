@@ -1,6 +1,6 @@
 'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
-  // I describe counting semaphores.
+  // I describe a counting semaphore.
   I.am({
     Abstract: false
   });

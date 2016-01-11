@@ -1,6 +1,6 @@
 'InstanceField'.subclass(function (I) {
   "use strict";
-  // I describe fields that define immutable data for objects.
+  // I describe a field that defines immutable data for objects.
   I.am({
     Abstract: false,
     Final: true

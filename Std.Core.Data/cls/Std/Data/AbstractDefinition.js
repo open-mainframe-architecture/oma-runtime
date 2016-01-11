@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe ASTs that define type expressions and macros.
+  // I describe an AST that defines type expressions and macros.
   I.have({
     // normalized source
     sourceText: null

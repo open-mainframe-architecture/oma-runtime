@@ -1,6 +1,6 @@
 'BaseObject+Immutable'.subclass(function (I, We) {
   "use strict";
-  // I describe agents that represent actors.
+  // I describe an agent that represents an actor.
   I.am({
     Final: true
   });

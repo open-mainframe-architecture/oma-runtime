@@ -2,7 +2,6 @@ function configure(module) {
   "use strict";
   /*global process*/
   module.description = 'This module implements core services in a Node.js environment.';
-  module.depends = ['Std.Core.HTTP'];
   module.requires = {
     loose: 'Std.Supervision.Loose'
   };

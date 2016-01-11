@@ -1,6 +1,6 @@
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe objects that grow when arguments are added.
+  // I describe an object that grows when arguments are added.
   I.know({
     // accumulate all elements from iterator
     accumulate: function (iterator) {

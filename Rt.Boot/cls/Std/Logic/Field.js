@@ -1,6 +1,6 @@
 'BaseObject+Logical'.subclass(function (I) {
   "use strict";
-  // I describe all logical fields, i.e. instance and package fields.
+  // I describe an instance or package field.
   I.have({
     // substance of this field, e.g. closure of method or value of constant
     fieldSubstance: null

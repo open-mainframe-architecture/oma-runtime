@@ -1,6 +1,6 @@
 'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
-  // I describe the theater that schedules actors on stage.
+  // I describe a theater that schedules actors on stage.
   I.am({
     Abstract: false,
     Service: true

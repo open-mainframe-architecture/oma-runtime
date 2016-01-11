@@ -1,8 +1,8 @@
-'Std.BaseObject+Std.Role'.subclass({
-  $http: 'Std.HTTP.Client'
+'Std.BaseObject+Std.Manager'.subclass(['Std.Core.Theater.Management'], {
+  http$: 'Std.HTTP.Client'
 }, function (I) {
   "use strict";
-  // I describe runtime environments that embed runtime systems.
+  // I describe a runtime environment that embeds a runtime system.
   I.am({
     Service: true
   });
@@ -14,22 +14,25 @@
     }
   });
   I.peek({
-    globalScope: I.burdenSubclass
+    globalScope: I.burdenSubclass,
+    isMinified: function () {
+      return /\.min\.js$/.test(I.$module.getBundle().getLocation().getFilename());
+    },
+    isSubsidiary: I.burdenSubclass
   });
   I.play({
     initialize: I.doNothing,
+    loadScript: function (location) {
+      return I.http$.get(location).completion().triggers(function (completion) {
+        var responseBody = completion.origin().get().getBody();
+        // defer script compilation and execution to mimic semantics of browser script tags
+        I.$.$rt.asap(function () { I.compileClosure(responseBody)(); });
+      });
+    },
     loadScripts: function (locations) {
       return I.When.all(locations.map(function (location) {
-        return I.$http.get(location).completion();
-      }))
-        .triggers(function (completions) {
-          completions.enumerate(function (completion) {
-            var responseBody = completion.origin().get().getBody();
-            // defer script compilation and execution in global scope to mimic browser semantics
-            I.$.$rt.asap(function () { I.compileClosure(responseBody)(); });
-          });
-        })
-        ;
+        return this.$agent.loadScript(location).completion();
+      }, this)).triggers();
     }
   });
 })

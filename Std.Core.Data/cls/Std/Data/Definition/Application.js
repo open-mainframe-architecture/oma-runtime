@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for applications of type macros.
+  // I describe an AST for applications of type macros.
   I.am({
     Abstract: false
   });

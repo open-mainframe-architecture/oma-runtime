@@ -1,6 +1,6 @@
 'Dictionary+Logical'.subclass(function (I) {
   "use strict";
-  // I describe dictionaries that hold substances of package fields.
+  // I describe a dictionary that holds substances of package fields.
   I.am({
     Abstract: false,
     Final: true

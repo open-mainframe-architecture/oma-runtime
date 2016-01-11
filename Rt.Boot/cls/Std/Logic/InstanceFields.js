@@ -1,6 +1,6 @@
 'FieldContainer'.subclass(function (I) {
   "use strict";
-  // I describe containers that hold instance fields of objects.
+  // I describe a container that holds instance fields.
   I.am({
     Abstract: false,
     Final: true

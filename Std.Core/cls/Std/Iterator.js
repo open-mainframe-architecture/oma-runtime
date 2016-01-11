@@ -1,6 +1,6 @@
 'BaseObject+Indirect'.subclass(function (I) {
   "use strict";
-  // I describe iterators that walk until the last step has been taken.
+  // I describe an iterator that walks until the last step has been taken.
   I.am({
     Abstract: false
   });
@@ -58,7 +58,7 @@
   });
   I.nest({
     Converter: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe iterators that convert elements of another iterator.
+      // I describe an iterator that converts elements of another iterator.
       I.have({
         // conversion closure
         conversion: null,
@@ -86,7 +86,7 @@
       var Unassigned = {};
     }),
     Counter: 'Iterator'.subclass(function (I) {
-      // I describe iterators that count up or down.
+      // I describe an iterator that counts up or down.
       I.have({
         // current count
         count: 0,
@@ -114,7 +114,7 @@
       });
     }),
     Decorator: 'Iterator'.subclass(function (I) {
-      // I describe iterators that wrap another iterator.
+      // I describe an iterator that wraps another iterator.
       I.have({
         // wrapped iterator
         decoratee: null
@@ -136,7 +136,7 @@
       });
     }),
     Filter: 'Iterator._.Verifier'.subclass(function (I) {
-      // I describe iterators that filter elements from another iterator.
+      // I describe an iterator that filters elements from another iterator.
       I.have({
         // selection closure
         selection: null,
@@ -167,7 +167,7 @@
       });
     }),
     Flattener: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe iterators that flatten iterators in decoratee.
+      // I describe an iterator that flattens iterators in decoratee.
       I.have({
         // maximum depth to expand flattened iterators (or null if there is no limit)
         depth: null,
@@ -233,7 +233,7 @@
       var Unassigned = {};
     }),
     Generator: 'Iterator'.subclass(function (I) {
-      // I describe iterators that compute their elements.
+      // I describe an iterator that computes elements.
       I.have({
         // closure to compute next element
         computation: null,
@@ -269,7 +269,7 @@
       var Unassigned = {};
     }),
     Injector: 'Iterator'.subclass(function (I) {
-      // I describe iterators that compute next element with current element.
+      // I describe an iterator that computes the next element with current element.
       I.have({
         // closure to compute next element (aka generation)
         computation: null,
@@ -298,7 +298,7 @@
       });
     }),
     Verifier: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe iterators that verify a condition on every access.
+      // I describe an iterator that verifies a condition on every access.
       I.know({
         get: function () {
           this.verifyCondition();

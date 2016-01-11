@@ -1,6 +1,6 @@
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe streams that decorate other streams.
+  // I describe a stream that decorates another stream.
   I.have({
     decoratedStream: null
   });

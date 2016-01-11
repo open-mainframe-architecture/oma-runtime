@@ -30,7 +30,7 @@
       MethodNotAllowed: '405',
       MovedPermanently: '301',
       MultipleChoices: '300',
-      NoConent: '204',
+      NoContent: '204',
       NonAuthoritiveInformation: '203',
       NotAcceptable: '406',
       NotFound: '404',
@@ -54,5 +54,12 @@
       UnsupportedMediaType: '415',
       UseProxy: '305'
     }
+  });
+  I.share({
+    // derive reverse mapping from numeric code to textual status
+    CodeStatus: Object.keys(I.StatusCode).reduce(function (accu, name) {
+      accu[I.StatusCode[name]] = name;
+      return accu;
+    }, {})
   });
 })

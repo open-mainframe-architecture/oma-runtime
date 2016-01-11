@@ -1,19 +1,19 @@
 'Std.BaseObject'.subclass(function (I) {
   "use strict";
-  // I am a bundle that distributes one or more modules.
+  // I describe a bundle that distributes one or more modules.
   I.have({
-    // bundle id must be unique within a runtime image
-    bundleId: null,
+    // bundle name must be unique within a runtime image
+    bundleName: null,
     // dictionary with modules that this bundle distributes
     bundledModules: null,
-    // path to home directory of bundle
-    bundleHome: null
+    // URL of JavaScript bundle loader
+    bundleURL: null
   });
   I.know({
-    build: function (id, home) {
+    build: function (name, loaderURL) {
       I.$super.build.call(this);
-      this.bundleId = id;
-      this.bundleHome = home;
+      this.bundleName = name;
+      this.bundleURL = loaderURL;
     },
     unveil: function () {
       I.$super.unveil.call(this);
@@ -31,8 +31,17 @@
     createModuleLoader: function (name, spec_) {
       return I._.ModuleLoader.create(this, name, spec_);
     },
-    getId: function () {
-      return this.bundleId;
+    getAnonymousModule: function() {
+      return I.$module.lookup(this.bundleName);
+    },
+    getConfig: function () {
+      return this.getAnonymousModule().getConfig();
+    },
+    getName: function () {
+      return this.bundleName;
+    },
+    getLocation: function() {
+      return this.bundleURL;
     }
   });
 })

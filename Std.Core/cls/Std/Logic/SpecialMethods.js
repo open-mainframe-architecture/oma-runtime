@@ -1,6 +1,6 @@
 'Dictionary'.subclass(function (I) {
   "use strict";
-  // I describe dictionaries with instance method closures that cannot be invoked directly.
+  // I describe a dictionary with instance method closures that cannot be invoked directly.
   I.have({
     // behavior that has been enhanced with special methods
     enhancedBehavior: null

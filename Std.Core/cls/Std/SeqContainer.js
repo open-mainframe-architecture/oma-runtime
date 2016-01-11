@@ -1,6 +1,6 @@
 'Container'.subclass(function (I) {
   "use strict";
-  // I describe containers whose indices form a linear sequence.
+  // I describe a container whose indices form a linear sequence.
   I.know({
     walkUnsafe: function () {
       if (this.isEmpty()) {

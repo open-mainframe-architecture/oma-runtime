@@ -1,6 +1,6 @@
 'LogicalContainer'.subclass(function (I) {
   "use strict";
-  // I describe containers that hold classes, modules or other namespaces.
+  // I describe a container that holds classes, modules and namespaces.
   I.am({
     Abstract: false,
     Final: true

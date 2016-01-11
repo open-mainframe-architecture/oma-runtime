@@ -1,6 +1,6 @@
 'Trait'.subclass(function (I, We) {
   "use strict";
-  // I describe roles that perform asynchronous scenes with actors/agents.
+  // I describe a role that performs asynchronous scenes with actors/agents.
   I.have({
     // theater job when this role is busy performing a scene on stage 
     theaterJob: null

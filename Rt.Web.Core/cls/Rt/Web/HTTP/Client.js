@@ -1,7 +1,7 @@
-'Std.HTTP.Client'.subclass(function (I) {
+'Std.HTTP.Client'.subclass(['Std.Core.HTTP'], function (I) {
   "use strict";
   /*global XMLHttpRequest*/
-  // I describe HTTP clients that rely on XMLHttpRequest objects in browsers and web workers.
+  // I describe an HTTP client that relies on XMLHttpRequest objects in browsers and web workers.
   I.am({
     Abstract: false
   });

@@ -1,6 +1,6 @@
 'Collection'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for dictionary types.
+  // I describe an AST for dictionary types.
   I.am({
     Abstract: false
   });

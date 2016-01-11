@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe descriptors of record fields.
+  // I describe a descriptor of a record field.
   I.have({
     // expression of field type
     fieldExpression: null,

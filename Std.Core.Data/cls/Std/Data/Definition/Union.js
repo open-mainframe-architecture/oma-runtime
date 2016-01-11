@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of union types.
+  // I describe an AST for union types.
   I.am({
     Abstract: false
   });

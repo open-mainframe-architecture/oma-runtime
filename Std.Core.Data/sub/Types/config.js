@@ -1,7 +1,7 @@
 function configure(module) {
   "use strict";
   module.description = 'This module defines the standard datatypes.';
-  module.datatype = {
+  module.datatypes = {
     Any: '*?',
     Flag: '"y"?',
     Text: 'string|[string]',

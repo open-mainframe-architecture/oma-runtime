@@ -1,7 +1,7 @@
 function refine(I) {
   "use strict";
   /*global performance*/
-  // I improve runtime systems of browser and (most) web worker environments.
+  // I improve the runtime system of browser and (most) web worker environments.
   var uptimeOffset = I.$.$rt.getUptime() - performance.now() / 1000;
   I.refine({
     getUptime: function () {

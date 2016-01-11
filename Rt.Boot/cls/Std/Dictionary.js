@@ -1,6 +1,6 @@
 'Container'.subclass(function (I) {
   "use strict";
-  // I describe dictionaries backed by a table.
+  // I describe a dictionary that maps string indices to elements.
   I.am({
     Abstract: false
   });
@@ -23,33 +23,25 @@
       }
     },
     contains: function (it) {
-      var this_ = this._, keys = Object.getOwnPropertyNames(this_);
-      for (var i = 0, n = keys.length; i < n; ++i) {
-        if (this_[keys[i]] === it) {
-          return true;
-        }
-      }
-      return false;
+      var this_ = this._;
+      return Object.getOwnPropertyNames(this_).some(function (ix) {
+        return this_[ix] === it;
+      });
     },
     containsIndex: function (ix) {
       return I.isPropertyOwner(this._, ix);
     },
     enumerate: function (visit) {
-      var this_ = this._, keys = Object.getOwnPropertyNames(this_);
-      for (var i = 0, n = keys.length; i < n; ++i) {
-        if (visit(this_[keys[i]], keys[i]) === false) {
-          return false;
-        }
-      }
-      return true;
+      var this_ = this._;
+      return Object.getOwnPropertyNames(this_).every(function (ix) {
+        return visit(this_[ix], ix) !== false;
+      });
     },
     indexOf: function (it) {
-      var this_ = this._, keys = Object.getOwnPropertyNames(this_);
-      for (var i = 0, n = keys.length; i < n; ++i) {
-        if (this_[keys[i]] === it) {
-          return keys[i];
-        }
-      }
+      var this_ = this._;
+      return Object.getOwnPropertyNames(this_).find(function (ix) {
+        return this_[ix] === it;
+      });
     },
     find: function (ix) {
       // find indexed element in this dictionary or in some base dictionary
@@ -65,12 +57,12 @@
       return Object.getOwnPropertyNames(this._).length;
     },
     clear: function () {
-      var this_ = this._, keys = Object.getOwnPropertyNames(this_);
-      if (keys.length) {
+      var this_ = this._, indices = Object.getOwnPropertyNames(this_);
+      if (indices.length) {
         ++this.modificationCount;
-        for (var i = 0, n = keys.length; i < n; ++i) {
-          delete this_[keys[i]];
-        }
+        indices.forEach(function (ix) {
+          delete this_[ix];
+        });
       }
       return this;
     },

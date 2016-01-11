@@ -1,6 +1,6 @@
 'Event'.subclass(function (I) {
   "use strict";
-  // I describe blooper events that capture asynchronous failures.
+  // I describe a blooper event that captures an asynchronous failure.
   I.have({
     asynchronousFailure: null
   });

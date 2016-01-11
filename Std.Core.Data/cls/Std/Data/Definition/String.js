@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of string types.
+  // I describe an AST for string types.
   I.am({
     Abstract: false
   });

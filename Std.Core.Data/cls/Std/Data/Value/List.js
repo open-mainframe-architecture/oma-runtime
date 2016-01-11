@@ -19,13 +19,6 @@
         }
       }
       return true;
-    },
-    $update: function (table) {
-      var array = this._.slice();
-      for (var index in table) {
-        array[index - 1] = table[index];
-      }
-      return this.$type.createValue(this.$expr, array);
     }
   });
 })

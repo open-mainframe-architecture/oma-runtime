@@ -1,6 +1,6 @@
 'Object'.subclass(String, function (I) {
   "use strict";
-  // I describe JavaScript strings.
+  // I describe a JavaScript string.
   I.access({
     // logical object at path given by this string
     logic: function () {

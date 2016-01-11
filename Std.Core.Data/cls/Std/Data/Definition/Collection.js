@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for dictionary and list types.
+  // I describe an AST for dictionary and list types.
   I.have({
     elementExpression: null
   });

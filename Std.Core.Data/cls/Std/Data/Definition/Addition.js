@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for addition of record types.
+  // I describe an AST for addition of record types.
   I.am({
     Abstract: false
   });

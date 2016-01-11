@@ -1,6 +1,6 @@
 'Syntax'.subclass(function (I) {
   "use strict";
-  // I describe parsers for the type definition language.
+  // I describe a parser for the type definition language.
   I.am({
     Abstract: false
   });
@@ -135,69 +135,64 @@
   // subroutines to normalize source code
   I.share({
     unparseAddition: function (cascade) {
-      var accu = [];
-      for (var i = 0, n = cascade.length; i < n; ++i) {
-        accu[i] = cascade[i].unparse();
-      }
-      return accu.join('+');
+      return cascade.map(function (expr) { return expr.unparse(); }).join('+');
     },
     unparseAnnotations: function (annotations_) {
       if (!I.hasEnumerables(annotations_)) {
         return '';
       }
       var accu = [];
-      var names = Object.getOwnPropertyNames(annotations_).sort();
-      for (var i = 0, n = names.length; i < n; ++i) {
-        accu.push(' @', names[i], '=', annotations_[names[i]]);
-      }
+      Object.getOwnPropertyNames(annotations_).sort().forEach(function (name) {
+        accu.push(' @', name, '=', annotations_[name]);
+      });
       return accu.join('');
     },
     unparseApplication: function (name, parameters) {
-      var accu = [];
-      for (var i = 0, n = parameters.length; i < n; ++i) {
-        accu[i] = parameters[i].unparse();
-      }
-      return name + '(' + accu.join() + ')';
+      var accu = [name, '('];
+      parameters.forEach(function (expr, i) { accu.push(i ? ',' : '', expr.unparse()); });
+      accu.push(')');
+      return accu.join('');
     },
     unparseDictionary: function (expr) {
       return '<' + expr.unparse() + '>';
     },
     unparseEnumeration: function (choices) {
       var distinct_ = {};
-      for (var i = 0, n = choices.length; i < n; ++i) {
-        distinct_[choices[i]] = true;
-      }
-      return '"' + Object.getOwnPropertyNames(distinct_).sort().join('"_"') + '"';
+      choices.forEach(function (choice) { distinct_[choice] = true; });
+      var accu = [];
+      Object.getOwnPropertyNames(distinct_).sort().forEach(function (choice, i) {
+        accu.push(i ? '_"' : '"', choice, '"');
+      });
+      return accu.join('');
     },
     unparseList: function (expr) {
       return '[' + expr.unparse() + ']';
     },
     unparseMacro: function (formals, expr) {
-      var accu = [];
+      var accu = ['('];
       for (var i = 0, n = formals.length; i < n; i += 2) {
         accu.push(i ? ',' : '', formals[i], '=', formals[i + 1].unparse());
       }
-      return '(' + accu.join('') + ')' + expr.unparse();
+      accu.push(')', expr.unparse());
+      return accu.join('');
     },
     unparseOptional: function (mandatory) {
       return mandatory.unparse() + '?';
     },
     unparseRecord: function (fields_) {
-      var accu = [];
-      var names = Object.getOwnPropertyNames(fields_).sort();
-      for (var i = 0, n = names.length; i < n; ++i) {
-        var field = fields_[names[i]];
-        var fieldTypeSource = field.expression.unparse();
-        var fieldAnnotationsSource = I.unparseAnnotations(field.annotations_);
-        accu.push(i ? ',' : '', names[i], ':', fieldTypeSource, fieldAnnotationsSource);
-      }
-      return '{' + accu.join('') + '}';
+      var accu = ['{'];
+      Object.getOwnPropertyNames(fields_).sort().forEach(function (name, i) {
+        var field = fields_[name];
+        var typeSource = field.expression.unparse();
+        var annotationsSource = I.unparseAnnotations(field.annotations_);
+        accu.push(i ? ',' : '', name, ':', typeSource, annotationsSource);
+      });
+      accu.push('}');
+      return accu.join('');
     },
     unparseUnion: function (alternatives) {
       var distinct_ = {};
-      for (var i = 0, n = alternatives.length; i < n; ++i) {
-        distinct_[alternatives[i].unparse()] = true;
-      }
+      alternatives.forEach(function (expr) { distinct_[expr.unparse()] = true; });
       return Object.getOwnPropertyNames(distinct_).sort().join('|');
     }
   });

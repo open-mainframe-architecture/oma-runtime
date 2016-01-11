@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   'use strict';
-  // I describe events in a theater that can fire when they are charged.
+  // I describe an events in a theater that can fire when it's charged.
   I.have({
     // parent of this charged event, otherwise uncharged event
     parentEvent: null
@@ -80,7 +80,7 @@
   });
   I.nest({
     Composition: 'Event'.subclass(function (I) {
-      // I describe events with two or more children.
+      // I describe an event with two or more children.
       I.have({
         // array with children of this composed event
         children: null
@@ -93,7 +93,7 @@
       });
     }),
     Conjunction: 'Event._.Composition'.subclass(function (I) {
-      // I describe composed events that fire when all children have fired.
+      // I describe a composed event that fires when all children have fired.
       I.have({
         // array with events that already fired
         ignitions: null,
@@ -151,7 +151,7 @@
       });
     }),
     Disjunction: 'Event._.Composition'.subclass(function (I) {
-      // I describe composed events that fire when some child has fired.
+      // I describe a composed event that fires when some child has fired.
       I.know({
         charge: function (parent) {
           I.$super.charge.call(this, parent);
@@ -197,7 +197,7 @@
       });
     }),
     Tryout: 'Event'.subclass(function (I) {
-      // I describe events that charge fallible child events with child bloopers.
+      // I describe an events that charges a fallible child events with a child blooper.
       I.have({
         // fallible child event
         fallible: null,
@@ -236,7 +236,7 @@
       });
     }),
     Countdown: 'Event'.subclass(function (I) {
-      // I describe events that fire upwards after they've been fired a number of times.
+      // I describe an event that fires upwards after it has been fired a number of times.
       I.have({
         count: null
       });

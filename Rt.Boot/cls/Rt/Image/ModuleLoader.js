@@ -28,7 +28,7 @@
       } else {
         // create anonymous module with bundle specification below boot module
         var home = I.$module;
-        var key = bundle.getId();
+        var key = bundle.getName();
         this.subjectModule = I._.Std._.Logic._.Module.create(home, key, bundle, spec_['']);
       }
       this.moduleSpec_ = spec_;
@@ -136,8 +136,8 @@
       if (this.dependencyNames) {
         return this.dependencyNames;
       }
-      var addDependency = function (dependency) { accu_[dependency] = true; };
       var accu_ = {}, spec_ = this.moduleSpec_;
+      var addDependency = function (dependency) { accu_[dependency] = true; };
       for (var name in spec_) {
         if (name) {
           var depends = spec_[name].depends;

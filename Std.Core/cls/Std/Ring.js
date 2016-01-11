@@ -1,5 +1,5 @@
 'SeqContainer+Growable'.subclass(function (I) {
-  // I describe exclusive, set-like containers whose doubly-linked elements form a circular ring.
+  // I describe an exclusive, set-like container whose doubly-linked elements form a ring.
   "use strict";
   I.am({
     Abstract: false
@@ -156,7 +156,7 @@
   });
   I.nest({
     Link: 'Trait'.subclass(function (I) {
-      // I describe doubly-linked elements that are contained in at most one ring.
+      // I describe a doubly-linked element that is contained in at most one ring.
       I.have({
         // ring container of this link
         linkingRing: null,

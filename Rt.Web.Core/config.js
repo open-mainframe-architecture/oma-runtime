@@ -1,8 +1,7 @@
 function configure(module) {
   "use strict";
-  /*global XMLHttpRequest,MessageChannel*/
-  module.description = 'This module implements what web browsers and worker have in common.';
-  module.depends = ['Std.Core.HTTP'];
+  /*global MessageChannel,XMLHttpRequest*/
+  module.description = 'This module implements what web browsers and workers have in common.';
   module.requires = {
     loose: 'Std.Supervision.Loose'
   };
@@ -12,6 +11,6 @@ function configure(module) {
     }
   };
   module.test = function () {
-    return typeof XMLHttpRequest !== 'undefined' && typeof MessageChannel !== 'undefined';
+    return typeof MessageChannel !== 'undefined' && typeof XMLHttpRequest !== 'undefined';
   };
 }

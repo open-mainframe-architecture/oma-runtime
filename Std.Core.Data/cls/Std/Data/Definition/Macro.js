@@ -1,6 +1,6 @@
 'AbstractDefinition'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of type macros.
+  // I describe an AST for type macros.
   I.am({
     Abstract: false
   });

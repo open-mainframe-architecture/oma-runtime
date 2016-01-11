@@ -1,4 +1,4 @@
-'BaseObject+Role'.subclass(function (I) {
+'BaseObject+Role'.subclass(['Std.Core.Theater'], function (I) {
   "use strict";
   I.am({
     Abstract: false,

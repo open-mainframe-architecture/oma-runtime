@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of type references.
+  // I describe an AST for type references.
   I.am({
     Abstract: false
   });

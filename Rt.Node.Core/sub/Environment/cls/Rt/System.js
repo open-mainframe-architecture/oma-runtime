@@ -1,7 +1,7 @@
 function refine(I) {
   "use strict";
   /*global process, setImmediate*/
-  // I improve runtime systems of Node.js environments.
+  // I improve the runtime system in a Node.js environment.
   var sinceMoment = process.hrtime();
   var uptimeOffset = I.$.$rt.getUptime();
   I.refine({

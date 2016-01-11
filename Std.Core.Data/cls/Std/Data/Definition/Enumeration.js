@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for enumeration types.
+  // I describe an AST for enumeration types.
   I.am({
     Abstract: false
   });

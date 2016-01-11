@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe situations where things have gone bad.
+  // I describe a situation where things have gone bad.
   I.have({
     // object where this failure originates
     failureOrigin: null,

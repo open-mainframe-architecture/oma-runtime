@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe datatypes that know how to compose their members.
+  // I describe a datatype that knows how to compose values.
   I.am({
     Abstract: true
   });

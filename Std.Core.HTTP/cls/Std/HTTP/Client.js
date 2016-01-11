@@ -1,12 +1,12 @@
-'BaseObject+Role'.subclass(function (I) {
+'BaseObject+Role'.subclass(['Std.Core.Theater'], function (I) {
   "use strict";
-  // I describe HTTP clients that receive responses when they send out requests.
+  // I describe an HTTP client that receives responses when it sends out requests.
   I.am({
     Service: true
   });
   I.know({
-    createArrival: function (binary, request) {
-      return this.$_.Arrival.create(binary || false, request);
+    createArrival: function (request, binary) {
+      return this.$_.Arrival.create(request, binary || false);
     },
     createReceipt: function (arrival) {
       return this.$_.Receipt.create(arrival);
@@ -38,7 +38,7 @@
   });
   I.nest({
     Arrival: 'Event'.subclass(function (I) {
-      // I describe events that fire when the first chunk of an HTTP response arrives.
+      // I describe an event that fires when the first chunk of an HTTP response arrives.
       I.have({
         // HTTP request object that was sent
         request: null,
@@ -54,7 +54,7 @@
       });
     }),
     Receipt: 'Event'.subclass(function (I) {
-      // I describe events that fire when all chunks of an HTTP response have been received.
+      // I describe an event that fires when all chunks of an HTTP response have been received.
       I.have({
         // arrival event that triggered this receipt
         arrival: null,

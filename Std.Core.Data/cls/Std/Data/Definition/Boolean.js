@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs for boolean types.
+  // I describe an AST for boolean types.
   I.am({
     Abstract: false
   });

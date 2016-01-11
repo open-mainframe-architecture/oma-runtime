@@ -1,6 +1,6 @@
 'Contextual'.subclass(function (I) {
   "use strict";
-  // I describe logical objects whose definitions span one or more modules.
+  // I describe a logical object whose definitions span one or more modules.
   I.have({
     // array with modules that define this logical and all logicals inside it
     logicModules: null,
@@ -38,11 +38,8 @@
       return I._.Logic._.Namespace.describes(context) ? context : context.getNamespace();
     },
     resolve: function (path) {
-      if (typeof path === 'string') {
-        // split path string in separated elements
-        path = path.split('.');
-      }
-      return I.$super.resolve.call(this, path);
+      // split path string in separated elements
+      return I.$super.resolve.call(this, typeof path === 'string' ? path.split('.') : path);
     }
   });
 })

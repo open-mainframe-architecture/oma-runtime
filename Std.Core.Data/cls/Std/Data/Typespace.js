@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe typespaces with data types.
+  // I describe a typespace with datatypes.
   I.have({
     // dictionary to map name to a type definition
     typeDefinitions: null,
@@ -83,7 +83,7 @@
   });
   I.nest({
     Evaluator: 'BaseObject'.subclass(function (I) {
-      // I describe stack-based evaluators for type expressions.
+      // I describe a stack-based evaluator for type expressions.
       I.have({
         // typespace that owns this evaluator
         typespace: null,

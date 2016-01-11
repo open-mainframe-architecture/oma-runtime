@@ -33,7 +33,7 @@
     getTable: function (key, object) {
       var value = this.lookupDefault(arguments.length < 2 ? {} : object, key);
       if (value && typeof value === 'object' && !Array.isArray(value)) {
-        return I.assign(I.createTable(), value);
+        return Object.assign(I.createTable(), value);
       }
       this.bad('object', key);
     },

@@ -1,6 +1,6 @@
-'Role'.subclass(function (I) {
+'Role'.subclass(['Std.Core.Theater'], function (I) {
   "use strict";
-  // I describe asynchronous streams with read and/or write operations.
+  // I describe an asynchronous stream with read and/or write operations.
   I.peek({
     isReadable: I.returnFalse,
     isWritable: I.returnFalse

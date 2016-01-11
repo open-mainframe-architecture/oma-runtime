@@ -1,6 +1,6 @@
 'Contextual+Indexable'.subclass(function (I) {
   "use strict";
-  // I describe contextual objects that hold contextual objects.
+  // I describe a contextual object that indexes contextual objects.
   I.have({
     // distance of this context to the root context
     contextDepth: -1

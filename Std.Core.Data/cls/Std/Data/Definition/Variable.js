@@ -1,6 +1,6 @@
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of type variables.
+  // I describe an AST for type variables.
   I.am({
     Abstract: false
   });

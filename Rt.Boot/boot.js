@@ -1,4 +1,4 @@
-function boot(bundleId, bootName) {
+function boot(bundleName, bootModuleName) {
   "use strict";
   // runtime system boots at t0
   var t0 = new Date();
@@ -526,7 +526,7 @@ function boot(bundleId, bootName) {
       unveilLogical(behavior);
     }
     // create basic boot module
-    var bootKeys = bootName.split('.'), bootNs = createHomeContext(bootKeys);
+    var bootKeys = bootModuleName.split('.'), bootNs = createHomeContext(bootKeys);
     var Boot = bootNs._[bootKeys[bootKeys.length - 1]] = basicCreate(Module);
     Boot.homeContext = bootNs;
     Boot.contextKey = bootKeys[bootKeys.length - 1];
@@ -541,7 +541,7 @@ function boot(bundleId, bootName) {
     bootNamespaces.forEach(function (ns) { unveilLogical(ns); });
     // run setup routines and complete initialization of boot module
     bootSetup.forEach(function (closure) { closure(); });
-    Boot.assetBundle = Rt_.Image._.Bundle.create(bundleId);
+    Boot.assetBundle = Rt_.Image._.Bundle.create(bundleName);
     Boot.logicConfig = Logic_.Config.create(bootSpec_['']);
     unveilLogical(Boot);
     Boot.beLoaded(true);
@@ -552,10 +552,10 @@ function boot(bundleId, bootName) {
     bundle: function (moduleSpecs_) {
       delete this.bundle;
       // boot module creates runtime system
-      var Boot = loadBootModule(moduleSpecs_[bootName]), bundle = Boot.getBundle();
+      var Boot = loadBootModule(moduleSpecs_[bootModuleName]), bundle = Boot.getBundle();
       Boot.$rt.bootTimestamp = t0;
       // load other modules from bundle
-      delete moduleSpecs_[bootName];
+      delete moduleSpecs_[bootModuleName];
       var loading, loaders = [], names = Object.keys(moduleSpecs_), limit = names.length;
       // sorted names ensure a child module is created after its parent
       names.sort().forEach(function (name) {

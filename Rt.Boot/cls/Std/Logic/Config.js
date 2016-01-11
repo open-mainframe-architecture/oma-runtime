@@ -1,6 +1,6 @@
 'Config'.subclass(function (I) {
   "use strict";
-  // I describe module configurations.
+  // I describe a module configuration.
   I.access({
     // names of modules that must be loaded
     depends: function () {

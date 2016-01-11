@@ -1,6 +1,6 @@
 'BaseObject+Indexable'.subclass(function (I) {
   "use strict";
-  // I describe containers that store, retrieve and remove indexed elements.
+  // I describe a container that stores, retrieves and removes indexed elements.
   I.have({
     // count is increased after every modification
     modificationCount: 0

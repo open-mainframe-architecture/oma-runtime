@@ -1,6 +1,6 @@
 'Decorator'.subclass(function (I) {
   "use strict";
-  // I describe streams that convert items of other streams.
+  // I describe a stream that converts items of other streams.
   I.am({
     Abstract: false
   });

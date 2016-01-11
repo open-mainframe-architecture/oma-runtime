@@ -2,7 +2,6 @@ function configure(module) {
   "use strict";
   /*global window*/
   module.description = 'This module implements the runtime environment of a web browser.';
-  module.depends = ['Std.Core.Runtime'];
   module.requires = {
     loose: 'Std.Supervision.Loose'
   };

@@ -1,6 +1,6 @@
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe decoded URLs.
+  // I describe a decoded URL.
   I.have({
     // scheme, e.g. http or ftp or about
     urlScheme: null,
@@ -36,8 +36,10 @@
       if (this.urlScheme) {
         output.push(encodeURIComponent(this.urlScheme), ':');
       }
-      if (this.urlHost) {
+      if (this.urlScheme || this.urlHost) {
         output.push('//');
+      }
+      if (this.urlHost) {
         if (this.urlUser) {
           output.push(encodeURIComponent(this.urlUser), '@');
         }
@@ -75,6 +77,10 @@
         }
       }
       return true;
+    },
+    getFilename: function () {
+      var path = this.urlPath;
+      return path ? path[path.length - 1] : '';
     },
     getFragment: function () {
       return this.urlFragment;

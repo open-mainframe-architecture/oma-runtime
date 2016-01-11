@@ -1,6 +1,6 @@
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe eventful objects that implement a strategy to create and to manage events.
+  // I describe an eventful object that implements a strategy to create and to manage events.
   I.have({
     // null, false or array with events
     chargedEvents: null

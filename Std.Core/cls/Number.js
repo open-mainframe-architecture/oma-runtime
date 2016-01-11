@@ -1,4 +1,4 @@
 'Object'.subclass(Number, function () {
   "use strict";
-  // I describe JavaScript numbers.
+  // I describe a JavaScript number.
 })

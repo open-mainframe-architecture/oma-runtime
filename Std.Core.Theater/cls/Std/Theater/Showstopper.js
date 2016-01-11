@@ -1,6 +1,6 @@
 'Event'.subclass(function (I) {
   "use strict";
-  // I describe root events that block jobs.
+  // I describe a root event that blocks a job.
   I.am({
     Final: true
   });

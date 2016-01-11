@@ -1,6 +1,6 @@
 'Decorator'.subclass(function (I) {
   "use strict";
-  // I describe streams that filter items of other streams.
+  // I describe a streams that filters items of another stream.
   I.am({
     Abstract: false
   });

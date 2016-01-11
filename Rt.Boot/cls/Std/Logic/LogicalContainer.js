@@ -1,6 +1,6 @@
 'Dictionary+Logical+Context'.subclass(function (I) {
   "use strict";
-  // I describe containers that hold logical objects.
+  // I describe a container that holds logical objects.
   I.know({
     build: function (baseDictionary, homeContext, contextKey, module) {
       I.$super.build.call(this, baseDictionary);

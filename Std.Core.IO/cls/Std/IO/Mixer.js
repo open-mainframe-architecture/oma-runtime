@@ -1,6 +1,6 @@
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe streams whose input and/or output sides delegate to other streams.
+  // I describe a stream whose input and/or output sides delegate to other streams.
   I.am({
     Abstract: false
   });

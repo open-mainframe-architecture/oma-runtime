@@ -1,6 +1,6 @@
 'AbstractDefinition'.subclass(function (I) {
   "use strict";
-  // I describe ASTs of type expressions that can be evaluated, unless they contain variables.
+  // I describe an AST for type expressions that can be evaluated, unless they contain variables.
   I.know({
     // get mandatory expression if this expression is optional, otherwise get this expression
     asMandatory: I.returnThis,

@@ -1,6 +1,6 @@
 'BaseObject+Indirect+Eventful'.subclass(function (I) {
   "use strict";
-  // I describe clocks that tick independently from real-time. 
+  // I describe a clock that ticks independently from real-time. 
   I.am({
     Service: true
   });

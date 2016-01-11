@@ -6,8 +6,6 @@
     Service: true
   });
   I.have({
-    // expose the table of the root namespace for convenient access
-    _: null,
     // moment when this runtime was created
     bootTimestamp: null,
     // dictionary with service providers
@@ -16,7 +14,6 @@
   I.know({
     unveil: function () {
       I.$super.unveil.call(this);
-      this._ = I._.Root._;
       this.serviceRegistry = I._.Std._.Dictionary.create();
       this.register(this);
     },

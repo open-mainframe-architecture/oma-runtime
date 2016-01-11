@@ -1,6 +1,6 @@
 'Event'.subclass(function (I) {
   "use strict";
-  // I describe base events with eventful origins.
+  // I describe an event with an eventful origin.
   I.have({
     // origin from which this event was created
     eventfulOrigin: null

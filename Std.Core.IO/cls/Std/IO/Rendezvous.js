@@ -1,6 +1,6 @@
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe streams that synchronize readers and writers.
+  // I describe a stream that synchronizes the reader and writer.
   I.am({
     Abstract: false
   });

@@ -1,6 +1,6 @@
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe streams that buffer written items until the capacity has been exhausted.
+  // I describe a stream that buffers written items until the capacity has been exhausted.
   I.am({
     Abstract: false
   });

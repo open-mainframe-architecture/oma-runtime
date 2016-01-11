@@ -1,7 +1,7 @@
-'Std.HTTP.Client'.subclass(function (I) {
+'Std.HTTP.Client'.subclass(['Std.Core.HTTP'], function (I) {
   "use strict";
   /*global require, Buffer*/
-  // I describe HTTP clients that rely on standard Node.js facilities.
+  // I describe an HTTP client that relies on standard Node.js facilities.
   I.am({
     Abstract: false
   });
@@ -72,7 +72,7 @@
             nodeResponse.setEncoding('utf8');
           }
           nodeResponse
-            .once('data', chunks.push.bind(chunks))
+            .on('data', chunks.push.bind(chunks))
             .once('end', this.succeed.bind(this))
             .once('error', this.fail.bind(this, blooper))
           ;
@@ -86,13 +86,15 @@
           blooper.fail(this.arrival.nodeResponse, error.message);
         },
         succeed: function () {
-          var arrival = this.arrival, chunks = this.chunks;
-          var nodeResponse = arrival.nodeResponse, binary = arrival.binary;
-          var code = nodeResponse.statusCode, status = nodeResponse.statusMessage;
-          var headers = nodeResponse.headers;
-          var body = binary ? new Uint8Array(Buffer.concat(chunks)).buffer : chunks.join('');
-          this.response = I._.Std._.HTTP._.Response.create(status, code, headers, body);
-          this.fire();
+          if (!this.response) {
+            var arrival = this.arrival, chunks = this.chunks;
+            var nodeResponse = arrival.nodeResponse, binary = arrival.binary;
+            var code = nodeResponse.statusCode, status = nodeResponse.statusMessage;
+            var headers = nodeResponse.headers;
+            var body = binary ? new Uint8Array(Buffer.concat(chunks)).buffer : chunks.join('');
+            this.response = I._.Std._.HTTP._.Response.create(status, code, headers, body);
+            this.fire();
+          }
         }
       });
     })

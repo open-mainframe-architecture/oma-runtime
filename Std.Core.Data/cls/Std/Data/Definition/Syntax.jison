@@ -21,7 +21,7 @@ I.know({
 });
 %}
 %lex
-CHOICE         "\""[0-9A-Za-z\.\-+_$]+"\""
+CHOICE         "\""[0-9A-Za-z\.\-+_$!]+"\""
 FIELD          [a-z][0-9A-Za-z]*
 NAME           [A-Z][0-9A-Za-z]+("."[A-Z][0-9A-Za-z]+)*
 VARIABLE       [A-Z]

@@ -1,4 +1,4 @@
 'Object'.subclass(Boolean, function () {
   "use strict";
-  // I describe JavaScript booleans.
+  // I describe a JavaScript boolean.
 })
