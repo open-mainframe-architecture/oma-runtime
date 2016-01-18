@@ -5,6 +5,14 @@ function refine(I) {
     EmptyTable: I._.Rt._.Table.getPrototype(),
     // convenient access to iterator subroutines
     Loop: I._.Std._.Iterator._,
+    // collect distinct characters in table
+    charset: function (characters) {
+      var table = I.createTable();
+      for (var i = 0, n = characters.length; i < n; ++i) {
+        table[characters.charAt(i)] = true;
+      }
+      return table;
+    },
     // compile the source of a JavaScript closure body
     compileClosure: function (body) {
       return new GlobalEval(body);

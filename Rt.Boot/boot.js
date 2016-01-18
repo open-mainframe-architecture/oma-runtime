@@ -5,7 +5,7 @@ function boot(bundleName, bootModuleName) {
   // create subclass method for strings, e.g. 'Std.BaseObject'.subclass(function(I) { ... })
   Object.defineProperty(String.prototype, 'subclass', {
     configurable: true, enumerable: false, writable: false, value: function () {
-      var n = arguments.length - 1, clsSpec = { $super: this, script: arguments[n] };
+      var n = arguments.length - 1, clsSpec = { super: this, script: arguments[n] };
       for (var i = 0; i < n; ++i) {
         var argument = arguments[i];
         if (typeof argument === 'function') {
@@ -89,9 +89,9 @@ function boot(bundleName, bootModuleName) {
       return instCls;
     }
     // setup initial class hierarchy with bootstrapped prototypes
-    var Void = cls(Root_, 'Void');
-    cls(Rt_, 'Table', Void, protoTable);
-    var Pojo = cls(Root_, 'Object', Void, protoObject, Object);
+    var Any = cls(Root_, 'Any');
+    cls(Rt_, 'Table', Any, protoTable);
+    var Pojo = cls(Root_, 'Object', Any, protoObject, Object);
     var BaseObject = cls(Std_, 'BaseObject', Pojo, protoBaseObject);
     var Trait = cls(Std_, 'Trait', BaseObject);
     var Ix = cls(Std_, 'Indexable', Trait);
@@ -168,7 +168,7 @@ function boot(bundleName, bootModuleName) {
       }
     }
     // bottom-up construction of metaclass hierarchy
-    enumerateBehaviors(Void, true, true, function (instCls) {
+    enumerateBehaviors(Any, true, true, function (instCls) {
       var metacls = instCls.$;
       var parentBehavior = instCls.parentBehavior;
       // metaclass hierarchy mirrors class hierarchy, except in the root class
@@ -322,7 +322,7 @@ function boot(bundleName, bootModuleName) {
         this.subject = subject;
       }
       this.spec = clsSpec;
-      this.superParts = clsSpec.$super.split('+');
+      this.superParts = clsSpec.super.split('+');
     }
     // create mixed-in class and register appropriate class loader
     function addMixin(superCls, traitCls, bootSpec_, bootLoading_) {
@@ -533,8 +533,8 @@ function boot(bundleName, bootModuleName) {
     // run class scripts, but not the setup routines
     loadClasses(Boot, bootSpec_);
     // unveil all objects built by boot module so far
-    Void.inheritanceDepth = -1;
-    enumerateBehaviors(Void, true, false, unveilBehavior);
+    Any.inheritanceDepth = -1;
+    enumerateBehaviors(Any, true, false, unveilBehavior);
     enumerateBehaviors(Class, false, false, function (metacls) {
       metacls.behaviorPackage.enumerate(unveilLogical);
     });

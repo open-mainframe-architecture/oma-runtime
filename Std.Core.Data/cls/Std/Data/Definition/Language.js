@@ -91,10 +91,6 @@
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Macro.create(source, formals, expression));
     },
-    createName: function (name) {
-      var cached = this.definitionCache.lookup(name);
-      return cached || this.cache(I._.Reference.create(name));
-    },
     createNone: function () {
       return this.noneExpression;
     },
@@ -110,6 +106,10 @@
       var source = I.unparseRecord(fields_);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Record.create(source, fields_));
+    },
+    createReference: function (name) {
+      var cached = this.definitionCache.lookup(name);
+      return cached || this.cache(I._.Reference.create(name));
     },
     createString: function () {
       return this.stringExpression;
@@ -130,70 +130,6 @@
     cache: function (definition) {
       this.definitionCache.store(definition, definition.unparse());
       return definition;
-    }
-  });
-  // subroutines to normalize source code
-  I.share({
-    unparseAddition: function (cascade) {
-      return cascade.map(function (expr) { return expr.unparse(); }).join('+');
-    },
-    unparseAnnotations: function (annotations_) {
-      if (!I.hasEnumerables(annotations_)) {
-        return '';
-      }
-      var accu = [];
-      Object.getOwnPropertyNames(annotations_).sort().forEach(function (name) {
-        accu.push(' @', name, '=', annotations_[name]);
-      });
-      return accu.join('');
-    },
-    unparseApplication: function (name, parameters) {
-      var accu = [name, '('];
-      parameters.forEach(function (expr, i) { accu.push(i ? ',' : '', expr.unparse()); });
-      accu.push(')');
-      return accu.join('');
-    },
-    unparseDictionary: function (expr) {
-      return '<' + expr.unparse() + '>';
-    },
-    unparseEnumeration: function (choices) {
-      var distinct_ = {};
-      choices.forEach(function (choice) { distinct_[choice] = true; });
-      var accu = [];
-      Object.getOwnPropertyNames(distinct_).sort().forEach(function (choice, i) {
-        accu.push(i ? '_"' : '"', choice, '"');
-      });
-      return accu.join('');
-    },
-    unparseList: function (expr) {
-      return '[' + expr.unparse() + ']';
-    },
-    unparseMacro: function (formals, expr) {
-      var accu = ['('];
-      for (var i = 0, n = formals.length; i < n; i += 2) {
-        accu.push(i ? ',' : '', formals[i], '=', formals[i + 1].unparse());
-      }
-      accu.push(')', expr.unparse());
-      return accu.join('');
-    },
-    unparseOptional: function (mandatory) {
-      return mandatory.unparse() + '?';
-    },
-    unparseRecord: function (fields_) {
-      var accu = ['{'];
-      Object.getOwnPropertyNames(fields_).sort().forEach(function (name, i) {
-        var field = fields_[name];
-        var typeSource = field.expression.unparse();
-        var annotationsSource = I.unparseAnnotations(field.annotations_);
-        accu.push(i ? ',' : '', name, ':', typeSource, annotationsSource);
-      });
-      accu.push('}');
-      return accu.join('');
-    },
-    unparseUnion: function (alternatives) {
-      var distinct_ = {};
-      alternatives.forEach(function (expr) { distinct_[expr.unparse()] = true; });
-      return Object.getOwnPropertyNames(distinct_).sort().join('|');
     }
   });
 })

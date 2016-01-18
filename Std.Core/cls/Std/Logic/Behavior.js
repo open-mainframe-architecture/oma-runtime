@@ -14,9 +14,11 @@ function refine(I) {
       });
     },
     // create iterator that walks over offspring of this behavior, either top-down or bottom-up
-    walkOffspring: function (bottomUp) {
+    walkOffspring: function (bottomUp, skipRoot) {
       var direction = bottomUp ? bottomUpOffspring : topDownOffspring;
-      return I.Loop.flatten(I.Loop.collect(this.walkChildren(), direction));
+      // by default, walk over this behavior as the tree root, otherwise walk over child forest
+      var roots = skipRoot ? this.childBehaviors : [this];
+      return I.Loop.flatten(I.Loop.collect(roots.walk(), direction));
     }
   });
   function bottomUpOffspring(behavior) {

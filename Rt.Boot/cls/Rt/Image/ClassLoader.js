@@ -12,7 +12,7 @@
     classContext: null,
     // key in context of new class
     classKey: null,
-    // class specification with $super, script, legacy, requires and depends.
+    // class specification with super, script, legacy, requires and depends.
     classSpec: null,
     // existing or new class of this loader
     classSubject: null,
@@ -48,10 +48,10 @@
       var key = this.classKey;
       var spec = this.classSpec;
       if (!this.superParts) {
-        if (typeof spec.$super !== 'string') {
+        if (typeof spec.super !== 'string') {
           this.bad('super');
         }
-        this.superParts = spec.$super.split('+');
+        this.superParts = spec.super.split('+');
       }
       var i, superParts = this.superParts, n = superParts.length;
       for (i = 0; i < n; ++i) {
@@ -107,9 +107,9 @@
       if (typeof script !== 'function') {
         this.bad('script');
       }
-      if (spec.$super && spec.$super !== 'super' && instCls.getModule() !== this.classModule) {
-        // verify superfluous $super expression of class refinement
-        var superCls = this.classNamespace.evaluateClassExpression(spec.$super);
+      if (spec.super && spec.super !== 'super' && instCls.getModule() !== this.classModule) {
+        // verify superfluous super expression of class refinement
+        var superCls = this.classNamespace.evaluateClassExpression(spec.super);
         if (superCls !== instCls.getParentBehavior()) {
           this.bad('super');
         }
