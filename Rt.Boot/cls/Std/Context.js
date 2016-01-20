@@ -1,11 +1,13 @@
+//@ I describe a contextual object that indexes contextual objects.
 'Contextual+Indexable'.subclass(function (I) {
   "use strict";
-  // I describe a contextual object that indexes contextual objects.
   I.have({
-    // distance of this context to the root context
+    //@{integer} Discrete distance of this context to the root context.
     contextDepth: -1
   });
   I.know({
+    //@ Get distance to root context.
+    //@return {integer} number of ancestors on path to root
     getContextualDepth: function () {
       if (this.contextDepth >= 0) {
         // cached depth
@@ -15,8 +17,12 @@
       this.contextDepth = I.$super.getContextualDepth.call(this);
       return this.contextDepth;
     },
+    //@return this context
     resolutionContext: I.returnThis,
-    // create ancestor contexts from this context to the context where the keys lead
+    //@ Create ancestor contexts from this context to the context where the keys lead.
+    //@param keys {[string]} path to context
+    //@param factory {Rt.Closure} factory closure creates a new context if necessary
+    //@return {Std.Context} existing or new context
     makeContexts: function (keys, factory) {
       var context = this;
       for (var i = 0, n = keys.length; i < n; ++i) {

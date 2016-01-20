@@ -1,20 +1,28 @@
+//@ I describe a standard object.
 'Object'.subclass(function (I, We) {
   "use strict";
-  // I describe a standard object.
   I.know({
-    // class of this object
+    //@ Class of this object.
+    //@type {Std.Logic.Behavior} class or metaclass if this receiver is a class object
     $: null,
-    // table with package field substances (object.$_ is shortcut for object.$._)
+    //@ Table with package field substances.
+    //@type {Rt.Table} table with package constants and subroutines
     $_: null,
-    // runtime system singleton
+    //@ Runtime system singleton.
+    //@type {Rt.System} runtime system
     $rt: null,
-    // abort execution with a failure from this object
+    //@ Abort execution with a failure from this object.
+    //@param ... {Any} failure reasons
+    //@return never
     bad: function () {
       throw I._.Failure.create(this, I.slice(arguments));
     },
-    // build this new object from construction arguments
+    //@ Build this new object from construction arguments.
+    //@param ... {Any} construction arguments
+    //@return nothing
     build: I.doNothing,
-    // unveil this new object after construction to complete initialization
+    //@ Unveil this new object after construction to complete initialization.
+    //@return nothing
     unveil: I.doNothing
   });
   We.know({
@@ -23,8 +31,8 @@
       // every class installs $ and $_ constants for its own instances
       this.lockInstanceConstants({ $: this, $_: this._ });
     },
-    // create constructor that initializes new instances of this concrete class
     createConstructor: function () {
+      // constructor initializes new instances of this concrete class
       return function BaseObject(constructionArgs) {
         I.prepareNew(this);
         I.initializeNew(this, constructionArgs);
@@ -36,16 +44,22 @@
     }
   });
   I.share({
-    // method closure for an abstract method
+    //@ An abstract method burdens a subclass with the implementation.
+    //@return never
     burdenSubclass: function () {
       this.bad('abstraction');
     },
-    // invoke build and unveil methods to initialize new object
+    //@ Invoke build and unveil methods to initialize new object.
+    //@param object {Std.BaseObject} new object
+    //@param constantArgs {[Any]} construction arguments
+    //@return nothing
     initializeNew: function (object, constructionArgs) {
       object.build.apply(object, constructionArgs);
       object.unveil();
     },
-    // copy uninitialized instance variables to new object
+    //@ Copy uninitialized instance variables to new object.
+    //@param object {Std.BaseObject} new object
+    //@return nothing
     prepareNew: function (object) {
       for (var key in object) {
         // this is either a no-op or it copies default value of instance variable from prototype
@@ -54,7 +68,8 @@
       // seal new object after ownership of instance variables has been established
       Object.seal(object);
     },
-    // method closure for situation that should not have occurred
+    //@ A method should never be invoked.
+    //@return never
     shouldNotOccur: function () {
       this.bad('state');
     }

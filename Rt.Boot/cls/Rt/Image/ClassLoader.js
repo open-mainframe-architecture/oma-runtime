@@ -223,16 +223,15 @@
     loader.moduleLoader.addNestedLoaders(module, loader.classNamespace, this.$, nestedSpecs_);
   }
   function scriptSetup(closure) { //jshint validthis:true
-    var loader = this[''];
-    // obtain mutable scriptInst from this immutable
-    var scriptInst = Object.getPrototypeOf(this);
-    loader.moduleLoader.addSetupRoutine(function () {
-      // reinstall share functionality while setup routine is running
-      scriptInst[''] = loader;
-      scriptInst.share = scriptShare;
-      closure();
-      delete scriptInst.share;
-      delete scriptInst[''];
+    var loader = this[''], instCls = this.$;
+    loader.moduleLoader.addSetupRoutine(typeof closure === 'function' ? closure : function () {
+      // add more package constants and subroutines after instance class has been unveiled
+      var fields_ = {};
+      for (var key in closure) {
+        var factory = closure[key];
+        fields_[key] = factory();
+      }
+      instCls.addPackageFields(loader.classModule, fields_);
     });
   }
 })

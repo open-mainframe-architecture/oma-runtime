@@ -1,35 +1,51 @@
+//@ I describe a contextual object that's part of a context hierarchy.
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe a contextual object that's part of a context hierarchy.
   I.have({
-    // context where this contextual is situated
+    //@{Std.Context} Context where this contextual is situated.
     homeContext: null,
-    // unique key of this contextual within the home context
+    //@{string} Unique key of this contextual within the home context.
     contextKey: null
   });
   I.know({
+    //@ Build new contextual.
+    //@param context {Std.Context} context of this contextual
+    //@param key {string} key of this contextual
+    //@return nothing
     buildContextual: function (context, key) {
       this.homeContext = context;
       this.contextKey = key;
     },
+    //@ Get context where this contextual resides.
+    //@return {Std.Context} a context
     getContext: function () {
       return this.homeContext;
     },
+    //@ Get distance to root context.
+    //@return {integer} distance to root context
     getContextualDepth: function () {
       var home = this.homeContext;
       return this === home ? 0 : home.getContextualDepth() + 1;
     },
+    //@ Get unique key of this contextual in the context.
+    //@return {string} key of contextual
     getKey: function () {
       return this.contextKey;
     },
+    //@ Is this a root context? A root context is its own parent context.
+    //@return {boolean} true if this is a root, otherwise false
     isRootContext: function () {
       return this === this.homeContext;
     },
-    // default contextual resolves to itself
+    //@ By default, a contextual resolves to itself.
+    //@return {Std.Contextual} resolved contextual
     resolutionResult: I.returnThis,
-    // produce resolution context of this contextual that resolves more path elements
+    //@ Produce resolution context of this contextual that resolves more path elements.
+    //@return {Std.Context?} resolution context if available
     resolutionContext: I.doNothing,
-    // resolve array with path elements
+    //@ Resolve array with path elements.
+    //@param path {[string]} path elements
+    //@return {Std.Contextual?} resolved contextual or nothing
     resolve: function (path) {
       var contextual = this;
       for (var i = 0, n = path.length; contextual && i < n; ++i) {

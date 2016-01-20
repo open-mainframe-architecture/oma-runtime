@@ -1,13 +1,12 @@
 //@ I am the root class with two instances: null and undefined.
-/*@
-This is the second line.
-*/
 'Any'.subclass(function (I) {
   "use strict";
   I.am({
-    //@ I am abstract despite my primitive instances.
+    //@ I am abstract despite my primitive, and mostly useless, instances.
     Abstract: true,
+    //@ I am not final, because I have several subclasses.
     Final: false,
+    //@ I am not a runtime service.
     Service: false
   });
   I.share({
@@ -18,7 +17,7 @@ This is the second line.
     },
     //@ Define an immutable property value of it.
     //@param it {Object} JavaScript object
-    //@param key {String} property name
+    //@param key {string} property name
     //@param value {Any} property value
     //@return nothing
     defineConstant: function (it, key, value) {
@@ -36,7 +35,7 @@ This is the second line.
     doNothing: function () { },
     //@ Is it null, undefined, a boolean, a number or a string?
     //@param it {Any} JavaScript object or value
-    //@return {Boolean} true if it is a basic thing, otherwise false
+    //@return {boolean} true if it is a basic thing, otherwise false
     isBasic: function (it) {
       switch (typeof it) {
         case 'undefined': case 'boolean': case 'number': case 'string':
@@ -48,19 +47,19 @@ This is the second line.
     },
     //@ Is it not null and not undefined?
     //@param it {Any} JavaScript object or value
-    //@return {Boolean} true if it is defined (not null and not undefined), otherwise false
+    //@return {boolean} true if it is defined (not null and not undefined), otherwise false
     isDefined: function (it) {
       return it !== null && it !== void 0;
     },
     //@ Test whether it owns a property, even when it does not have a hasOwnProperty method.
     //@param it {Any} JavaScript object or value
-    //@param key {String} property name
-    //@return {Boolean} true if it owns the named property, otherwise false
+    //@param key {string} property name
+    //@return {boolean} true if it owns the named property, otherwise false
     isPropertyOwner: function (it, key) {
       return it !== null && it !== void 0 && Object.prototype.hasOwnProperty.call(it, key);
     },
     //@ Always return false.
-    //@return {Boolean} false
+    //@return {boolean} false
     returnFalse: function () {
       return false;
     },
@@ -69,11 +68,11 @@ This is the second line.
     returnThis: function () {
       return this;
     },
-    //@ Slice array-like object, e.g. arguments, into proper array.
-    //@param arr {Any} array-like object
-    //@param begin {Number} offset where to start slicing (default 0)
-    //@param end {Number} first offset not included in slice (default arr.length)
-    //@return {Array} new array
+    //@ Slice elements of array-like object, e.g. arguments.
+    //@param array {Any} array-like object
+    //@param begin {integer?} offset where to start slicing (default 0)
+    //@param end {integer?} first offset not included in slice (default array.length)
+    //@return {Array} new array with sliced elements
     slice: Function.prototype.call.bind(Array.prototype.slice)
   });
 })

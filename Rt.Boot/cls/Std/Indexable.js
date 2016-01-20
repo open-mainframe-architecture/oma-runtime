@@ -1,6 +1,6 @@
+//@ I describe an object that can enumerate indexed elements.
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe an object that can enumerate indexed elements.
   I.know({
     // test whether it is indexed by this indexable
     contains: function (it) {

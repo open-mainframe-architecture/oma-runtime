@@ -317,10 +317,10 @@
       });
     })
   });
-  I.setup(function () {
-    I.share({
-      // create empty iterator after Iterator class has been unveiled
-      Empty: I.$.create()
-    });
+  I.setup({
+    // create empty iterator after Iterator class has been unveiled
+    Empty: function() {
+      return I.$.create();
+    }
   });
 })

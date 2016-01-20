@@ -17,10 +17,10 @@
       return this.sourceText;
     }
   });
-  I.setup(function () {
+  I.setup({
     // share parser for type definition language, which caches all ASTs
-    I.share({
-      Cache: I._.Definition._.Language.create()
-    });
+    Cache: function () {
+      return I._.Definition._.Language.create();
+    }
   });
 })
