@@ -1,10 +1,13 @@
+//@ An AST for a dictionary or list type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for dictionary and list types.
   I.have({
+    //@{Std.Data.Definition.Expression} expression for element type
     elementExpression: null
   });
   I.know({
+    //@param source {string} normalized source of macro application
+    //@param expression {Std.Data.Definition.Expression} element type expression
     build: function (source, expression) {
       I.$super.build.call(this, source);
       this.elementExpression = expression;

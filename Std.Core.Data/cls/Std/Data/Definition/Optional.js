@@ -1,17 +1,21 @@
+//@ An AST for an optional type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for optional types.
   I.am({
     Abstract: false
   });
   I.have({
+    //@{Std.Data.Definition.Expression} expression for mandatory type
     mandatoryExpression: null
   });
   I.know({
+    //@param source {string} source text
+    //@param expression {Std.Data.Definition.Expression} mandatory type
     build: function (source, expression) {
       I.$super.build.call(this, source);
       this.mandatoryExpression = expression;
     },
+    //@return {Std.Data.Definition.Expression} expression for mandatory type
     asMandatory: function () {
       return this.mandatoryExpression;
     },
@@ -24,7 +28,7 @@
     substitute: function (variables_) {
       var expression = this.mandatoryExpression;
       var sub = expression.substitute(variables_);
-      return expression === sub ? this : I.Cache.createOptional(sub);
+      return expression === sub ? this : I.AST.createOptional(sub);
     }
   });
 })

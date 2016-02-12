@@ -1,11 +1,13 @@
 function refine(I) {
   "use strict";
   I.share({
-    // immutable, empty table is prototype for all tables
+    //@{Rt.Table} an immutable, empty table is the prototype of all tables
     EmptyTable: I._.Rt._.Table.getPrototype(),
-    // convenient access to iterator subroutines
+    //@{Rt.Table} convenient access to subroutines from Std.Iterator package
     Loop: I._.Std._.Iterator._,
-    // collect distinct characters in table
+    //@ Collect distinct characters in table.
+    //@param characters {string} string with characters
+    //@return {Rt.Table} table that maps distinct characters to true
     charset: function (characters) {
       var table = I.createTable();
       for (var i = 0, n = characters.length; i < n; ++i) {
@@ -13,16 +15,25 @@ function refine(I) {
       }
       return table;
     },
-    // compile the source of a JavaScript closure body
+    //@ Compile the source of a JavaScript closure body.
+    //@param body {string} source code of closure body
+    //@return {Rt.Closure} parameterless closure with compiled body
     compileClosure: function (body) {
       return new GlobalEval(body);
     },
-    // define property whose value is obtained with getter closure
+    //@ Define property whose value is obtained with getter closure.
+    //@param it {Any} JavaScript object
+    //@param key {string} property name
+    //@param getter {Rt.Closure} getter closure
+    //@return nothing
     defineGetter: function (it, key, getter) {
       var descriptor = { configurable: true, enumerable: false, get: getter };
       Object.defineProperty(it, key, descriptor);
     },
-    // enumerate JavaScript properties until visit returns false
+    //@ Enumerate JavaScript properties until visit returns false.
+    //@param it {Any} JavaScript object
+    //@param visit {Rt.Closure} called with property value and name
+    //@return {boolean} false if some visit returned false, otherwise true
     enumerate: function (it, visit) {
       for (var key in it) {
         if (visit(it[key], key) === false) {
@@ -31,26 +42,40 @@ function refine(I) {
       }
       return true;
     },
-    // does it have at least one enumerable property?
+    //@ Does it have at least one enumerable property?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if at least one property is enumerable, otherwise false
     hasEnumerables: function (it) {
       for (var ignore in it) { //jshint ignore:line
         return true;
       }
       return false;
     },
-    // is it an opaque ArrayBuffer or a typed view on an ArrayBuffer?
+    //@ Is it an opaque ArrayBuffer or a typed view on an ArrayBuffer?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it a buffer or buffer view, otherwise false
     isBinary: function (it) {
       return it instanceof ArrayBuffer || ArrayBuffer.isView(it);
     },
-    // is it a runtime exception or a standard failure?
+    //@ Is it a runtime exception or a standard failure?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it is an exception or failure, otherwise false
     isError: function (it) {
       return I._.Rt._.Exception.describes(it) || I._.Std._.Failure.describes(it);
     },
-    // is it a finite number? this excludes NaN and Infinity from the number type
+    //@ Is it a finite number? NaN and Infinity are not finite numbers.
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it is a finite number, otherwise false
     isFiniteNumber: function (it) {
       return typeof it === 'number' && isFinite(it);
     },
-    // get opaque ArrayBuffer from typed array view, otherwise leave it as is
+    //@ Is it a runtime table?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it is a table, otherwise false
+    isTable: Object.prototype.isPrototypeOf.bind(I._.Rt._.Table.getPrototype()),
+    //@ Get opaque ArrayBuffer from typed array view or leave it as is.
+    //@param it {any} JavaScript object or value
+    //@return {any} arraybuffer if it is a buffer view, otherwise just it
     opaqueBytes: function (it) {
       if (ArrayBuffer.isView(it)) {
         var buffer = it.buffer, bytes = it.byteLength;
@@ -58,23 +83,34 @@ function refine(I) {
       }
       return it;
     },
-    // reuse closure that returns first argument
+    //@ Return first argument.
+    //@param argument {any} first argument
+    //@return {any} first argument
     returnArgument: function (argument) {
       return argument;
     },
-    // reuse closure that returns second argument
-    returnArgument2: function (first, second) {
-      return second;
+    //@ Return second argument.
+    //@param ignore {any} ignored first argument
+    //@param argument {any} second argument
+    //@return {any} second argument
+    returnArgument2: function (ignore, argument) {
+      return argument;
     },
-    // reuse closure that returns third argument
-    returnArgument3: function (first, second, third) {
-      return third;
+    //@ Return third argument.
+    //@param ignore1 {any} ignored first argument
+    //@param ignore2 {any} ignored second argument
+    //@param argument {any} third argument
+    //@return {any} third argument
+    returnArgument3: function (ignore1, ignore2, argument) {
+      return argument;
     },
-    // reuse closure that always returns null
+    //@ Always return null.
+    //@return null
     returnNull: function () {
       return null;
     },
-    // reuse closure that always returns true
+    //@ Always return true.
+    //@return true
     returnTrue: function () {
       return true;
     }

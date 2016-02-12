@@ -1,4 +1,2 @@
-'Field'.subclass(function () {
-  "use strict";
-  // I describe a field that defines code and data of objects.
-})
+//@ An instance field defines code or data of objects.
+'Field'.subclass(function () {})

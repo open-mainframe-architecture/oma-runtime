@@ -176,7 +176,7 @@ function boot(bundleName, bootModuleName) {
       metacls.parentBehavior = metaParent;
       metaParent.childBehaviors.push(metacls);
     });
-    // generic function to initialize behavior packages and instance fields
+    // generic function to initialize behavior package and instance fields
     function addBehaviorDictionary(behavior, ivar, key, dictionaryClass) {
       var dictionary = basicCreate(dictionaryClass);
       var baseDictionary = behavior.parentBehavior[ivar];
@@ -191,7 +191,7 @@ function boot(bundleName, bootModuleName) {
     function addBehaviorPackage(behavior, packageClass) {
       behavior._ = addBehaviorDictionary(behavior, 'behaviorPackage', '_', packageClass)._;
     }
-    // top-down initialization of metaclass packages and flags
+    // top-down initialization of metaclass package and behavior flags
     enumerateBehaviors(Class, false, false, function (metacls) {
       addBehaviorPackage(metacls, MetaclassPackage);
       metacls.behaviorFlags_ = create(metacls.parentBehavior.behaviorFlags_);
@@ -235,8 +235,6 @@ function boot(bundleName, bootModuleName) {
     });
     // complete initialization of metaclasses
     enumerateBehaviors(Class, false, false, addInstanceFieldContainer);
-    // test whether behavior is a trait class, but not necessarily a mixin
-    var isTraitClass = protoObject.isPrototypeOf.bind(Trait.$.instancePrototype);
     // test whether class includes a mixin
     function hasMixin(cls, mixin) {
       if (mixin === Trait) {
@@ -268,7 +266,7 @@ function boot(bundleName, bootModuleName) {
     function resolveKeys(relative, keys) {
       var n = keys.length;
       if (n) {
-        // lookup first key, possibly in ancestor namespace
+        // look up first key, possibly in ancestor namespace
         relative = relative._[keys[0]];
         for (var i = 1; relative && i < n; ++i) {
           // other keys must be owned by namespace
@@ -448,7 +446,7 @@ function boot(bundleName, bootModuleName) {
       var script = loader.spec.script;
       script(freeze(create(scriptInst)), freeze(create(scriptMeta)));
       // mixin holds on to class spec, because creation of mixed-in class runs class script again
-      if (isTraitClass(instCls) && !instCls.traitBehavior) {
+      if (Trait.$.instancePrototype.isPrototypeOf(instCls) && !instCls.traitBehavior) {
         instCls.mixedInClasses = instCls.mixedInClasses || [];
         instCls.definingSpecs = [loader.spec, bootModule];
       }

@@ -1,10 +1,10 @@
-//@ I describe a contextual object that's part of a context hierarchy.
+//@ A contextual object is part of a context hierarchy.
 'Trait'.subclass(function (I) {
   "use strict";
   I.have({
-    //@{Std.Context} Context where this contextual is situated.
+    //@{Std.Context} context where this contextual is situated
     homeContext: null,
-    //@{string} Unique key of this contextual within the home context.
+    //@{string} unique key of this contextual within the home context
     contextKey: null
   });
   I.know({

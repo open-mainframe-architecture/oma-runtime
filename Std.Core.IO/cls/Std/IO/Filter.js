@@ -1,29 +1,32 @@
+//@ A filter selects items to read from and write to a decorated stream.
 'Decorator'.subclass(function (I) {
   "use strict";
-  // I describe a streams that filters items of another stream.
   I.am({
     Abstract: false
   });
   I.have({
-    // closure to select items for input stream
+    //@{Rt.Closure} select items for input stream
     inputSelection: null,
-    // closure to select items for output stream
+    //@{Rt.Closure} select items for output stream
     outputSelection: null
   });
   I.know({
+    //@param decorator {Std.Stream} decorated stream
+    //@param input {Rt.Closure} input selection
+    //@param output {Rt.Closure} output selection
     build: function (stream, input, output) {
       I.$super.build.call(this, stream);
-      this.inputSelection = input || I.returnTrue;
+      var self = this, selectInput = input || I.returnTrue;
+      this.inputSelection = function(ignition) {
+        var it = ignition.origin().get();
+        return selectInput(it) ? it : self.$agent.read();
+      };
       this.outputSelection = output || I.returnTrue;
     }
   });
   I.play({
     read: function () {
-      var agent = this.$agent, selection = this.inputSelection;
-      return this.decoratedStream.read().completion().triggers(function (ignition) {
-        var it = ignition.origin().get();
-        return selection(it) ? it : agent.read();
-      });
+      return this.decoratedStream.read().completion().triggers(this.inputSelection);
     },
     write: function (it) {
       var selection = this.outputSelection;
@@ -32,5 +35,4 @@
       }
     }
   });
-
 })

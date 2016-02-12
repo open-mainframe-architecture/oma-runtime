@@ -1,3 +1,4 @@
+//@ A none type describes null values.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({

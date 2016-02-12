@@ -1,6 +1,6 @@
+//@ An AST that evaluates the none type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for none types.
   I.am({
     Abstract: false
   });

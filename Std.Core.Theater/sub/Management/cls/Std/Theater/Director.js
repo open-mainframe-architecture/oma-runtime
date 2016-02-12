@@ -1,3 +1,4 @@
+//@ A director manages itself. It is the root actor in a theater.
 'BaseObject+Manager'.subclass(function(I) {
   "use strict";
   I.am({

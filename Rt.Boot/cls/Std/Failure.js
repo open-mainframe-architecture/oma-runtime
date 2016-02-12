@@ -1,15 +1,17 @@
+//@ A failure is a situation where things have gone bad.
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe a situation where things have gone bad.
   I.have({
-    // object where this failure originates
+    //@{Any} object from where this failure originates
     failureOrigin: null,
-    // array with generic reasons (strings, number, objects, etc.) for this failure
+    //@{[any]} array with generic reasons for this failure
     failureReasons: null,
-    // exception with stack trace of failure creation
+    //@{Rt.Exception} exception with stack trace of failure creation
     failureTrace: null
   });
   I.know({
+    //@param origin {Any} failure origin
+    //@param reasons {[any]} failure reasons
     build: function (origin, reasons) {
       I.$super.build.call(this);
       this.failureOrigin = origin;

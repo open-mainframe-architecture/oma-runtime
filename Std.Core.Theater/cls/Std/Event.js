@@ -1,31 +1,42 @@
+//@ An event in a theater can fire when it's charged.
 'BaseObject'.subclass(function (I) {
   'use strict';
-  // I describe an events in a theater that can fire when it's charged.
   I.have({
-    // parent of this charged event, otherwise uncharged event
+    //@{Std.Event?} parent of this charged event, otherwise this event is uncharged
     parentEvent: null
   });
   I.know({
-    // a charged event has a parent
+    //@ A charged event has a parent. An event can only fire after it has been charged.
+    //@param parent {Std.Event} charging parent
+    //@param blooper {Std.Theater.Blooper?} blooper for fallible events
+    //@return {Std.Event?} nothing or event that fired upon charging
+    //@except when this event is already charged
     charge: function (parent) {
       if (this.parentEvent) {
         this.bad();
       }
       this.parentEvent = parent;
     },
-    // a discharged event is an orphan without a parent
+    //@ A discharged event is an orphan without a parent. Once discharged, an event cannot fire.
+    //@return nothing
+    //@except when this event is already discharged
     discharge: function () {
       if (!this.parentEvent) {
         this.bad();
       }
       this.parentEvent = null;
     },
-    // enumerate ignitions
+    //@ Enumerate ignitions. Caller must ensure this event is an ignition that fired.
+    //@param visit {Rt.Closure} called with ignition event and one-based index
+    //@return {boolean} false when a visit returned false, otherwise true
     enumerate: function (visit) {
       // assume this event is the only ignition
       return visit(this, 1) !== false;
     },
-    // fire ignition upwards to root event if event is charged
+    //@ Fire ignition upwards to root event if event is charged.
+    //@param ignition {Std.Event?} event that fired, otherwise this event fired
+    //@param fromChild {Std.Event?} child event that propagated upwards
+    //@return nothing
     fire: function (ignition, fromChild) {
       var parent = this.parentEvent;
       if (parent) {
@@ -36,13 +47,12 @@
         this.bad();
       }
     },
-    // fallible events can fail asynchronously
+    //@ Is this a fallible event? Fallible events are charged with a blooper.
+    //@return {boolean} true for event that potentiallly fails asynchronously, otherwise false
     isFallible: I.returnFalse,
-    // prepare child event before parent can charge it
-    precharge: function () {
-      return this.isFallible() ? I.Tryout.create(this) : this;
-    },
-    // install triggered effect when ignition is not a blooper
+    //@ Install effect that an ignition triggers.
+    //@param effect {any|Rt.Closure} plain or computed effect of ignition
+    //@return {Std.Theater.Showstopper} shopstopper event for job
     triggers: function (effect) {
       if (this.parentEvent) {
         this.bad();
@@ -51,66 +61,69 @@
     }
   });
   I.share({
+    //@ Create conjunction event that fires when all events fire.
+    //@param events {[Std.Event]} child events
+    //@return {Std.Event?} conjunction event or nothing if there are no children
     all: function (events) {
       var n = events.length;
       if (n > 1) {
         return I.Conjunction.create(events);
       } else if (n === 1) {
         return events[0];
-      } else {
-        return I.countdown(0);
       }
     },
-    countdown: function (count) {
-      return I.Countdown.create(count || 0);
-    },
-    one: function (events) {
+    //@ Create disjunction event that fires when first event fires.
+    //@param events {[Std.Event]} child events
+    //@return {Std.Event?} disjunction event or nothing if there are no children
+    some: function (events) {
       var n = events.length;
       if (n > 1) {
         return I.Disjunction.create(events);
       } else if (n === 1) {
         return events[0];
-      } else {
-        return I.countdown(0);
       }
-    },
-    spark: function () {
-      return I.$.create();
     }
   });
   I.nest({
+    //@ An event with two or more children.
     Composition: 'Event'.subclass(function (I) {
-      // I describe an event with two or more children.
       I.have({
-        // array with children of this composed event
-        children: null
-      });
-      I.know({
-        build: function (children) {
-          I.$super.build.call(this);
-          this.children = children;
-        }
-      });
-    }),
-    Conjunction: 'Event._.Composition'.subclass(function (I) {
-      // I describe a composed event that fires when all children have fired.
-      I.have({
-        // array with events that already fired
-        ignitions: null,
-        // true if this conjunction has at least one fallible child, otherwise false
+        //@{[Std.Event]} array with children of this composed event
+        children: null,
+        //@{boolean} true if this composition has at least one fallible child, otherwise false
         faulty: null
       });
       I.know({
-        unveil: function () {
-          I.$super.unveil.call(this);
-          this.faulty = this.children.some(function (child) { return child.isFallible(); });
+        //@param children {[Std.Event]} child events
+        build: function (children) {
+          I.$super.build.call(this);
+          this.children = children;
+          this.faulty = children.some(function (child) { return child.isFallible(); });
         },
+        isFallible: function () {
+          // this composition is fallible if one or more children are fallible
+          return this.faulty;
+        }
+      });
+    }),
+    //@ A conjunction event fires when all children have fired.
+    Conjunction: 'Event._.Composition'.subclass(function (I) {
+      I.have({
+        //@{[Std.Event]} array with events that already fired
+        ignitions: null
+      });
+      I.know({
         charge: function (parent, blooper) {
           I.$super.charge.call(this, parent);
+          if (blooper && blooper.getFailure()) {
+            this.bad();
+          }
           var children = this.children, ignitions = this.ignitions = [];
           for (var i = 0, n = children.length; i < n; ++i) {
-            // pass same blooper to all children
             var ignition = children[i].charge(this, blooper);
+            if (blooper && blooper.getFailure()) {
+              return;
+            }
             if (ignition) {
               children[i] = null;
               // add event that fired while charging
@@ -144,21 +157,23 @@
           if (ignitions.length === children.length) {
             I.$super.fire.call(this);
           }
-        },
-        isFallible: function () {
-          return this.faulty;
         }
       });
     }),
+    //@ A disjunction event fires when some child has fired.
     Disjunction: 'Event._.Composition'.subclass(function (I) {
-      // I describe a composed event that fires when some child has fired.
       I.know({
-        charge: function (parent) {
+        charge: function (parent, blooper) {
           I.$super.charge.call(this, parent);
+          if (blooper && blooper.getFailure()) {
+            this.bad();
+          }
           var children = this.children, j;
           for (var i = 0, n = children.length; i < n; ++i) {
-            var child = children[i] = children[i].precharge();
-            var ignition = child.charge(this);
+            var ignition = children[i].charge(this, blooper);
+            if (blooper && blooper.getFailure()) {
+              return;
+            }
             if (ignition) {
               for (j = i + 1; j < n; ++j) {
                 children[j] = null;
@@ -193,70 +208,6 @@
             }
           }
           I.$super.fire.call(this, ignition, fromChild);
-        }
-      });
-    }),
-    Tryout: 'Event'.subclass(function (I) {
-      // I describe an events that charges a fallible child events with a child blooper.
-      I.have({
-        // fallible child event
-        fallible: null,
-        // blooper for asynchronous failures
-        blooper: null
-      });
-      I.know({
-        build: function (child) {
-          I.$super.build.call(this);
-          this.fallible = child;
-          this.blooper = I._.Theater._.Blooper.create();
-        },
-        charge: function (parent) {
-          I.$super.charge.call(this, parent);
-          // charge fallible child before blooper
-          var ignition = this.fallible.charge(this, this.blooper) || this.blooper.charge(this);
-          if (ignition) {
-            return ignition;
-          }
-        },
-        discharge: function () {
-          I.$super.discharge.call(this);
-          this.fallible.discharge();
-          this.blooper.discharge();
-          this.fallible = this.blooper = null;
-        },
-        fire: function (ignition, fromChild) {
-          // disjunction of fallible and blooper event
-          if (fromChild === this.fallible) {
-            this.blooper.discharge();
-          } else if (fromChild === this.blooper) {
-            this.fallible.discharge();
-          }
-          I.$super.fire.call(this, ignition, fromChild);
-        }
-      });
-    }),
-    Countdown: 'Event'.subclass(function (I) {
-      // I describe an event that fires upwards after it has been fired a number of times.
-      I.have({
-        count: null
-      });
-      I.know({
-        build: function (count) {
-          I.$super.build.call(this);
-          this.count = count;
-        },
-        charge: function (parent) {
-          I.$super.charge.call(this, parent);
-          if (this.count <= 0) {
-            // zero count fires immediately upon charging
-            return this;
-          }
-        },
-        fire: function () {
-          if (--this.count <= 0) {
-            // fire up when count reaches zero
-            I.$super.fire.call(this);
-          }
         }
       });
     })

@@ -1,13 +1,14 @@
+//@ I am the root mixin.
 'BaseObject'.subclass(function (I, We) {
   "use strict";
-  // I am the root class of mixins.
   I.am({
+    //@ The traits of a mixin are abstract.
     Abstract: true
   });
   We.have({
-    // list with class specs/module pairs, which define and refine this mixin
+    //@{[Any]} class specification/module pairs that define and refine this mixin
     definingSpecs: null,
-    // list with classes that have been mixed-in by this mixin
+    //@{[Std.Logic.Class]} classes that have been mixed-in by this mixin
     mixedInClasses: null
   });
   We.know({
@@ -21,8 +22,8 @@
       // if it is an object, test whether class of object is derived from this trait class
       return I._.BaseObject.describes(it) && this.isTraitFor(it.$);
     },
+    //@return {boolean} false if this trait class is mixed-in, otherwise true
     isMixin: function () {
-      // if a trait class is mixed-in, the trait class is not a mixin
       return !this.traitBehavior;
     },
     prepareLoad: function (loader) {

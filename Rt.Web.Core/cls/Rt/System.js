@@ -1,8 +1,9 @@
+//@ Improve runtime system implementation in web browser or worker environment.
 function refine(I) {
   "use strict";
   /*global MessageChannel*/
   I.refine({
-    // improve on setTimeout implementation
+    //@ Replace setTimeout implementation with MessageChannel.
     asap: function (closure) {
       // use postMessage of message channel to call closure in macrotask as soon as possible
       var data = String(++asapSequence);

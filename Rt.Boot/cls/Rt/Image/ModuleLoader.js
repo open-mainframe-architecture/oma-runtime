@@ -1,25 +1,28 @@
+//@ A module loader runs all scripts of a new module.
 'Std.BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe a loader that runs all scripts of a new module.
   I.have({
-    // module that this loader has created
+    //@{Std.Logic.Module} module that this loader has created
     subjectModule: null,
-    // table with class specifications
+    //@{Rt.Table} mapping from class names to class specifications
     moduleSpec_: null,
-    // list with module names on which subject module depends
+    //@{[string]} module names on which subject module depends
     dependencyNames: null,
-    // array with modules that must be loaded when scripts of this loader run
+    //@{[Std.Logic.Module]} modules that must be loaded when scripts of this loader run
     moduleDependencies: null,
-    // array with names of required services
+    //@{[string]} names of required services
     moduleRequirements: null,
-    // array with class loaders whose scripts run in the same round
+    //@{[Rt.Image.ClassLoader]} class loaders whose scripts run in the same round
     loadingClasses: null,
-    // array with new classes that have been created by this loader
+    //@{[Std.Logic.Class]} new classes that have been created by this loader
     newClasses: null,
-    // array with setup routines
+    //@{[Rt.Closure]} setup routines
     moduleSetup: null
   });
   I.know({
+    //@param bundle {Rt.Image.Bundle} bundle that distributes new module
+    //@param name {string?} module name or empty for anonymous module
+    //@param spec_ {Rt.Table} class specifications
     build: function (bundle, name, spec_) {
       I.$super.build.call(this);
       if (name) {
@@ -38,7 +41,12 @@
       this.newClasses = [];
       this.moduleSetup = [];
     },
-    // add new class loader in current round of this module loader
+    //@ Add new class loader in current round of this module loader.
+    //@param module {Std.Logic.Module} module of class definition/refinement
+    //@param namespace {Std.Logic.Namespace} namespace where class lives
+    //@param spec {Object} class specification
+    //@param instCls {Std.Logic.Class} class subject of new loader
+    //@return {Rt.Image.ClassLoader} new class loader
     addClassLoader: function (module, namespace, spec, instCls) {
       var home = instCls.getContext();
       var key = instCls.getKey();
@@ -46,7 +54,10 @@
       this.loadingClasses.push(loader);
       return loader;
     },
-    // if required, add new loader for mixed-in class in current round of this module loader
+    //@ If required, add new loader for mixed-in class in current round of this module loader.
+    //@param superCls {Std.Logic.Class} superclass of mixed-in class
+    //@param mixin {Std.Logic.Class} class mixin to add to super
+    //@return {Std.Logic.Class} existing or new mixed-in class
     addMixin: function (superCls, mixin) {
       var instCls = mixin.getMixedClass(superCls);
       if (instCls) {
@@ -71,29 +82,46 @@
       });
       return newCls;
     },
-    // add loaders for nested classes in current round of this module loader
+    //@ Add loaders for nested classes in current round of this module loader.
+    //@param module {Std.Logic.Module} module with definition/refinment of outer class
+    //@param namespace {Std.Logic.Namespace} namespace of nested classes
+    //@param instCls {Std.Logic.Namespace} outer class
+    //@param nestedSpecs_ {Rt.Table} map keys of nested classes to class specifications
+    //@return nothing
     addNestedLoaders: function (module, namespace, instCls, nestedSpecs_) {
       var home = instCls.$.getPackage(), loadingClasses = this.loadingClasses;
       for (var key in nestedSpecs_) {
-        // lookup existing nested class, if any
+        // look up existing nested class (metaclass package contains package alias, not the class)
         var nestCls = instCls.getPackage().lookup(key);
         var spec = nestedSpecs_[key];
         var loader = I._.ClassLoader.create(this, module, namespace, home, key, spec, nestCls);
         loadingClasses.push(loader);
       }
     },
+    //@ Schedule code to run when this module loader has unveiled new classes.
+    //@param closure {Rt.Closure} setup routine
+    //@return nothing
     addSetupRoutine: function (closure) {
       this.moduleSetup.push(closure);
     },
+    //@ Add new subclass to this module loader.
+    //@param module {Std.Logic.Module} module of new class
+    //@param superCls {Std.Logic.Class} superclass of new class
+    //@param context {Std.Logic.Namespace|Std.Logic.MetaclassPackage} context of new class
+    //@param key {string} unique key of subclass
+    //@param legacyConstructor {Rt.Closure?} existing constructor or nothing
+    //@return {Std.Logic.Class} new class
     addSubclass: function (module, superCls, context, key, legacyConstructor) {
       var newCls = superCls.subclass(context, key, module, legacyConstructor);
       this.newClasses.push(newCls);
       return newCls;
     },
-    // create initial class loaders for first round of this module loader
+    //@ Create initial class loaders for first round of this module loader.
+    //@return {[Rt.Image.ClassLoader]} class loaders
     createLoaders: function () {
       var loaders = [], module = this.subjectModule, spec_ = this.moduleSpec_;
       var Namespace = I._.Std._.Logic._.Namespace;
+      // if necessary, create namespace for new class
       function createAncestor(home, key) {
         return Namespace.create(home, key, module);
       }
@@ -109,7 +137,9 @@
       }
       return loaders;
     },
-    // module dependencies or undefined if dependencies cannot be resolved
+    //@ Get module dependencies or nothing if dependencies cannot yet be resolved.
+    //@return {[Std.Logic.Module]?} module on which the module subject depends or nothing
+    //@except when specified dependency names are not module names
     getDependencies: function () {
       if (this.moduleDependencies) {
         return this.moduleDependencies;
@@ -131,7 +161,8 @@
         return modules;
       }
     },
-    // names of modules on which the subject module depends
+    //@ Get names of modules on which the subject module depends.
+    //@return {[string]} module names
     getDependencyNames: function () {
       if (this.dependencyNames) {
         return this.dependencyNames;
@@ -150,10 +181,13 @@
       this.dependencyNames = Object.keys(accu_);
       return this.dependencyNames;
     },
+    //@ Get module subject.
+    //@return {Std.Logic.Module} module
     getModule: function () {
       return this.subjectModule;
     },
-    // get names of required services
+    //@ Get names of required services.
+    //@return {[string]} service names
     getRequirements: function () {
       var requirements = this.moduleRequirements;
       if (requirements) {
@@ -175,6 +209,8 @@
       this.moduleRequirements = Object.keys(accu_);
       return this.moduleRequirements;
     },
+    //@ Test whether this loader is ready to load the subject.
+    //@return {boolean} true when module is ready to be loaded, otherwise false
     isReady: function () {
       if (!this.subjectModule.isLoading()) {
         // if subject module is not loading, this loader is not ready anymore
@@ -199,6 +235,10 @@
       // ready when all requirements are satisfied, otherwise wait for future satisfaction
       return this.getRequirements().every(function (service) { return rt.provides(service); });
     },
+    //@ Run class scripts in one or more rounds to load class definitions/refinements.
+    //@return nothing
+    //@except when this loader is already loading classes
+    //@except when the class of a class loader cannot be created
     loadClasses: function () {
       if (this.loadingClasses) {
         this.bad();
@@ -237,7 +277,9 @@
       this.moduleSetup.forEach(function (closure) { closure(); });
       this.loadingClasses = this.newClasses = this.moduleSetup = null;
     },
-    // when this loader is ready, either load module or mark module as permanently unloadable
+    //@ When this loader is ready, either load module subject or mark it permanently unloadable.
+    //@return nothing
+    //@except when module subject is not loading classes anymore
     loadModule: function () {
       var subject = this.subjectModule;
       if (!subject.isLoading()) {

@@ -1,10 +1,12 @@
+//@ A decorator decorates another stream.
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe a stream that decorates another stream.
   I.have({
+    //@{Std.Stream} decorated stream
     decoratedStream: null
   });
   I.know({
+    //@param stream {Std.Stream} decorated stream
     build: function (stream) {
       I.$super.build.call(this);
       this.decoratedStream = stream;

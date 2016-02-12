@@ -1,6 +1,6 @@
+//@ An AST that evaluates the boolean type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for boolean types.
   I.am({
     Abstract: false
   });

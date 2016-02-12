@@ -1,14 +1,15 @@
 'super'.subclass({
   data$: 'Std.Data'
-}, function(I) {
+}, function (I) {
   "use strict";
   I.access({
-    datatypes: function() {
+    //@{Rt.Table} get configured type definitions
+    datatypes: function () {
       return this.getTable('datatypes');
     }
   });
   I.refine({
-    installModule: function(module) {
+    installModule: function (module) {
       I.$former.installModule.call(this, module);
       I.data$.defineTypes('', this.datatypes);
     }

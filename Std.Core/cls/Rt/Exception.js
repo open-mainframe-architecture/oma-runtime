@@ -1,4 +1,2 @@
-'Object'.subclass(Error, function () {
-  "use strict";
-  // I describe a JavaScript error.
-})
+//@ A JavaScript error is a runtime exception.
+'Object'.subclass(Error, function () { })

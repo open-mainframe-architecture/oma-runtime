@@ -1,4 +1,2 @@
-'Object'.subclass(Function, function () {
-  "use strict";
-  // I describe a JavaScript function.
-})
+//@ A JavaScript function is a runtime closure.
+'Object'.subclass(Function, function () { })

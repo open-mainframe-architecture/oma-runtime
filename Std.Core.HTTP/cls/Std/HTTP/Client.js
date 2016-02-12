@@ -1,67 +1,96 @@
+//@ An HTTP client receives responses when it sends out requests.
 'BaseObject+Role'.subclass(['Std.Core.Theater'], function (I) {
   "use strict";
-  // I describe an HTTP client that receives responses when it sends out requests.
   I.am({
     Service: true
   });
   I.know({
-    createArrival: function (request, binary) {
-      return this.$_.Arrival.create(request, binary || false);
+    //@ Create arrival event of response.
+    //@param request {Std.HTTP.Request} HTTP request
+    //@param expectBinary {boolean?} true if binary response is expected
+    //@return {Std.HTTP.Client._.Arrival} new event
+    createArrival: function (request, expectBinary) {
+      return this.$_.Arrival.create(request, expectBinary || false);
     },
+    //@ Create receipt event of response body.
+    //@param arrival {Std.HTTP.Client._.Arrival} arrival event of response
+    //@return {Std.HTTP.Client._.Receipt} new event
     createReceipt: function (arrival) {
       return this.$_.Receipt.create(arrival);
     }
   });
   I.play({
-    get: function (location, headers, binary) {
-      return this.$agent.send(I._.Constants._.Method.Get, location, headers, null, binary);
+    //@ Send HTTP GET request.
+    //@param location {string|Std.HTTP.URL} URL of request
+    //@param headers {Object|Rt.Table?} container for header names and values
+    //@param expectBinary {boolean?} true if binary response is expected
+    //@promise {Std.HTTP.Response} HTTP response with textual or binary body
+    get: function (location, headers, expectBinary) {
+      return this.$agent.send(I._.Constants._.Method.Get, location, headers, null, expectBinary);
     },
-    post: function (location, headers, body, binary) {
-      return this.$agent.send(I._.Constants._.Method.Post, location, headers, body, binary);
+    //@ Send HTTP POST request.
+    //@param location {string|Std.HTTP.URL} URL of request
+    //@param headers {Object|Rt.Table?} container for header names and values
+    //@param body {string|binary} body data to post
+    //@param expectBinary {boolean?} true if binary response is expected
+    //@promise {Std.HTTP.Response} HTTP response with textual or binary body
+    post: function (location, headers, body, expectBinary) {
+      return this.$agent.send(I._.Constants._.Method.Post, location, headers, body, expectBinary);
     },
-    // receive response chunks after arrival of first chunk
+    //@ Receive response chunks after arrival of first chunk.
+    //@param arrival {Std.HTTP.Client._.Arrival} arrival event that fired
+    //@promise {Std.HTTP.Response} HTTP response with textual or binary body
     receive: function (arrival) {
       return this.createReceipt(arrival).triggers(function (receipt) {
         // return HTTP response with all chunks
         return receipt.response;
       });
     },
-    // send HTTP request
-    send: function (method, location, headers, body, binary) {
+    //@ Send HTTP request.
+    //@param method {string} HTTP method, e.g. GET, POST, PUT, etc.
+    //@param location {string|Std.HTTP.URL} URL of request
+    //@param headers {Object|Rt.Table?} container for header names and values
+    //@param body {string|binary} body data to post
+    //@param expectBinary {boolean?} true if binary response is expected
+    //@promise {Std.HTTP.Response} HTTP response with textual or binary body
+    send: function (method, location, headers, body, expectBinary) {
       var url = typeof location === 'string' ? I._.URL._.decode(location) : location;
       var request = I._.Request.create(method, url, headers, body);
       // create arrival event for binary or textual response
-      var arrival = this.createArrival(request, binary);
+      var arrival = this.createArrival(request, expectBinary);
       // receive chunks when response arrives
       return arrival.triggers(this.$agent.receive(arrival));
     }
   });
   I.nest({
+    //@ Arrival event fires when first chunk of HTTP response arrives.
     Arrival: 'Event'.subclass(function (I) {
-      // I describe an event that fires when the first chunk of an HTTP response arrives.
       I.have({
-        // HTTP request object that was sent
+        //@{Std.HTTP.Request} HTTP request object that was sent
         request: null,
-        // true if response with binary body is expected, otherwise false
-        binary: null
+        //@{boolean} true if response with binary body is expected, otherwise false
+        expectBinary: null
       });
       I.know({
-        build: function (request, binary) {
+        //@param request {Std.HTTP.Request} HTTP request
+        //@param expectBinary {boolean} true for binary body, otherwise false for textual body
+        build: function (request, expectBinary) {
           I.$super.build.call(this);
           this.request = request;
-          this.binary = binary;
+          this.expectBinary = expectBinary;
         }
       });
     }),
+    //@ Receipt event fires when all chunks of an HTTP response have been received.
     Receipt: 'Event'.subclass(function (I) {
-      // I describe an event that fires when all chunks of an HTTP response have been received.
       I.have({
-        // arrival event that triggered this receipt
+        //@{Std.HTTP.Client._.Arrival} arrival event that triggered this receipt
         arrival: null,
-        // HTTP response object
+        //@{Std.HTTP.Response} HTTP response object
         response: null
       });
       I.know({
+        //@param arrival {Std.HTTP.Client._.Arrival} arrival event
         build: function (arrival) {
           I.$super.build.call(this);
           this.arrival = arrival;

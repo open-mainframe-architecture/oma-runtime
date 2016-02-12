@@ -1,15 +1,14 @@
 function refine(I) {
   "use strict";
   I.refine({
-    // is this actor managing a team?
-    isManaging: function() {
+    isManaging: function () {
       return this.roleClass.isMixedBy(I._.Manager);
     },
-    managePostMortem: function(job) {
+    managePostMortem: function (job) {
       // manage performance for this dead actor
       return this.actorManager.managePostMortem(job.forkScene());
     },
-    manageStageException: function(job, exception) {
+    manageStageException: function (job, exception) {
       if (exception === I.PoisonPill) {
         // manage poison pill as suicide attempt on stage
         return this.actorManager.manageSuicide(job.forkScene());
@@ -20,6 +19,7 @@ function refine(I) {
     }
   });
   I.share({
+    //@{Object} actor throws poison pill on stage to commit suicide
     PoisonPill: Object.freeze({})
   });
 }

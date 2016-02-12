@@ -1,19 +1,20 @@
+//@ An event with an eventful origin.
 'Event'.subclass(function (I) {
   "use strict";
-  // I describe an event with an eventful origin.
   I.have({
-    // origin from which this event was created
+    //@{Std.Eventful} origin from which this event was created
     eventfulOrigin: null
   });
   I.know({
+    //@param origin {Std.Eventful} event origin
     build: function (origin) {
       I.$super.build.call(this);
       this.eventfulOrigin = origin;
     },
-    charge: function (parent) {
+    charge: function (parent, blooper) {
       I.$super.charge.call(this, parent);
       // fire while charging?
-      if (this.eventfulOrigin.testIgnition(this)) {
+      if (this.eventfulOrigin.testIgnition(this, this.isFallible() ? blooper : null)) {
         return this;
       } else {
         // add charged event to origin
@@ -30,6 +31,8 @@
       // remove fired event
       this.eventfulOrigin.removeCharge(this, false);
     },
+    //@ Get origin.
+    //@return {Std.Eventful} event origin
     origin: function () {
       return this.eventfulOrigin;
     }

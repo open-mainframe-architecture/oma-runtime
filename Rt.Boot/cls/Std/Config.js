@@ -1,4 +1,4 @@
-//@ I describe an immutable configuration that maps keys to configured values.
+//@ An immutable configuration maps keys to configured values.
 'Dictionary+Immutable'.subclass(function (I) {
   "use strict";
   I.am({
@@ -19,6 +19,7 @@
     //@param key {string} configuration key
     //@param array {[Any]?} configuration default
     //@return {[Any]} configured array
+    //@except when configured value is not an array
     getArray: function (key, array) {
       var value = this.lookupDefault(arguments.length < 2 ? [] : array, key);
       if (Array.isArray(value)) {
@@ -30,6 +31,7 @@
     //@param key {string} configuration key
     //@param code {Rt.Closure?} configuration default
     //@return {Rt.Closure} configured closure
+    //@except when configured value is not a closure
     getClosure: function (key, code) {
       var value = this.lookupDefault(arguments.length < 2 ? I.doNothing : code, key);
       if (typeof value === 'function') {
@@ -41,6 +43,7 @@
     //@param key {string} configuration key
     //@param object {Object} configuration default
     //@return {Rt.Table} configured table
+    //@except when configured value is not a table
     getTable: function (key, object) {
       var value = this.lookupDefault(arguments.length < 2 ? {} : object, key);
       if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -48,10 +51,10 @@
       }
       this.bad('object', key);
     },
-    //@ Lookup index if index is contained. Otherwise return with default for absent index.
-    //@param absentDefault {Any} default configuration
-    //@param ix {string} lookup index
-    //@return {Any} configured value
+    //@ Look up index if index is contained. Otherwise return with default for absent index.
+    //@param absentDefault {any} default configuration
+    //@param ix {string} index to look up
+    //@return {any} configured value
     lookupDefault: function (absentDefault, ix) {
       return this.containsIndex(ix) ? this.lookup(ix) : absentDefault;
     }

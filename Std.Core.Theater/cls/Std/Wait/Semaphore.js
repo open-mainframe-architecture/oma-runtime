@@ -1,19 +1,19 @@
+//@ A Dijkstra semaphore that counts.
 'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
-  // I describe a counting semaphore.
   I.am({
     Abstract: false
   });
   I.have({
-    // current count of this Dijkstra semaphore
+    //@{integer} current count of this Dijkstra semaphore
     semaphoreCount: null
   });
   I.know({
+    //@param count {number} initial, nonnegative semaphore count
     build: function (count) {
       I.$super.build.call(this);
-      this.semaphoreCount = count || 0;
+      this.semaphoreCount = Math.floor(count || 0);
     },
-    // try to decrement
     testIgnition: function () {
       if (this.semaphoreCount) {
         // no need to wait, decrement this semaphore right away
@@ -22,11 +22,13 @@
       }
       return false;
     },
-    // decrement event fires upon charging or after this semaphore has been incremented
+    //@ Create decrement event that fires upon charging or after semaphore has been incremented.
+    //@return {Std.FullEvent} decrement event
     decrement: function () {
       return this.createEvent();
     },
-    // fire oldest decrement event or just increment count
+    //@ Fire oldest decrement event or just increment semaphore count.
+    //@return nothing
     increment: function () {
       var event = this.getFirstCharge();
       if (event) {

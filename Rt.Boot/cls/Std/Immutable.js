@@ -1,4 +1,4 @@
-//@ I describe an object that freezes after construction.
+//@ An immutable object freezes after construction.
 'Trait'.subclass(function (I) {
   "use strict";
   I.know({

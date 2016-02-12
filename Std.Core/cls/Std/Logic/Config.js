@@ -1,31 +1,31 @@
 function refine(I) {
   "use strict";
   I.access({
-    // concise description
+    //@{string} get concise description of the module
     description: function () {
       return this.getString('description');
     },
-    // prefix names of modules that are excluded from distribution
+    //@{[string]} get prefix names of modules that are excluded from distribution
     excludes: function () {
       return this.getArray('excludes');
     },
-    // prefix names of modules that are included in distribution
+    //@{[string]} get prefix names of modules that are included in distribution
     includes: function () {
       return this.getArray('includes');
     },
-    // module publishes public assets
+    //@{Rt.Table} get info about public assets in module
     publishes: function () {
       return this.getTable('publishes');
     },
-    // bundle releases modules from versioned archives
+    //@{Rt.Table} get info about archive versions where modules from bundle reside
     releases: function () {
       return this.getTable('releases');
     },
-    // versions of source archives
+    //@{Rt.Table} get info about versions of archive names in a bundle
     sources: function () {
       return this.getTable('sources');
     },
-    // semantic versions of source archives
+    //@{Rt.Table} get specified semantic versions of archives from bundle configuration
     versions: function () {
       return this.getTable('versions');
     }

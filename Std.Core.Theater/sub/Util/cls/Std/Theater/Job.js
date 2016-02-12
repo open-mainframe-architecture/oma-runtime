@@ -1,9 +1,17 @@
 function refine(I) {
   "use strict";
   I.know({
+    //@ Close a chain of promises. This is necessary to run immobile jobs.
+    //@param onFulfillment {Rt.Closure} called with intermediate success of this job
+    //@param onRejection {Rt.Closure} called with intermediate error/failure of this job
+    //@return nothing
     done: function (onFulfillment, onRejection) {
       this.then(onFulfillment, onRejection).run();
     },
+    //@ Add lazy promise to a chain of promises.
+    //@param onFulfillment {Rt.Closure} called with intermediate success of this job
+    //@param onRejection {Rt.Closure} called with intermediate error/failure of this job
+    //@return {Std.Theater.Job} new immobile job
     then: function (onFulfillment, onRejection) {
       if (!onFulfillment && !onRejection) {
         // this job already represents the promise if there's nothing to fulfill or reject
@@ -19,25 +27,6 @@ function refine(I) {
             return I.promised(self.jobResult, onFulfillment, onRejection);
           });
       }.play(true);
-    },
-    trap: function (errorClass, onRejection) {
-      var matchOnError = errorClass && typeof errorClass !== 'function';
-      if (onRejection && !matchOnError) {
-        this.bad();
-      }
-      var errorHandler = onRejection || !matchOnError && errorClass;
-      return !matchOnError ? this.then(null, errorHandler) :
-        // match particular error class?
-        this.then(null, function (error) {
-          if (!errorClass.describes(error)) {
-            // pass on unmatched error
-            return error;
-          } else if (errorHandler) {
-            // handle matched error
-            return errorHandler(error);
-          }
-          // else return with nothing to ignore matched error
-        });
     }
   });
 }

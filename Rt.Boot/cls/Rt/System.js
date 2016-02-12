@@ -1,14 +1,15 @@
+//@ The runtime system manages service providers.
 'Std.BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe how the runtime system manages service providers.
   I.am({
     Final: true,
+    //@ The runtime system registers itself as a provider.
     Service: true
   });
   I.have({
-    // moment when this runtime was created
+    //@{Rt.Timestamp} moment when this runtime was created
     bootTimestamp: null,
-    // dictionary with service providers
+    //@{Std.Dictionary} registry maps service to one or more service providers
     serviceRegistry: null
   });
   I.know({
@@ -17,15 +18,21 @@
       this.serviceRegistry = I._.Std._.Dictionary.create();
       this.register(this);
     },
+    //@ Get moment when runtime system was created.
+    //@return {Rt.Timestamp} JavaScript date
     getBootTimestamp: function () {
       return this.bootTimestamp;
     },
-    // test whether this runtime system provides a service
+    //@ Test whether this runtime system provides a service.
+    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to test
+    //@return {boolean} true if service is provided, otherwise false
     provides: function (service) {
       var serviceClass = I.resolveService(service);
       return !!serviceClass && this.serviceRegistry.containsIndex(serviceClass.getName());
     },
-    // register new service provider
+    //@ Register new service provider.
+    //@param provider {Any} implementation of services
+    //@return {Any} provider
     register: function (provider) {
       var registry = this.serviceRegistry;
       // get concrete class of provider and enumerate its services
@@ -33,14 +40,20 @@
         var serviceName = serviceClass.getName();
         var providers = registry.lookup(serviceName);
         if (providers) {
-          providers.push(provider);
+          // harmless to register twice or more
+          if (providers.indexOf(provider) < 0) {
+            providers.push(provider);
+          }
         } else {
           registry.store([provider], serviceName);
         }
       });
       return provider;
     },
-    // collect providers for service requirements
+    //@ Collect providers for service requirements.
+    //@param requirements_ {Rt.Table} identify service classes
+    //@return {Rt.Table} new table, with same keys, that identifies providers
+    //@except when a required service cannot be not provided
     satisfy: function (requirements_) {
       var registry = this.serviceRegistry;
       var satisfactions_ = I.createTable();
@@ -55,7 +68,9 @@
     }
   });
   I.share({
-    // resolve service description to class
+    //@ Resolve service description to class.
+    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service description
+    //@return {Std.Logic.Class?} service class or nothing
     resolveService: function (service) {
       var logical = typeof service === 'string' ? I._.Root.resolve(service) : service;
       var serviceClass;

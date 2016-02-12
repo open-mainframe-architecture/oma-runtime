@@ -1,25 +1,32 @@
+//@ A class loader defines or redefines a class.
 'Std.BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe a loader that defines or redefines a class.
   I.have({
-    // module loader that created this class loader
+    //@{Rt.Image.ModuleLoader} module loader that created this class loader
     moduleLoader: null,
-    // module that contains definitions/refinements of this class loader
+    //@{Std.Logic.Module} module that contains definitions/refinements of this class loader
     classModule: null,
-    // namespace where resolution of logic names in class scripts starts
+    //@{Std.Logic.Namespace} namespace where resolution of logic names in class scripts starts
     classNamespace: null,
-    // context that contains new class of this loader
+    //@{Std.Logic.Namespace|Std.Logic.MetaclassPackage} context that owns class of this loader
     classContext: null,
-    // key in context of new class
+    //@{string} unique key of class in its context
     classKey: null,
-    // class specification with super, script, legacy, requires and depends.
+    //@{Object} class specification with super, script, legacy, requires and depends properties
     classSpec: null,
-    // existing or new class of this loader
+    //@{Std.Logic.Class} existing or new class of this loader
     classSubject: null,
-    // cache intermediate evaluation results of $super expression
+    //@{[string|Std.Logic.Class]} cache intermediate evaluation results of super expression
     superParts: null
   });
   I.know({
+    //@param loader {Rt.Image.ModuleLoader} module loader
+    //@param module {Std.Logic.Module} module with class definition or refinement
+    //@param namespace {Std.Logic.Namespace} namespace for name resolution in script
+    //@param context {Std.Logic.Namespace|Std.Logic.MetaclassPackage} home context of class
+    //@param key {string} unique key of class
+    //@param spec {Object} class specification
+    //@param subject {Std.Logic.Class?} alternative class subject to load, otherwise resolve key
     build: function (loader, module, namespace, context, key, spec, subject) {
       I.$super.build.call(this);
       this.moduleLoader = loader;
@@ -28,15 +35,20 @@
       this.classContext = context;
       this.classKey = key;
       this.classSpec = spec;
-      // lookup existing class subject in context if not explicitly specified
+      // look up existing class subject in context if not explicitly specified
       this.classSubject = subject || context.lookup(key);
     },
-    // add class loader that runs specification of this loader against alternative subject
+    //@ Add class loader that runs specification of this loader against alternative subject.
+    //@param subject {Std.Logic.Class} class subject of new loader
+    //@return nothing
     addClassLoader: function (subject) {
       var module = this.classModule;
       this.moduleLoader.addClassLoader(module, this.classNamespace, this.classSpec, subject);
     },
-    // attempt to create class of this loader
+    //@ Attempt to create class subject of this loader.
+    //@return {boolean} true if class was created, otherwise false
+    //@except when this loader already has a subject
+    //@except when the super expression in the class specification is invalid
     finishCreation: function () {
       if (this.classSubject) {
         this.bad();
@@ -84,19 +96,28 @@
       this.classSubject = instCls;
       return true;
     },
+    //@ Get inheritance depth of class subject.
+    //@return {integer} distance of subject to root class
     getInheritanceDepth: function () {
       return this.classSubject.getInheritanceDepth();
     },
+    //@ Get module that defines/refines the class subject.
+    //@return {Std.Logic.Module} module
     getModule: function () {
       return this.classModule;
     },
+    //@ Get specification of class definition or refinement.
+    //@return {Object} class specification
     getSpec: function () {
       return this.classSpec;
     },
+    //@ Test whether this loader has a class subject.
+    //@return {boolean} true if loader has subject, otherwise false
     hasClass: function () {
       return !!this.classSubject;
     },
-    // run class script to define or redefine the class of this loader
+    //@ Run class script to define or redefine the class of this loader.
+    //@return nothing
     loadClass: function () {
       var instCls = this.classSubject;
       var spec = this.classSpec;
@@ -146,11 +167,15 @@
         delete scriptMeta[keyword];
       }
     },
-    // prepare subject to run script of this loader in the near future
+    //@ Prepare subject to run script of this loader in the near future.
+    //@return nothing
     prepareLoad: function () {
       this.classSubject.prepareLoad(this);
     },
-    // prepare script arguments of this loader
+    //@ Prepare script arguments of this loader.
+    //@param scriptInst {Rt.Table} instance side of class script, usually called I
+    //@param scriptMeta {Rt.Table} class side of class script, usually called We
+    //@return nothing
     prepareScript: function (scriptInst, scriptMeta) {
       var instCls = this.classSubject;
       // I.$ for class and We.$ for metaclass
@@ -192,7 +217,7 @@
       scriptInst.share = scriptShare;
       // I.nest for nested classes
       scriptInst.nest = scriptNest;
-      // I.setup for a setup routine
+      // I.setup for a setup routine and for deferred construction of package constants
       scriptInst.setup = scriptSetup;
       // add nonstandard keywords to simplify scripts in particular domain of classes
       instCls.prepareScript(scriptInst, scriptMeta);

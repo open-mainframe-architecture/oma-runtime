@@ -1,7 +1,11 @@
+//@ A parser processes source texts.
 'Trait'.subclass(function (I) {
   "use strict";
-  // I describe a parser for text processing.
   I.know({
+    //@ Parse source text.
+    //@param source {string} source text
+    //@return {any} parse result, e.g. an AST
+    //@except when there are parse errors
     parse: I.burdenSubclass
   });
 })

@@ -1,6 +1,6 @@
+//@ An AST that evaluates the integer type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for integer types.
   I.am({
     Abstract: false
   });

@@ -8,6 +8,7 @@ function configure(module) {
     List: '(T=Any)[T]',
     Dict: '(T=Any)<T>',
     Maybe: '(T=*)T?',
-    Record: '{}'
+    Record: '{}',
+    Pixel: { height: 'integer', width: 'integer' }
   };
 }

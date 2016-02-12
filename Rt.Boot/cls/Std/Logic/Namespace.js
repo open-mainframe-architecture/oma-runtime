@@ -1,11 +1,14 @@
+//@ A namespace contains classes, modules and namespaces.
 'LogicalContainer'.subclass(function (I) {
   "use strict";
-  // I describe a container that holds classes, modules and namespaces.
   I.am({
     Abstract: false,
     Final: true
   });
   I.know({
+    //@param parentNamespace {Std.Logic.Namespace} context of this namespace
+    //@param key {string} unique key of this namespace
+    //@param module {Std.Logic.Module} defining module
     build: function (parentNamespace, key, module) {
       I.$super.build.call(this, parentNamespace, parentNamespace, key, module);
       parentNamespace.store(this, key);
@@ -14,7 +17,9 @@
       return I.$super.checkStorage.call(this, it, ix) &&
         (I._.Class.describes(it) || I.$.describes(it) || I._.Module.describes(it));
     },
-    // evaluate an expression that designates a class, e.g. BaseObject+Indirect
+    //@ Evaluate an expression that designates a class
+    //@param classExpr {string} class expression, e.g. BaseObject+Indirect
+    //@return {Std.Logic.Class?} class or nothing if expression cannot be evaluated
     evaluateClassExpression: function (classExpr) {
       var parts = classExpr.split('+');
       var n = parts.length;

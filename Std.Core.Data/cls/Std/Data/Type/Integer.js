@@ -1,3 +1,4 @@
+//@ An integer type describes integer numbers.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({

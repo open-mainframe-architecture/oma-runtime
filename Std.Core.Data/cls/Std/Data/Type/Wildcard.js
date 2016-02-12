@@ -1,3 +1,4 @@
+//@ A wildcard type describes all data values except null.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
@@ -5,12 +6,12 @@
   });
   I.know({
     describesValue: function (value) {
-      return I.isBasicValue(value) ||
-        I.isComposedValue(value) && value.$type.typespace === this.typespace;
+      return I.Data.isBasicValue(value) ||
+        I.Data.isComposedValue(value) && value.$type.typespace === this.typespace;
     },
     marshalValue: I.shouldNotOccur,
     unmarshalJSON: function (json, expression) {
-      if (I.isBasicValue(json)) {
+      if (I.Data.isBasicValue(json)) {
         return json;
       } else if (json) {
         var typespace = this.typespace;

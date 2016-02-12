@@ -1,18 +1,21 @@
+//@ An enumeration type describes string choices.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
+    //@{Rt.Table} map choice to true
     enumeratedChoices_: null
   });
   I.know({
+    //@param typespace {Std.Data.Typespace} typespace of this enumeration type
+    //@param expression {Std.Data.Definition.Expression} type expression
+    //@param choices {[string]} string choices
     build: function (typespace, expression, choices) {
       I.$super.build.call(this, typespace, expression);
-      this.enumeratedChoices_ = I.createTable();
-      for (var i = 0, n = choices.length; i < n; ++i) {
-        this.enumeratedChoices_[choices[i]] = true;
-      }
+      var choices_ = this.enumeratedChoices_ = I.createTable();
+      choices.forEach(function(s) { choices_[s] = true; });
     },
     describesValue: function (value) {
       return typeof value === 'string' && !!this.enumeratedChoices_[value];
@@ -21,14 +24,19 @@
     unmarshalJSON: I.returnArgument
   });
   I.share({
-    flatten: function (typespace, expression, enumerations) {
+    //@ Merge choices of enumeration types.
+    //@param typespace {Std.Data.Typespace} typespace of new enumeration type
+    //@param expression {Std.Data.Definition.Expression} type expression
+    //@param enumerations {[Std.Data.Type.Enumeration]} enumeration types
+    //@return {Std.Data.Type.Enumeration} merged enumeration type
+    merge: function (typespace, expression, enumerations) {
       if (enumerations.length === 1) {
         return enumerations[0];
       }
       var choices_ = I.createTable();
-      for (var i = 0, n = enumerations.length; i < n; ++i) {
-        Object.assign(choices_, enumerations[i].enumeratedChoices_);
-      }
+      enumerations.forEach(function(enumeration) {
+        Object.assign(choices_, enumeration.enumeratedChoices_);
+      });
       return I.$.create(typespace, expression, Object.getOwnPropertyNames(choices_));
     }
   });

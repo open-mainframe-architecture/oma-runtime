@@ -1,26 +1,30 @@
+//@ An AST for a type definition represents a type expression or macro.
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe an AST that defines type expressions and macros.
   I.have({
-    // normalized source
+    //@{string} normalized source
     sourceText: null
   });
   I.know({
+    //@param source {string} normalized source of type definition
     build: function (source) {
       I.$super.build.call(this);
       this.sourceText = source;
     },
-    // turn this definition into an expression that can be evaluated
+    //@ Express this definition without variables, which ensures it can be evaluated.
+    //@param parameters {[Std.Data.Definition.Expression]} expression parameters
+    //@return {Std.Data.Definition.Expression} an expression
     express: I.burdenSubclass,
-    // get normalized source of this definition
+    //@ Get normalized source of this type definition.
+    //@return {string} source text
     unparse: function () {
       return this.sourceText;
     }
   });
   I.setup({
-    // share parser for type definition language, which caches all ASTs
-    Cache: function () {
-      return I._.Definition._.Language.create();
+    //@{Std.Data.Language} one parser caches all ASTs of type definitions
+    AST: function () {
+      return I._.Language.create();
     }
   });
 })

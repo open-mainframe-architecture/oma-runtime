@@ -1,13 +1,13 @@
+//@ A ring is an exclusive, set-like container whose doubly-linked elements form a circle.
 'SeqContainer+Growable'.subclass(function (I) {
-  // I describe an exclusive, set-like container whose doubly-linked elements form a ring.
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
-    // number of links in this ring
+    //@{integer} number of links in this ring
     ringLength: 0,
-    // first link is first element in this circular ring
+    //@{Std.RingLink} first element in this circular ring
     firstLink: null
   });
   I.know({
@@ -41,19 +41,21 @@
       return this.ringLength;
     },
     clear: function () {
-      var link = this.firstLink;
-      if (link) {
+      var first = this.firstLink;
+      if (first) {
         ++this.modificationCount;
+        this.firstLink = null;
+        this.ringLength = 0;
+        var link = first;
         do {
           var nextLink = link.nextInRing;
           link.prevInRing = link.nextInRing = null;
           link = nextLink;
-        } while (link !== this.firstLink);
-        this.firstLink = null;
-        this.ringLength = 0;
+        } while (link !== first);
       }
       return this;
     },
+    //@except when index is not a link in this ring
     remove: function (ix) {
       var prevLink = ix && ix.prevInRing;
       if (!prevLink || ix.linkingRing !== this) {
@@ -69,6 +71,7 @@
       }
       return this;
     },
+    //@except when index is not a link in this ring
     replace: function (it, ix) {
       if (!ix || !ix.prevInRing || ix.linkingRing !== this) {
         this.bad(ix);
@@ -91,6 +94,7 @@
       }
       return this;
     },
+    //@except when index and element are not identical links
     store: function (it, ix) {
       if (!it || it !== ix) {
         this.bad(ix);
@@ -129,7 +133,9 @@
       }
       return this;
     },
-    // rotate ring left or right
+    //@ Rotate this ring to the left or to the right. This is destructive.
+    //@param steps {integer} number of steps to rotate to the left (negative) or right (positive)
+    //@return {Std.Ring} this ring
     rotate: function (steps) {
       var n = this.ringLength;
       if (steps && n > 1 && (steps = steps % n)) {
@@ -153,34 +159,5 @@
       }
       return this;
     }
-  });
-  I.nest({
-    Link: 'Trait'.subclass(function (I) {
-      // I describe a doubly-linked element that is contained in at most one ring.
-      I.have({
-        // ring container of this link
-        linkingRing: null,
-        // previous link in ring
-        prevInRing: null,
-        // next link in ring
-        nextInRing: null
-      });
-      I.know({
-        // initialize ring of this link without adding it to the ring 
-        buildRingLink: function (ring) {
-          this.linkingRing = ring;
-        },
-        // get current ring of this link (or most recent ring if this link has been removed)
-        getLinkingRing: function () {
-          return this.linkingRing;
-        },
-        // remove this link from current ring or leave link untouched if it's not part of a ring
-        unlinkFromRing: function () {
-          if (this.prevInRing) {
-            this.linkingRing.remove(this);
-          }
-        }
-      });
-    })
   });
 })

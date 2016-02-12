@@ -1,3 +1,4 @@
+//@ A Node.js runtime environment.
 'Env.Service'.subclass(['Std.Core.Runtime'], function (I) {
   "use strict";
   /*global global,process*/

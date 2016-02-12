@@ -1,13 +1,15 @@
+//@ Agent methods delegate to actor roles.
 'Logic.SpecialMethods'.subclass(function (I) {
-  // I describe agent methods that delegate to actor roles.
   "use strict";
   I.have({
-    // prototype for agents that invoke synchronous peek methods and asynchronous play methods
+    //@{Std.Theater.Agent} prototype invokes synchronous peek methods and asynchronous play methods
     agentPrototype: null,
-    // constructor of new agents
+    //@{Rt.Closure} constructor of new agents
     agentConstructor: null
   });
   I.know({
+    //@param parent {Std.Theater.AgentMethods?} optional base dictionary with inherited methods
+    //@param behavior {Std.Role.$} role class is owner of agent methods
     build: function (parent, behavior) {
       I.$super.build.call(this, parent, behavior);
       var parentPrototype = parent ? parent.agentPrototype : I._.Agent.getPrototype();
@@ -21,11 +23,8 @@
       };
       this.agentConstructor.prototype = this.agentPrototype;
     },
-    createAgent: function () {
-      return new this.agentConstructor(arguments);
-    },
-    // add keywords to support peek and play methods in class scripts
     prepareScript: function (scriptInst, scriptMeta) {
+      // add keywords to support peek and play methods in class scripts
       var parent = this.getParentMethods();
       if (parent) {
         I.defineConstant(scriptInst, '$superRole', parent._);
@@ -36,6 +35,13 @@
         I.defineConstant(scriptInst, '$formerRole', I.createTable());
         scriptInst.refineRole = scriptRefine;
       }
+    },
+    //@ Create agent that implements these agent methods.
+    //@param ... {any} constructor arguments
+    //@return {Std.Theater.Agent} new agent
+    createAgent: function () {
+      var Constructor = this.agentConstructor;
+      return new Constructor(arguments);
     }
   });
   I.share({

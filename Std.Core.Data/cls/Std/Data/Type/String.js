@@ -1,3 +1,4 @@
+//@ A string type describes string values.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({

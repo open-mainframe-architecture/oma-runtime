@@ -1,18 +1,18 @@
+// An HTTP client uses XMLHttpRequest objects in web browser and worker environments.
 'Std.HTTP.Client'.subclass(['Std.Core.HTTP'], function (I) {
   "use strict";
   /*global XMLHttpRequest*/
-  // I describe an HTTP client that relies on XMLHttpRequest objects in browsers and web workers.
   I.am({
     Abstract: false
   });
   I.nest({
+    //@ Arrival event in web browser or worker environments.
     Arrival: 'Std.HTTP.Client._.Arrival'.subclass(function (I) {
       I.have({
-        // XMLHttpRequest object
+        //@{Any} XMLHttpRequest object
         xhr: null
       });
       I.know({
-        // transmit XMLHttpRequest to charge response arrival
         charge: function (parent, blooper) {
           I.$super.charge.call(this, parent);
           var request = this.request, xhr = this.xhr = new XMLHttpRequest();
@@ -21,7 +21,7 @@
           var user = url.getUser(), password = url.getPassword();
           xhr.open(method, url.withoutCredentials().encode(), true, user, password);
           // binary or textual response data
-          xhr.responseType = this.binary ? 'arraybuffer' : 'text';
+          xhr.responseType = this.expectBinary ? 'arraybuffer' : 'text';
           // copy headers
           request.enumerateHeaders(function (value, name) {
             xhr.setRequestHeader(name, value);
@@ -37,15 +37,21 @@
           I.$super.discharge.call(this);
           this.xhr.abort();
         },
+        //@return true
         isFallible: I.returnTrue,
+        //@ Fail with blooper event.
+        //@param blooper {Std.Theater.Blooper} blooper event
+        //@return nothing
         fail: function (blooper) {
+          // status text might shed some light on the problem
           blooper.fail(this.xhr, this.xhr.statusText);
         }
       });
     }),
+    //@ Receipt event in web browser or worker environments.
     Receipt: 'Std.HTTP.Client._.Receipt'.subclass(function (I) {
       I.know({
-        // create HTTP response object from XMLHttpRequest object
+        //@return this
         charge: function (parent) {
           I.$super.charge.call(this, parent);
           var xhr = this.arrival.xhr, code = xhr.status, status = xhr.statusText;

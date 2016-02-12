@@ -1,7 +1,11 @@
+//@ A container with logical objects.
 'Dictionary+Logical+Context'.subclass(function (I) {
   "use strict";
-  // I describe a container that holds logical objects.
   I.know({
+    //@param baseDictionary {Std.Dictionary} base dictionary
+    //@param homeContext {Std.Context} logical context
+    //@param contextKey {string} logical key
+    //@param module {Std.Logic.Module} defining module
     build: function (baseDictionary, homeContext, contextKey, module) {
       I.$super.build.call(this, baseDictionary);
       this.buildLogical(homeContext, contextKey, module);
@@ -16,7 +20,10 @@
       }
       return I.$super.store.call(this, it, ix);
     },
-    // fail if it cannot be stored in this container
+    //@ Test whether a logical object can be stored in this container.
+    //@param it {Std.Logical} logical object to store
+    //@param ix {string} key of logical object
+    //@return {boolean} true if it can be stored, otherwise false
     checkStorage: function (it, ix) {
       return I._.Logical.describes(it) &&
         Identifier.test(ix) && !I.isPropertyOwner(this._, ix) &&

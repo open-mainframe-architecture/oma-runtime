@@ -1,14 +1,18 @@
+//@ A mixer delegates reading and writing to other streams.
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe a stream whose input and/or output sides delegate to other streams.
   I.am({
     Abstract: false
   });
   I.have({
+    //@{Std.Stream?} input side of this mixer
     inputStream: null,
+    //@{Std.Stream?} output side of this mixer
     outputStream: null
   });
   I.know({
+    //@param input {Std.Stream?} input stream to mix
+    //@param output {Std.Stream?} output stream to mix
     build: function (input, output) {
       I.$super.build.call(this);
       this.inputStream = input;

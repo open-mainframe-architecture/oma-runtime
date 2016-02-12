@@ -1,6 +1,6 @@
+//@ An AST that evaluates a type name.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for type references.
   I.am({
     Abstract: false
   });

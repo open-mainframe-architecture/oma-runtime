@@ -1,11 +1,11 @@
+//@ I describe how the class side of a class behaves.
 'Behavior'.subclass(function (I) {
   "use strict";
-  // I describe how classes behave.
   I.am({
     Final: true
   });
   I.share({
-    // metaclass package with package fields
+    //@{Std.Logic.MetaclassPackage.$} metaclass package with package fields
     BehaviorPackage: I._.MetaclassPackage
   });
 })

@@ -1,36 +1,36 @@
+//@ A theater schedules actors on stage.
 'BaseObject+Eventful'.subclass(function (I) {
   "use strict";
-  // I describe a theater that schedules actors on stage.
   I.am({
     Abstract: false,
     Service: true
   });
   I.have({
-    // ring with actors that have nothing to do, not even something planned in their agendas
+    //@{Std.Ring} ring with actors that have nothing to do, not even in their agendas
     idleActors: null,
-    // ring with actors that are ready to work on jobs
+    //@{Std.Ring} ring with actors that are ready to work on assigned jobs
     workingActors: null,
-    // ring with actor on theater stage
+    //@{Std.Ring} ring with active actor on theater stage
     activeActor: null,
-    // ring with actors that are out of work and waiting for events in their agendas to fire
+    //@{Std.Ring} ring with unemployed actors, waiting for events in their agendas to fire
     waitingActors: null,
-    // ring with actors in trouble whose managers decide what to do next
+    //@{Std.Ring} ring with actors in trouble whose managers decide what to do next
     troubledActors: null,
-    // clock keeps track of real-time
+    //@{Std.Theater.Service._.Clock} clock keeps track of real-time
     theaterClock: null,
-    // curtain is either open or closed
+    //@{boolean} curtain is either open or closed
     curtainOpen: false,
-    // by default, curtain remains open for 8ms in a time slice unless there's nothing to do
+    //@{number} curtain remains open for 8ms in a time slice unless there's nothing to do
     curtainSlice: 0.008,
-    // count number of times curtain has been opened to schedule actors in a time slice 
+    //@{integer} count number of times curtain has been opened to schedule actors in a time slice 
     sliceCount: 0,
-    // count number of actor performances in time slices
+    //@{integer} count number of actor performances in time slices
     slicePerformances: 0,
-    // total time that curtain has been open for a time slice
+    //@{number} total time that curtain has been open for a time slice
     sliceTime: 0,
-    // count number of interrupts on stage
+    //@{integer} count number of interrupts on stage
     interruptCount: 0,
-    // total time that curtain has been open to handle interrupts
+    //@{number} total time that curtain has been open to handle interrupts
     interruptTime: 0
   });
   I.know({
@@ -41,9 +41,12 @@
       this.activeActor = I._.Ring.create();
       this.waitingActors = I._.Ring.create();
       this.troubledActors = I._.Ring.create();
+      // register clock of this theater
       this.theaterClock = this.$rt.register(I.Clock.create(this.wakeUp.bind(this)));
     },
-    // handle interrupt on theater stage
+    //@ Handle external interrupt on theater stage.
+    //@param job {Std.Theater.Job} immobile job becomes interrupt handler
+    //@return nothing
     interrupt: function (job) {
       if (this.curtainOpen || !job.isImmobile()) {
         this.bad();
@@ -66,6 +69,9 @@
         this.curtainOpen = false;
       }
     },
+    //@ Add actor to the appropriate ring in this theater, or remove it from this ring.
+    //@param actor {Std.Theater.Actor} theater actor whose status may have changed
+    //@return nothing
     reschedActor: function (actor) {
       if (actor.isDead()) {
         // remove reference to dead actor, if any
@@ -88,11 +94,14 @@
         this.idleActors.add(actor);
       }
     },
-    // create event that fires when this theater ends a time slice and goes back to sleep
-    sleeps: function () {
+    //@ Create event that fires when this theater ends next or current time slice.
+    //@return {Std.FullEvent} event fires when curtains close
+    stageBreak: function () {
       return this.createEvent();
     },
-    // wake up to open curtain and to let actors work on theater stage until time's up
+    //@ Wake up to open curtain and to let actors work on theater stage until time's up.
+    //@return nothing
+    //@except when curtain is already open
     wakeUp: function () {
       if (this.curtainOpen) {
         this.bad();
@@ -116,13 +125,14 @@
         // actor must leave the stage if it didn't already
         active.clear();
       }
-      // fire events when this theater goes back to sleep
+      // fire events when this theater takes a break
       this.fireAll();
       // start deep sleep when out of work, otherwise wake up for next slice as soon as possible
       this.sliceTime += clock.sleep(working.isEmpty()) - beginning;
       this.curtainOpen = false;
     },
-    // iterate over actors that live in this theater
+    //@ Walk over all actors that live in this theater.
+    //@return {Std.Iterator} iterator over actors
     walkActors: function () {
       var active = this.activeActor.walk();
       var working = this.workingActors.walk();
@@ -132,20 +142,21 @@
     }
   });
   I.nest({
+    //@ A theater clock wakes up on time for delay events.
     Clock: 'Wait.Clock'.subclass(function (I) {
       I.am({
         Abstract: false
       });
-      // I describe clocks that wake up on time for delay events.
       I.have({
-        // closure for wake-up call
+        //@{Rt.Closure} wake-up call
         wakeUp: null,
-        // false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
+        //@{any} false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
         sleeping: true,
-        // deadline for next JavaScript alarm
+        //@{number} deadline for next JavaScript alarm
         deadline: null
       });
       I.know({
+        //@param wakeUp {Rt.Closure} code to wake up
         build: function (wakeUp) {
           I.$super.build.call(this);
           this.wakeUp = wakeUp;
@@ -180,7 +191,8 @@
         delay: function (seconds) {
           return I.$outer.Delay.create(this, seconds);
         },
-        // advance clock whilst awake
+        //@ Adjust clock whilst awake.
+        //@return {number} current clock time
         awake: function () {
           this.resetAlarm(false);
           var uptime = this.get();
@@ -190,7 +202,8 @@
           }
           return uptime;
         },
-        // schedule wake-up call as soon as possible
+        //@ Schedule next wake-up call as soon as possible.
+        //@return nothing
         awakeSoon: function () {
           if (this.sleeping !== null) {
             clearTimeout(this.sleeping);
@@ -200,7 +213,8 @@
           }
           // otherwise wake-up call is already scheduled
         },
-        // clear pending alarm and continue with new sleeping status
+        //@ Clear pending alarm and continue with new sleeping status.
+        //@param sleeping {any} null, boolean or JavaScript alarm
         resetAlarm: function (sleeping) {
           if (this.sleeping) {
             clearTimeout(this.sleeping);
@@ -208,7 +222,9 @@
           }
           this.sleeping = sleeping;
         },
-        // schedule wake-up call for deep sleep, otherwise wake up as soon as possible
+        //@ Schedule wake-up call for deep sleep, otherwise wake up as soon as possible.
+        //@param deep {boolean} true for deep sleep, otherwise wake up asap
+        //@return {number} current clock time
         sleep: function (deep) {
           var delay = deep && this.getFirstCharge();
           var uptime = this.get();
@@ -228,15 +244,17 @@
         }
       });
     }),
+    //@ A delay event stems from a theater clock.
     Delay: 'FullEvent'.subclass(function (I) {
-      // I describe delay events of clocks.
       I.have({
-        // seconds to wait
+        //@{number} seconds to wait
         seconds: null,
-        // uptime when this delay event fires
+        //@{number} uptime when this delay event fires
         deadline: null
       });
       I.know({
+        //@param clock {Std.Theater.Service._.Clock} theater clock
+        //@param seconds {number} seconds to wait
         build: function (clock, seconds) {
           I.$super.build.call(this, clock);
           this.seconds = seconds;
@@ -245,6 +263,7 @@
     })
   });
   I.setup(function () {
+    // register theater instance and lock it for actors
     I._.Actor.lockInstanceConstants({ $theater: I.$.$rt.register(I.$.create()) });
   });
 })

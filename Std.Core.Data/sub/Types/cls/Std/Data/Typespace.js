@@ -1,8 +1,11 @@
 function refine(I) {
   "use strict";
   I.know({
-    // add type definitions from module configuration
-    defineTypes: function(home, definitions_) {
+    //@ Add type definitions from module configuration.
+    //@param home {string} name of type package where to add definitions
+    //@param definitions_ {Rt.Table} map name to type definition or nested type package
+    //@return nothing
+    defineTypes: function (home, definitions_) {
       for (var key in definitions_) {
         if (!Key.test(key)) {
           this.bad('type definition', key);

@@ -1,71 +1,90 @@
+//@ An iterator walks until the last step has been taken.
 'BaseObject+Indirect'.subclass(function (I) {
   "use strict";
-  // I describe an iterator that walks until the last step has been taken.
   I.am({
     Abstract: false
   });
   I.know({
-    // get whatever this iterator currently has behind the indirection (caller ensures it has!)
+    //@ Get whatever this iterator is currently iterating. Caller ensures it has something.
+    //@return {any} iterated thing
     get: I.shouldNotOccur,
-    // test whether this iterator has anything behind the indirection
+    //@ Test whether this iterator has anything behind the indirection.
+    //@return {boolean} true if iterator can get something, otherwise false
     has: I.returnFalse,
-    // advance this iterator one step further, resetting the indirection
+    //@ Advance this iterator one step further, resetting the indirection.
+    //@return nothing
     step: I.shouldNotOccur
   });
   I.share({
-    // create iterator that converts elements of decoratee
+    //@ Create iterator that converts things of decoratee.
+    //@param decoratee {Std.Iterator} iterator over original things
+    //@param conversion {Rt.Closure} called with original thing to produce converted thing
+    //@return {Std.Iterator} an iterator over converted things
     collect: function (decoratee, conversion) {
       return decoratee === I.Empty ? I.Empty : I.Converter.create(decoratee, conversion);
     },
-    // create iterator that walks over arguments, iterator arguments are expanded one level deep
+    //@ Create iterator that walks over arguments. Iterator arguments are expanded one level deep.
+    //@param ... {any} iterated thing or iterator to expand
+    //@return {Std.Iterator} an iterator over expanded arguments
     concat: function () {
-      return arguments.length ? I.flatten(I.slice(arguments).walk(), 1) : I.Empty;
+      return !arguments.length ? I.Empty : I.flatten(I.slice(arguments).walk(), 1);
     },
-    // create iterator that counts up or down until the limit is reached
-    count: function (from, to, incr) {
-      incr = incr || 1;
-      return (incr > 0 ? from > to : from < to) ? I.Empty : I.Counter.create(from, to, incr);
+    //@ Create iterator that counts up or down until the limit has been passed.
+    //@param from {number} initial count
+    //@param to {number} count limit
+    //@param increment {number?} positive increment to count up (default 1), otherwise count down
+    //@return {Std.Iterator} an iterator over counted numbers
+    count: function (from, to, increment) {
+      increment = increment || 1;
+      function advance(count) { return count + increment; }
+      // different conditions for counting up and down
+      var condition = increment > 0 ? function (count) { return count <= to; } :
+        function (count) { return count >= to; };
+      return I.whilst(from, condition, advance);
     },
-    // create iterator that flattens iterators in decoratee until depth is reached
+    //@ Create iterator that flattens iterators in decoratee until depth is reached.
+    //@param decoratee {Std.Iterator} iterator over original things
+    //@param depth {number} maximum expansion depth of flattened iterators
+    //@return {Std.Iterator} an iterator over flattened things
     flatten: function (decoratee, depth) {
-      if (decoratee === I.Empty) {
-        return I.Empty;
-      }
-      return depth === 0 ? decoratee : I.Flattener.create(decoratee, depth);
+      return decoratee === I.Empty ? I.Empty :
+        depth === 0 ? decoratee : I.Flattener.create(decoratee, depth);
     },
-    // create iterator over results of repeated computation
-    generate: function (sentinel, computation) {
-      return I.Generator.create(computation || sentinel, computation && sentinel);
+    //@ Create iterator that generates next iterated thing from previous one.
+    //@param first {any} first iterated thing
+    //@param advance {Rt.Closure} called with iterated thing to produce next one
+    //@return {Std.Iterator} an iterator over generated things while generated thing is defined
+    inject: function (first, advance) {
+      return I.whilst(first, I.isDefined, advance);
     },
-    // create iterator that computes next generation from previous generation
-    inject: function (finalSentinel, firstGeneration, advance) {
-      var first = advance ? firstGeneration : finalSentinel;
-      var sentinel = advance && finalSentinel;
-      var computation = advance || firstGeneration;
-      return first === sentinel ? I.Empty : I.Injector.create(computation, first, sentinel);
-    },
-    // create iterator that walks over rejected elements from decoratee
-    reject: function (decoratee, rejection) {
-      return decoratee === I.Empty ? I.Empty : I.Filter.create(decoratee, function (it) {
-        return !rejection(it);
-      });
-    },
-    // create iterator that walks over selected elements from decoratee
+    //@ Create iterator that walks over selected things from decoratee.
+    //@param decoratee {Std.Iterator} iterator over original things
+    //@param selection {Rt.Closure} called with original thing, return truthy result to select it
+    //@return {Std.Iterator} an iterator over selected things
     select: function (decoratee, selection) {
-      // optionally convert selected elements
       return decoratee === I.Empty ? I.Empty : I.Filter.create(decoratee, selection);
+    },
+    //@ Create iterator that generates next iterated thing from previous one.
+    //@param first {any} first iterated thing
+    //@param condition {Rt.Closure} called with iterated thing to test whether iteration continues
+    //@param advance {Rt.Closure} called with iterated thing to produce next one
+    //@return {Std.Iterator} an iterator over generated things while condition holds
+    whilst: function (first, condition, advance) {
+      return !condition(first) ? I.Empty : I.Repeater.create(first, advance, condition);
     }
   });
   I.nest({
+    //@ A converter converts iterated things of another iterator.
     Converter: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe an iterator that converts elements of another iterator.
       I.have({
-        // conversion closure
+        //@{Rt.Closure} conversion closure
         conversion: null,
-        // current converted element
+        //@{any} current converted element
         converted: null
       });
       I.know({
+        //@param decoratee {Std.Iterator} iterator over original things
+        //@param conversion {Rt.Closure} compute converted thing from original one
         build: function (decoratee, conversion) {
           I.$super.build.call(this, decoratee);
           this.conversion = conversion;
@@ -85,41 +104,14 @@
       });
       var Unassigned = {};
     }),
-    Counter: 'Iterator'.subclass(function (I) {
-      // I describe an iterator that counts up or down.
-      I.have({
-        // current count
-        count: 0,
-        // limit that this counter cannot pass
-        limit: 0,
-        // counter increment
-        increment: 0
-      });
-      I.know({
-        build: function (from, to, increment) {
-          I.$super.build.call(this);
-          this.count = from;
-          this.limit = to;
-          this.increment = increment;
-        },
-        get: function () {
-          return this.count;
-        },
-        has: function () {
-          return this.increment > 0 ? this.count <= this.limit : this.count >= this.limit;
-        },
-        step: function () {
-          this.count += this.increment;
-        }
-      });
-    }),
+    //@ A decorator wraps another iterator.
     Decorator: 'Iterator'.subclass(function (I) {
-      // I describe an iterator that wraps another iterator.
       I.have({
-        // wrapped iterator
+        //@{Std.Iterator} wrapped iterator
         decoratee: null
       });
       I.know({
+        //@param decoratee {Std.Iterator} iterator over things
         build: function (decoratee) {
           I.$super.build.call(this);
           this.decoratee = decoratee;
@@ -135,15 +127,17 @@
         }
       });
     }),
+    //@ A filter selects iterated things of another iterator.
     Filter: 'Iterator._.Verifier'.subclass(function (I) {
-      // I describe an iterator that filters elements from another iterator.
       I.have({
-        // selection closure
+        //@{Rt.Closure} selection closure
         selection: null,
-        // true if decoratee is positioned at selected element
+        //@{boolean} true if decoratee is positioned at selected element
         selected: false
       });
       I.know({
+        //@param decoratee {Std.Iterator} iterator over original things
+        //@param selection {Rt.Closure} test whether original thing is selected
         build: function (decoratee, selection) {
           I.$super.build.call(this, decoratee);
           this.selection = selection;
@@ -166,17 +160,19 @@
         }
       });
     }),
+    //@ A flattener expands iterators in decoratee.
     Flattener: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe an iterator that flattens iterators in decoratee.
       I.have({
-        // maximum depth to expand flattened iterators (or null if there is no limit)
+        //@{number?} maximum depth to expand flattened iterators or null if there is no limit
         depth: null,
-        // array with expanded iterators
+        //@{[Std.Iterator]} stack with expanded iterators
         stack: null,
-        // current iterated element on top
+        //@{any} current iterated thing on top
         top: null
       });
       I.know({
+        //@param decoratee {Std.Iterator} iterator over original things
+        //@param depth {number?} maximum expansion depth of flattened iterators
         build: function (decoratee, depth) {
           I.$super.build.call(this, decoratee);
           this.depth = depth;
@@ -190,7 +186,7 @@
           if (this.top === Unassigned && this.stack.length) {
             this.reposition();
           }
-          return this.decoratee.has();
+          return I.$super.has.call(this);
         },
         step: function () {
           if (this.top === Unassigned) {
@@ -199,7 +195,8 @@
           this.stack[this.stack.length - 1].step();
           this.top = Unassigned;
         },
-        // expand iterators on stack until next top is found
+        //@ Expand iterators on stack until next thing on top is found.
+        //@return {any} thing on top of stack
         reposition: function () {
           var n = this.stack.length;
           for (; ;) {
@@ -232,94 +229,71 @@
       });
       var Unassigned = {};
     }),
-    Generator: 'Iterator'.subclass(function (I) {
-      // I describe an iterator that computes elements.
+    //@ A repeater computes the next iterated thing from the previous one.
+    Repeater: 'Iterator'.subclass(function (I) {
       I.have({
-        // closure to compute next element
-        computation: null,
-        // current element
+        //@{any} current generation
         generated: null,
-        // sentinel signals end of iteration
-        sentinel: null
+        //@{boolean?} null to test current generation, otherwise validity of current generation
+        selected: null,
+        //@{Rt.Closure} compute next generation from previous generation
+        computation: null,
+        //@{Rt.Closure} repeat while test condition holds
+        condition: null
       });
       I.know({
-        build: function (computation, sentinel) {
+        //@param first {any} first generation passes test
+        //@param advance {Rt.Closure} compute sequence of generations
+        //@param condition {Rt.Closure} test generation validity
+        build: function (first, advance, condition) {
           I.$super.build.call(this);
-          this.computation = computation;
-          this.generated = Unassigned;
-          this.sentinel = sentinel;
-        },
-        get: function () {
-          if (this.generated === Unassigned) {
-            this.step();
-          }
-          return this.generated;
-        },
-        has: function () {
-          if (this.generated === Unassigned) {
-            this.step();
-          }
-          return this.generated !== this.sentinel;
-        },
-        step: function () {
-          var computation = this.computation;
-          this.generated = computation();
-        }
-      });
-      var Unassigned = {};
-    }),
-    Injector: 'Iterator'.subclass(function (I) {
-      // I describe an iterator that computes the next element with current element.
-      I.have({
-        // closure to compute next element (aka generation)
-        computation: null,
-        // current generation
-        generated: null,
-        // sentinel indicates end of iteration
-        sentinel: null
-      });
-      I.know({
-        build: function (advance, first, sentinel) {
-          I.$super.build.call(this);
-          this.computation = advance;
           this.generated = first;
-          this.sentinel = sentinel;
+          this.selected = true;
+          this.computation = advance;
+          this.condition = condition;
         },
         get: function () {
           return this.generated;
         },
         has: function () {
-          return this.generated !== this.sentinel;
+          if (this.selected === null) {
+            var condition = this.condition;
+            this.selected = !!condition(this.generated);
+          }
+          return this.selected;
         },
         step: function () {
           var computation = this.computation;
           this.generated = computation(this.generated);
+          this.selected = null;
         }
       });
     }),
+    //@ A verifier checks a condition on every access.
     Verifier: 'Iterator._.Decorator'.subclass(function (I) {
-      // I describe an iterator that verifies a condition on every access.
       I.know({
         get: function () {
           this.verifyCondition();
-          return this.decoratee.get();
+          return I.$super.get.call(this);
         },
         has: function () {
           this.verifyCondition();
-          return this.decoratee.has();
+          return I.$super.has.call(this);
         },
         step: function () {
           this.verifyCondition();
-          this.decoratee.step();
+          I.$super.step.call(this);
         },
-        // verify condition on every iterator access
+        //@ Verify condition on every iterator access.
+        //@return nothing
         verifyCondition: I.doNothing
       });
     })
   });
   I.setup({
-    // create empty iterator after Iterator class has been unveiled
-    Empty: function() {
+    //@{Std.Iterator} empty iterator has nothing to iterate
+    Empty: function () {
+      // defer creation of empty iterator until Iterator class has been unveiled
       return I.$.create();
     }
   });

@@ -1,14 +1,17 @@
+//@ An HTTP client requires standard facilities in a Node.js environment.
 'Std.HTTP.Client'.subclass(['Std.Core.HTTP'], function (I) {
   "use strict";
   /*global require, Buffer*/
-  // I describe an HTTP client that relies on standard Node.js facilities.
   I.am({
     Abstract: false
   });
   I.nest({
+    //@ Arrival event in Node.js environment.
     Arrival: 'Std.HTTP.Client._.Arrival'.subclass(function (I) {
       I.have({
+        //@{Any} request object in Node.js environment
         nodeRequest: null,
+        //@{Any} response object in Node.js environment
         nodeResponse: null
       });
       I.know({
@@ -26,6 +29,7 @@
           request.enumerateHeaders(function (value, name) {
             headers[name] = value;
           });
+          // convert to options as expected by Node.js API
           var options = {
             hostname: url.getHost(),
             port: url.getPort(),
@@ -41,16 +45,25 @@
             .once('response', this.succeed.bind(this))
             .once('error', this.fail.bind(this, blooper))
             ;
+          // start sending request
           nodeRequest.end(I.opaqueBytes(request.getBody()));
         },
         discharge: function () {
           I.$super.discharge.call(this);
           this.nodeRequest.abort();
         },
+        //@return true
         isFallible: I.returnTrue,
+        //@ Fail with blooper event.
+        //@param blooper {Std.Theater.Blooper} blooper event
+        //@param error {Any} error information from Node.js environment
+        //@return nothing
         fail: function (blooper, error) {
           blooper.fail(this.nodeRequest, error.message);
         },
+        //@ Succeed when response arrives.
+        //@param response {Any} response object in Node.js environment
+        //@return nothing
         succeed: function (response) {
           if (!this.nodeResponse) {
             this.nodeResponse = response;
@@ -59,8 +72,10 @@
         }
       });
     }),
+    //@ Receipt event in Node.js runtime environment.
     Receipt: 'Std.HTTP.Client._.Receipt'.subclass(function (I) {
       I.have({
+        //@{[string|binary]?} textual or binary chunks received so far
         chunks: null
       });
       I.know({
@@ -68,7 +83,7 @@
           I.$super.charge.call(this, parent);
           var chunks = this.chunks = [];
           var nodeResponse = this.arrival.nodeResponse;
-          if (!this.arrival.binary) {
+          if (!this.arrival.expectBinary) {
             nodeResponse.setEncoding('utf8');
           }
           nodeResponse
@@ -81,17 +96,30 @@
           I.$super.discharge.call(this);
           this.arrival.nodeRequest.abort();
         },
+        //@return true
         isFallible: I.returnTrue,
+        //@ Fail with blooper event.
+        //@param blooper {Std.Theater.Blooper} blooper event
+        //@param error {Any} error information from Node.js environment
+        //@return nothing
         fail: function (blooper, error) {
           blooper.fail(this.arrival.nodeResponse, error.message);
         },
+        //@ Succeed when all chunks have arrived.
+        //@return nothing
         succeed: function () {
           if (!this.response) {
             var arrival = this.arrival, chunks = this.chunks;
-            var nodeResponse = arrival.nodeResponse, binary = arrival.binary;
+            var nodeResponse = arrival.nodeResponse, expectBinary = arrival.expectBinary;
             var code = nodeResponse.statusCode, status = nodeResponse.statusMessage;
             var headers = nodeResponse.headers;
-            var body = binary ? new Uint8Array(Buffer.concat(chunks)).buffer : chunks.join('');
+            var body; 
+            if (expectBinary) {
+              body = new Uint8Array(Buffer.concat(chunks)).buffer;
+            } else {
+              body = chunks.join('');
+            }
+            // assign standard response object with one body
             this.response = I._.Std._.HTTP._.Response.create(status, code, headers, body);
             this.fire();
           }

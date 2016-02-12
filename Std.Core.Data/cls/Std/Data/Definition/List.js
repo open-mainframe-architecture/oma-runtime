@@ -1,6 +1,6 @@
+//@ An AST that evaluates a list type.
 'Collection'.subclass(function (I) {
   "use strict";
-  // I describe an AST for list types.
   I.am({
     Abstract: false
   });
@@ -12,7 +12,7 @@
     substitute: function (variables_) {
       var expression = this.elementExpression;
       var sub = expression.substitute(variables_);
-      return expression === sub ? this : I.Cache.createList(sub);
+      return expression === sub ? this : I.AST.createList(sub);
     }
   });
 })

@@ -1,44 +1,57 @@
-//@ I describe an object that can enumerate indexed elements.
+//@ An indexable object enumerates indexed things.
 'Trait'.subclass(function (I) {
   "use strict";
   I.know({
-    // test whether it is indexed by this indexable
+    //@ Test whether it is indexed by this indexable.
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it is indexed by this this indexable, otherwise false
     contains: function (it) {
-      return !this.enumerate(function (elem) { return elem !== it; });
+      return !this.enumerate(function (thing) { return thing !== it; });
     },
-    // test whether ix is an index in this indexable
+    //@ Test whether this indexable indexes something at the index.
+    //@param ix {any} index to test
+    //@return {boolean} true if something is indexed at the index, otherwise false
     containsIndex: function (ix) {
-      return !this.enumerate(function (elem, elemIx) { return elemIx !== ix; });
+      return !this.enumerate(function (ignore, thingIx) { return thingIx !== ix; });
     },
-    // enumerate indexed elements until visitor returns false
+    //@ Enumerate indexed tings until visitor returns false.
+    //@param visit {Rt.Closure} closure is called with thing and its index
+    //@return {boolean} false if some visit returned false, otherwise true
     enumerate: I.burdenSubclass,
-    // relaxed find might have a broader scope and be more forgiving than strict lookup
+    //@ Find thing at index. Found thing may not be indexed by this receiver.
+    //@param ix {any} index where to find thing
+    //@return {any} found thing or nothing
     find: function (ix) {
       return this.lookup(ix);
     },
-    // find index of it in this indexable
+    //@ Determine index of it in this indexable.
+    //@param it {any} JavaScript object or value
+    //@return {any} index or nothing
     indexOf: function (it) {
       var ix;
-      this.enumerate(function (elem, elemIx) {
-        if (it === elem) {
-          ix = elemIx;
+      this.enumerate(function (thing, thingIx) {
+        if (it === thing) {
+          ix = thingIx;
           return false;
         }
       });
       return ix;
     },
-    // strict lookup of indexed element in this indexable
+    //@ Look up thing at index. Found thing must be indexed by this receiver.
+    //@param ix {any} index where to look up thing
+    //@return {any} thing or nothing
     lookup: function (ix) {
       var it;
-      this.enumerate(function (elem, elemIx) {
-        if (ix === elemIx) {
-          it = elem;
+      this.enumerate(function (thing, thingIx) {
+        if (ix === thingIx) {
+          it = thing;
           return false;
         }
       });
       return it;
     },
-    // count number of indexable elements in this indexable
+    //@ Count number of indexable things in this indexable.
+    //@return {integer} number of things
     size: function () {
       var n = 0;
       this.enumerate(function () { ++n; });

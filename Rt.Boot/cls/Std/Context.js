@@ -1,8 +1,8 @@
-//@ I describe a contextual object that indexes contextual objects.
+//@ A context is a contextual object that indexes contextual objects.
 'Contextual+Indexable'.subclass(function (I) {
   "use strict";
   I.have({
-    //@{integer} Discrete distance of this context to the root context.
+    //@{integer} discrete distance of this context to the root context
     contextDepth: -1
   });
   I.know({

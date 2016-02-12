@@ -1,13 +1,16 @@
+//@ An AST that evaluates a union type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for union types.
   I.am({
     Abstract: false
   });
   I.have({
+    //@{[Std.Data.Definition.Expression]} expressions of union alternatives
     alternativeExpressions: null
   });
   I.know({
+    //@param source {string} source text
+    //@param alternatives {[Std.Data.Definition.Expression]} alternative expressions
     build: function (source, alternatives) {
       I.$super.build.call(this, source);
       this.alternativeExpressions = alternatives;
@@ -21,7 +24,7 @@
     substitute: function (variables_) {
       var alternatives = this.alternativeExpressions;
       var subs = I.substituteExpressions(alternatives, variables_);
-      return subs === alternatives ? this : I.Cache.createUnion(subs);
+      return subs === alternatives ? this : I.AST.createUnion(subs);
     }
   });
 })

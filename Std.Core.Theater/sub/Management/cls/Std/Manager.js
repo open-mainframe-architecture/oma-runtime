@@ -1,3 +1,4 @@
+//@ A manager decides over life and death of managed actors.
 'Role'.subclass(function (I) {
   "use strict";
   I.play({
@@ -13,18 +14,26 @@
       // proceed with suicide of this manager when team is empty
       return I.$superRole.kill.call(this);
     },
-    // default handling of exception on stage is strict
+    //@ Handle exception of actor that was playing on stage.
+    //@param job {Std.Theater.Job} job clone explains what actor was doing
+    //@param exception {Std.Failure|Rt.Exception} problem caused by actor
+    //@return {any} result of failed job
     manageException: function (job, exception) {
       // bury actor that caused exception on stage, because the role may be inconsistent
       job.getActor().bury();
       return exception;
     },
-    // complete job with failure when actor has died
+    //@ Complete job of dead actor.
+    //@param job {Std.Theater.Job} job sent to dead actor
+    //@return {Std.Failure} unsuccessful result of job
     managePostMortem: function (job) {
       return I._.Failure.create(job.getActor(), ['death']);
     },
-    // bury actor that died on stage
+    //@ Handle suicide attempt of actor on stage.
+    //@param job {Std.Theater.Job} job of suicidal actor
+    //@return {boolean} true if actor was killed, otherwise false
     manageSuicide: function (job) {
+      // bury actor that died on stage
       job.getActor().bury();
       // true to confirm the actor has been killed
       return true;

@@ -1,15 +1,23 @@
+//@ An union type describes values of alternative types.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
+    //@{[Std.Data.AbstractType]} alternative types of this union
     alternativeTypes: null,
+    //@{[Std.Data.Type.Dictionary?]} only dictionary alternative or nothing
     dictionaryAlternative: null,
+    //@{[Std.Data.Type.List?]} only list alternative or nothing
     listAlternative: null,
+    //@{[Std.Data.Type.Record?]} only record alternative or nothing
     recordAlternative: null
   });
   I.know({
+    //@param typespace {Std.Data.Typespace} typespace of this union type
+    //@param expression {Std.Data.Definition.Expression} type expression
+    //@param alternatives {[Std.Data.AbstractType]} alternative types of this union type
     build: function (typespace, expression, alternatives) {
       I.$super.build.call(this, typespace, expression);
       this.alternativeTypes = alternatives;
@@ -29,17 +37,13 @@
       this.recordAlternative = typeof record === 'boolean' ? null : record;
     },
     describesValue: function (value) {
-      var alternatives = this.alternativeTypes;
-      for (var i = 0, n = alternatives.length; i < n; ++i) {
-        if (alternatives[i].describesValue(value)) {
-          return true;
-        }
-      }
-      return false;
+      return this.alternativeTypes.some(function (alternative) {
+        return alternative.describesValue(value);
+      });
     },
     marshalValue: I.shouldNotOccur,
     unmarshalJSON: function (json, expression) {
-      if (I.isBasicValue(json)) {
+      if (I.Data.isBasicValue(json)) {
         return json;
       } else {
         var alternative = json && (
@@ -52,16 +56,21 @@
     }
   });
   I.share({
+    //@ Normalize alternative types.
+    //@param typespace {Std.Data.Typespace} typespace of new type
+    //@param expression {Std.Data.Definition.Expression} type expression
+    //@param alternatives {[Std.Data.AbstractType]} alternatives of type to normalize
+    //@return {Std.Data.AbstractType} normalized type, probably a union
     normalize: function (typespace, expression, alternatives) {
       var flat = [];
-      var i, j, n, optional, wildcard, boolean, number, integer, string, enumerations;
-      for (i = 0, n = alternatives.length; i < n; ++i) {
-        if (I.$.describes(alternatives[i])) {
-          flat.push.apply(flat, alternatives[i].alternativeTypes);
+      alternatives.forEach(function(alternative) {
+        if (I.$.describes(alternative)) {
+          flat.push.apply(flat, alternative.alternativeTypes);
         } else {
-          flat.push(alternatives[i]);
+          flat.push(alternative);
         }
-      }
+      });
+      var i, j, n, optional, wildcard, boolean, number, integer, string, enumerations;
       for (optional = false, i = 0, j = 0, n = flat.length; i < n; ++i) {
         if (I._.None.describes(flat[i])) {
           optional = true;
@@ -119,7 +128,7 @@
         if (string) {
           flat.unshift(string);
         } else if (enumerations.length) {
-          flat.unshift(I._.Enumeration._.flatten(typespace, expression, enumerations));
+          flat.unshift(I._.Enumeration._.merge(typespace, expression, enumerations));
         }
         if (number) {
           flat.unshift(number);

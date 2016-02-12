@@ -1,16 +1,17 @@
+//@ A dictionary maps string indices to contained elements.
 'Container'.subclass(function (I) {
   "use strict";
-  // I describe a dictionary that maps string indices to elements.
   I.am({
     Abstract: false
   });
   I.have({
-    // table that backs this dictionary
+    //{Rt.Table} table with entries of this dictionary
     _: null,
-    // optional base dictionary where indices are found, which are missing from this dictionary
+    //{Std.Dictionary?} optional dictionary to find indices missing from this dictionary
     baseDictionary: null
   });
   I.know({
+    //@param baseDictionary {Std.Dictionary?} base dictionary of this new dictionary
     build: function (baseDictionary) {
       I.$super.build.call(this);
       this.baseDictionary = baseDictionary;
@@ -48,7 +49,7 @@
       return this._[ix];
     },
     lookup: function (ix) {
-      // strict lookup in this dictionary
+      // find in this dictionary, not in base
       if (I.isPropertyOwner(this._, ix)) {
         return this._[ix];
       }
@@ -80,6 +81,10 @@
       }
       return this;
     },
+    //@ Store constant at index. The index cannot be removed, updated or cleared afterwards.
+    //@param it {any} JavaScript object or value to store
+    //@param ix {string} index of constant
+    //@return {Std.Dictionary} this dictionary, because it's destructive
     storeConstant: function (it, ix) {
       var descriptor = { value: it, configurable: false, enumerable: true, writable: false };
       ++this.modificationCount;

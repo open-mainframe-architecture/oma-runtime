@@ -2,23 +2,20 @@
 'Object'.subclass(function (I, We) {
   "use strict";
   I.know({
-    //@ Class of this object.
-    //@type {Std.Logic.Behavior} class or metaclass if this receiver is a class object
+    //@{Std.Logic.Behavior} class of this object or metaclass if this object is a class
     $: null,
-    //@ Table with package field substances.
-    //@type {Rt.Table} table with package constants and subroutines
+    //@{Rt.Table} table with package field substances
     $_: null,
-    //@ Runtime system singleton.
-    //@type {Rt.System} runtime system
+    //@{Rt.System} runtime system singleton
     $rt: null,
     //@ Abort execution with a failure from this object.
-    //@param ... {Any} failure reasons
+    //@param ... {any} failure reasons
     //@return never
     bad: function () {
       throw I._.Failure.create(this, I.slice(arguments));
     },
     //@ Build this new object from construction arguments.
-    //@param ... {Any} construction arguments
+    //@param ... {any} construction arguments
     //@return nothing
     build: I.doNothing,
     //@ Unveil this new object after construction to complete initialization.

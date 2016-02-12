@@ -1,4 +1,2 @@
-'Object'.subclass(RegExp, function () {
-  "use strict";
-  // I describe a JavaScript regular expression.
-})
+//@ A JavaScript regular expression is a runtime regexp.
+'Object'.subclass(RegExp, function () {})

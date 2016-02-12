@@ -1,15 +1,15 @@
+//@ Improve runtime system implementation in Node.js environment.
 function refine(I) {
   "use strict";
   /*global process, setImmediate*/
-  // I improve the runtime system in a Node.js environment.
   var sinceMoment = process.hrtime();
   var uptimeOffset = I.$.$rt.getUptime();
   I.refine({
-    // improve on setTimeout implementation
+    //@ Replace setTimeout implementation with setImmediate.
     asap: function (closure) {
       setImmediate(closure);
     },
-    // improve on Date.now() implementation with process.hrtime()
+    //@ Replace Date.now implementation with high-resolution time.
     getUptime: function () {
       var sincePeriod = process.hrtime(sinceMoment);
       // adjust for different epochs

@@ -1,6 +1,6 @@
+//@ An AST that evaluates the string type.
 'Expression'.subclass(function (I) {
   "use strict";
-  // I describe an AST for string types.
   I.am({
     Abstract: false
   });

@@ -1,4 +1,2 @@
-'Field'.subclass(function () {
-  "use strict";
-  // I describe a fields that defines a subroutine or constant for scoped objects.
-})
+//@ A package field defines a subroutine, a constant or an alias for scoped objects.
+'Field'.subclass(function () { })

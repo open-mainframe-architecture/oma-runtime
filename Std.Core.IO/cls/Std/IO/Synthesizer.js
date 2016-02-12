@@ -1,16 +1,18 @@
+//@ A synthesizer computes and consumes items with closures.
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe a stream that delegate item production and consumption to closures.
   I.am({
     Abstract: false
   });
   I.have({
-    // closure to produce next item of input stream
+    //@{Rt.Closure?} produce next item of input stream
     inputComputation: null,
-    // closure to consume next item of output stream
+    //@{Rt.Closure?} consume next item of output stream
     outputComputation: null
   });
   I.know({
+    //@param input {Rt.Closure?} produce input
+    //@param output {Rt.Closure?} consume output
     build: function (input, output) {
       I.$super.build.call(this);
       this.inputComputation = input;

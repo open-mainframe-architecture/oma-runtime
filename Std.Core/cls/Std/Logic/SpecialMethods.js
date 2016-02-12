@@ -1,16 +1,21 @@
+//@ A dictionary with special instance method closures that cannot be invoked directly.
 'Dictionary'.subclass(function (I) {
   "use strict";
-  // I describe a dictionary with instance method closures that cannot be invoked directly.
   I.have({
-    // behavior that has been enhanced with special methods
+    //@{Std.Logic.Behavior} behavior that has been enhanced with special methods
     enhancedBehavior: null
   });
   I.know({
+    //@param parent {Std.Dictionary} base dictionary with parent methods
+    //@param behavior {Std.Logic.Behavior} enhanced behavior
     build: function (parent, behavior) {
       I.$super.build.call(this, parent);
       this.enhancedBehavior = behavior;
     },
-    // add closures of special methods
+    //@ Add closures of special methods.
+    //@param module {Std.Logic.Module} defining module
+    //@param specialMethods_ {Rt.Table} mapping from method names to closures
+    //@return nothing
     addMethods: function (module, specialMethods_) {
       var methods_ = {};
       var prefix = this.$_.SelectorPrefix;
@@ -24,13 +29,22 @@
       }
       this.enhancedBehavior.addInstanceKnowledge(module, methods_);
     },
+    //@ Get enhanced behavior.
+    //@return {Std.Logic.Behavior} behavior
     getBehavior: function () {
       return this.enhancedBehavior;
     },
+    //@ Get dictionary with parent methods.
+    //@return {Std.Dictionary?} dictionary or nothing
     getParentMethods: function () {
       return this.baseDictionary;
     },
-    // refine closures of special methods
+    //@ Refine closures of special methods.
+    //@param module {Std.Logic.Module} refining module
+    //@param refinedSpecials_ {Rt.Table} mapping from method names to new closures
+    //@param formerSpecials_ {Rt.Table} accumulator for former closures
+    //@return nothing
+    //@except when supplied refinements are invalid
     refineMethods: function (module, refinedSpecials_, formerSpecials_) {
       var refinedMethods_ = {};
       var formerMethods_ = Object.create(this.enhancedBehavior.getParentPrototype());
@@ -51,7 +65,7 @@
     }
   });
   I.share({
-    // key prefix that is added to instance methods
+    //@{string} key prefix that is added to instance methods
     SelectorPrefix: '@'
   });
 })

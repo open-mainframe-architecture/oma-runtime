@@ -1,12 +1,17 @@
 function refine(I) {
   "use strict";
   I.know({
-    // schedule closure after control has been given back to global event loop
+    //@ Schedule closure after control has been given back to global event loop.
+    //@param closure {Rt.Closure} code to schedule
+    //@return nothing
     asap: function (closure) {
       // setImmediate would be better, but it is not universally supported
       setTimeout(closure, 0);
     },
-    // enumerate all providers of a service
+    //@ Enumerate providers of a service.
+    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to enumerate
+    //@param visit {Rt.Closure} called with provider and one-based index of service provider
+    //@return {boolean} false if some visit returned false, otherwise true
     enumerateProviders: function (service, visit) {
       var serviceClass = I.resolveService(service);
       if (serviceClass) {
@@ -17,11 +22,14 @@ function refine(I) {
       }
       return true;
     },
-    // uptime in number of seconds
+    //@ Get uptime in number of seconds.
+    //@return {number} number of seconds since this runtime system booted
     getUptime: function () {
       return (Date.now() - this.bootTimestamp.getTime()) / 1000;
     },
-    // get provider for service
+    //@ Get provider for service.
+    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to enumerate
+    //@return {Any?} service provider or nothing if service is not provided
     provide: function (service) {
       var serviceClass = I.resolveService(service);
       if (serviceClass) {

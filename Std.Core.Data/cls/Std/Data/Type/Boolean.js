@@ -1,3 +1,4 @@
+//@ A boolean type describes true and false.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({

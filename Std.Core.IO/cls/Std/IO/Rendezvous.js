@@ -1,12 +1,15 @@
+//@ A rendez-vous stream synchronizes the reader and writer.
 'BaseObject+Stream'.subclass(function (I) {
   "use strict";
-  // I describe a stream that synchronizes the reader and writer.
   I.am({
     Abstract: false
   });
   I.have({
+    //@{any} last item written
     writtenItem: null,
+    //@{Std.Wait.Semaphore} binary semaphore for reader
     readProtection: null,
+    //@{Std.Wait.Semaphore} binary semaphore for writer
     writeProtection: null
   });
   I.know({
@@ -18,7 +21,9 @@
     }
   });
   I.peek({
+    //@return true
     isReadable: I.returnTrue,
+    //@return true
     isWritable: I.returnTrue
   });
   I.play({

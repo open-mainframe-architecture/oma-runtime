@@ -1,23 +1,35 @@
 function refine(I) {
   "use strict";
   I.know({
-    // get configured boolean (default is false if not specified)
-    getBoolean: function (key, boolean) {
-      var value = this.lookupDefault(arguments.length < 2 ? false : boolean, key);
+    //@ Get configured boolean.
+    //@param key {string} configuration key
+    //@param defaultValue {boolean?} default value if specified, otherwise false is default
+    //@return {boolean} configured boolean
+    //@except when configured value is not a boolean
+    getBoolean: function (key, defaultValue) {
+      var value = this.lookupDefault(arguments.length < 2 ? false : defaultValue, key);
       if (typeof value === 'boolean') {
         return value;
       }
       this.bad('boolean', key);
     },
-    // get configured number (default is zero if not specified)
-    getNumber: function (key, number) {
-      var value = this.lookupDefault(arguments.length < 2 ? 0 : number, key);
+    //@ Get configured number.
+    //@param key {string} configuration key
+    //@param defaultValue {number?} default value if specified, otherwise zero is default
+    //@return {number} configured number
+    //@except when configured value is not a number
+    getNumber: function (key, defaultValue) {
+      var value = this.lookupDefault(arguments.length < 2 ? 0 : defaultValue, key);
       if (typeof value === 'number') {
         return value;
       }
       this.bad('number', key);
     },
-    // get configured string (default is empty string if not specified)
+    //@ Get configured string.
+    //@param key {string} configuration key
+    //@param defaultValue {string?} default value if specified, otherwise empty string is default
+    //@return {string} configured string
+    //@except when configured value is not a string
     getString: function (key, string) {
       var value = this.lookupDefault(arguments.length < 2 ? '' : string, key);
       if (typeof value === 'string') {

@@ -1,3 +1,4 @@
+//@ A number type describes finite numbers, excluding NaN and Infinity.
 'AbstractType'.subclass(function (I) {
   "use strict";
   I.am({

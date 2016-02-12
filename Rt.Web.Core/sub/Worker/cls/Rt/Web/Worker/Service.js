@@ -1,3 +1,4 @@
+//@ A web worker runtime environment.
 'Env.Service'.subclass(['Std.Core.Runtime'], function (I) {
   "use strict";
   /*global self*/
@@ -8,6 +9,7 @@
     globalScope: function () {
       return self;
     },
+    //@return true
     isSubsidiary: I.returnTrue
   });
   I.play({

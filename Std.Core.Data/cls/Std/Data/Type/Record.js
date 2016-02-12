@@ -1,9 +1,11 @@
+//@ A record type describes record values.
 'Composition'.subclass(function (I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
+    //@{Rt.Table} map field name to descriptor
     fieldDescriptors_: null
   });
   I.know({
@@ -41,6 +43,9 @@
       }
       return prototype;
     },
+    //@ Enumerate data descriptors of this record type.
+    //@param visit {Rt.Closure} called with field descriptor and name
+    //@return {boolean} false if a visit returned false, otherwise true
     enumerateDataDescriptors: function (visit) {
       var descriptors_ = this.fieldDescriptors_;
       for (var key in descriptors_) {
@@ -51,6 +56,10 @@
       }
       return true;
     },
+    //@ Set field descriptors of this preliminary record type.
+    //@param descriptors_ {Rt.Table} descriptors of this record type
+    //@return nothing
+    //@exception when tis record type is not preliminary
     setDescriptors: function (descriptors_) {
       if (this.fieldDescriptors_) {
         this.bad();
@@ -59,6 +68,9 @@
     }
   });
   I.share({
+    //@ Merge fields of record type addition.
+    //@param cascade {[Std.Data.Type.Record]} added record types
+    //@return {Rt.Table} descriptors of merged record type
     merge: function (cascade) {
       var mergure_ = I.createTable();
       for (var n = cascade.length; n--;) {

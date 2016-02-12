@@ -1,3 +1,4 @@
+//@ A dictionary type describes dictionary values.
 'Collection'.subclass(function (I) {
   "use strict";
   I.am({

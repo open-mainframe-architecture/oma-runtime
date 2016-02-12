@@ -1,9 +1,26 @@
+//@ A list value maps integer indices to element values.
 'AbstractValue'.subclass(function (I) {
   "use strict";
   I.know({
-    $at: function (index) {
-      var array = this._, n = this._.length;
-      return index >= 1 && index <= n && ~~index === index ? array[index - 1] : this.$bad(index);
+    $difference: function (that) {
+      var thisArray = this._, thatArray = that._, mutations_ = I.createTable();
+      var thisLength = thisArray.length, thatLength = thatArray.length;
+      var minLength = thisLength < thatLength ? thisLength : thatLength;
+      for (var i = 0; i < minLength; ++i) {
+        var difference = I.compareValues(thisArray[i], thatArray[i]);
+        if (!difference.isZero()) {
+          mutations_[i + 1] = difference.compact();
+        }
+      }
+      if (thisLength > thatLength) {
+        mutations_[i + 1] = void 0;
+      } else if (thisLength < thatLength) {
+        for (; i < thatLength; ++i) {
+          mutations_[i + 1] = thatArray[i];
+        }
+      }
+      return I.hasEnumerables(mutations_) ? I._.Difference.create(mutations_, true) :
+        I._.Difference._.Zero;
     },
     $each: function (visit) {
       return this._.enumerate(visit, 1);
@@ -13,12 +30,28 @@
       if (thisArray.length !== thatArray.length) {
         return false;
       }
-      for (var i = 0, n = thisArray.length; i < n; ++i) {
-        if (!I.Datatype.equalValues(thisArray[i], thatArray[i])) {
-          return false;
+      return thisArray.every(function (thisElement, i) {
+        return I.equalValues(thisElement, thatArray[i]);
+      });
+    },
+    $get: function (index) {
+      return this._[index - 1];
+    },
+    $update: function (values_) {
+      var elements = [], thisArray = this._, i = 0;
+      for (var n = thisArray.length; i < n; ++i) {
+        if (!I.isPropertyOwner(values_, i + 1)) {
+          elements[i] = thisArray[i];
+        } else if (values_[i + 1] !== void 0) {
+          elements[i] = values_[i + 1];
+        } else {
+          return this.$type.createValue(this.$expr, elements);
         }
       }
-      return true;
+      for (; I.isPropertyOwner(values_, i + 1); ++i) {
+        elements[i] = values_[i + 1];
+      }
+      return this.$type.createValue(this.$expr, elements);
     }
   });
 })

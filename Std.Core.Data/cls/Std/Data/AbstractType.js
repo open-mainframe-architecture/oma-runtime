@@ -1,48 +1,42 @@
+//@ A datatype describes data values.
 'BaseObject'.subclass(function (I) {
   "use strict";
-  // I describe a datatype that knows how to compose values.
   I.am({
     Abstract: true
   });
   I.have({
-    // this type belongs to a typespace
+    //@{Std.Data.Typespace} typespace creates this type
     typespace: null,
-    // this type resulted from an expression evaluation
+    //@{Std.Data.Definition.Expression} type expression restricts this type
     typeExpression: null
   });
   I.know({
+    //@param typespace {Std.Data.Typespace} typespace of this type
+    //@param expression {Std.Data.Definition.Expression} expression of this type
     build: function (typespace, expression) {
       I.$super.build.call(this);
       this.typespace = typespace;
       this.typeExpression = expression;
     },
-    // get mandatory type if this type is optional, otherwise get this type
+    //@ Get mandatory type if this type is optional. Otherwise get this type.
+    //@return {Std.Data.AbstractType} this type
     asMandatory: I.returnThis,
-    // test whether a value obeys the rules of this type
+    //@ Test whether a value obeys the rules of this type.
+    //@param value {any} JavaScript object or value
+    //@return {boolean} true if value obeys rules of this type, otherwise false
     describesValue: I.burdenSubclass,
-    // a preliminary type cannot be used, because it is still being evaluated
+    //@ Test whether this type is preliminary. A preliminary type is still being evaluated.
+    //@return {boolean} true if this type is preliminary and cannot be used, otherwise false
     isPreliminary: I.returnFalse,
-    // compute JSON representation of data value
+    //@ Compute JSON representation of data value.
+    //@param value {any} JavaScript object or value
+    //@param expression {Std.Data.Definition.Expression} inferred type expression
+    //@return {any} JSON representation
     marshalValue: I.burdenSubclass,
-    // construct data value from JSON representation
+    //@ Compute data value from JSON representation
+    //@param json {any} JSON representation
+    //@param expression {Std.Data.Definition.Expression} inferred type expression
+    //@return {any} data value
     unmarshalJSON: I.burdenSubclass
-  });
-  I.share({
-    // deep equality if necessary
-    equalValues: function (lhs, rhs) {
-      return lhs === rhs ? I.isValue(lhs) :
-        I.isComposedValue(lhs) && I.isComposedValue(rhs) &&
-        lhs.$expr === rhs.$expr && lhs.$type === rhs.$type && lhs.$equals(rhs);
-    },
-    // is it a basic boolean, number or string value?
-    isBasicValue: function (it) {
-      return it === false || it === true || typeof it === 'string' || I.isFiniteNumber(it);
-    },
-    // is it a composed dictionary, list or record value?
-    isComposedValue: I._.AbstractValue.describes.bind(I._.AbstractValue),
-    // is it any typed value, including null?
-    isValue: function (it) {
-      return it === null || I.isBasicValue(it) || I.isComposedValue(it);
-    }
   });
 })

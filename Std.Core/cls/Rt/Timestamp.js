@@ -1,4 +1,2 @@
-'Object'.subclass(Date, function () {
-  "use strict";
-  // I describe a JavaScript date.
-})
+//@ A JavaScript date is a runtime timestamp.
+'Object'.subclass(Date, function () { })
