@@ -1,5 +1,5 @@
 //@ A datatype describes data values.
-'BaseObject'.subclass(function (I) {
+'BaseObject'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: true
@@ -13,7 +13,7 @@
   I.know({
     //@param typespace {Std.Data.Typespace} typespace of this type
     //@param expression {Std.Data.Definition.Expression} expression of this type
-    build: function (typespace, expression) {
+    build: function(typespace, expression) {
       I.$super.build.call(this);
       this.typespace = typespace;
       this.typeExpression = expression;

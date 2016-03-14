@@ -1,5 +1,5 @@
 //@ A decoded URL.
-'BaseObject'.subclass(function (I) {
+'BaseObject'.subclass(function(I) {
   "use strict";
   I.have({
     //@{string} URL scheme, e.g. http or ftp or about
@@ -28,7 +28,7 @@
     //@param path {[string]?} path elements
     //@param query {[[string]]?} parameter names and values
     //@param fragment {string?} URL fragment
-    build: function (scheme, user, password, host, port, path, query, fragment) {
+    build: function(scheme, user, password, host, port, path, query, fragment) {
       I.$super.build.call(this);
       this.urlScheme = scheme && scheme.toLowerCase() || '';
       this.urlUser = host && user || '';
@@ -41,7 +41,7 @@
     },
     //@ Compute encoded representation of this URL.
     //@return {string} URL in encoded string
-    encode: function () {
+    encode: function() {
       var output = [];
       if (this.urlScheme) {
         output.push(encodeURIComponent(this.urlScheme), ':');
@@ -67,9 +67,9 @@
       return output.join('');
     },
     //@ Enumarate URL parameters.
-    //@param visit {Rt.Closure} called with parameter value and name
+    //@param visit {Std.Closure} called with parameter value and name
     //@return {boolean} false if a visit returned false, otherwise true
-    enumerateParameters: function (visit) {
+    enumerateParameters: function(visit) {
       var query = this.urlQuery;
       if (query) {
         for (var i = 0, n = query.length; i < n; ++i) {
@@ -81,9 +81,9 @@
       return true;
     },
     //@ Enumarate path elements.
-    //@param visit {Rt.Closure} called with path element and one-based index
+    //@param visit {Std.Closure} called with path element and one-based index
     //@return {boolean} false if a visit returned false, otherwise true
-    enumeratePathElements: function (visit) {
+    enumeratePathElements: function(visit) {
       var path = this.urlPath;
       if (path) {
         for (var first = path[0] ? 0 : 1, i = first, n = path.length; i < n; ++i) {
@@ -96,58 +96,63 @@
     },
     //@ Get filename from last path element.
     //@return {string} filename or empty string if path is empty
-    getFilename: function () {
+    getFilename: function() {
       var path = this.urlPath;
       return path ? path[path.length - 1] : '';
     },
     //@ Get URL fragment.
     //@return {string} fragment, possible empty
-    getFragment: function () {
+    getFragment: function() {
       return this.urlFragment;
     },
     //@ Get host name or address.
     //@return {string} host, possible empty
-    getHost: function () {
+    getHost: function() {
       return this.urlHost;
     },
     //@ Get user password.
     //@return {string} password, possible empty
-    getPassword: function () {
+    getPassword: function() {
       return this.urlPassword;
     },
     //@ Get URL path.
     //@return {string} path or empty string if path is empty
-    getPath: function () {
+    getPath: function() {
       return this.urlPath ? this.urlPath.join('/') : '';
+    },
+    //@ Get individual elements of URL path.
+    //@return {[string]} path elements
+    getPathElements: function() {
+      return this.urlPath ? this.urlPath.slice() : [];
     },
     //@ Get port number on host.
     //@return {string} port number, possible empty
-    getPort: function () {
+    getPort: function() {
       return this.urlPort;
     },
     //@ Get URL scheme.
     //@return {string} scheme, possible empty
-    getScheme: function () {
+    getScheme: function() {
       return this.urlScheme;
     },
     //@ Get user name.
     //@return {string?} name, possible empty
-    getUser: function () {
+    getUser: function() {
       return this.urlUser;
     },
     //@ Is the path of this URL nonempty?
     //@return {boolean} true if path is nonempty, otherwise false for empty path
-    hasPath: function () {
+    hasPath: function() {
       return !!this.urlPath;
     },
     //@ Is the path of this URL absolute?
     //@return {boolean} true if path is absolute, otherwise false for relative path
-    isAbsolute: function () {
+    isAbsolute: function() {
       return !!this.urlPath && !this.urlPath[0];
     },
     //@ Clone this URL except for credentials, i.e. user and password.
     //@return {Std.HTTP.URL} this or a new URL
-    withoutCredentials: function () {
+    withoutCredentials: function() {
       if (this.urlUser) {
         var scheme = this.urlScheme;
         var host = this.urlHost;
@@ -161,7 +166,7 @@
     },
     //@ Clone this URL except for the fragment part.
     //@return {Std.HTTP.URL} this or a new URL
-    withoutFragment: function () {
+    withoutFragment: function() {
       if (this.urlFragment) {
         var scheme = this.urlScheme;
         var user = this.urlUser;
@@ -180,7 +185,7 @@
     //@param input {string} encoded URL
     //@return {Std.HTTP.URL?} decoded URL or nothing
     //@more https://url.spec.whatwg.org, https://tools.ietf.org/html/rfc3986#appendix-B
-    decode: function (input) {
+    decode: function(input) {
       var components = SyntaxURL.exec(input);
       if (components) {
         var authority = components[2] && SyntaxAuthority.exec(components[2]);
@@ -200,7 +205,7 @@
     //@ Encode URL or leave it as is.
     //@param it {string|Std.HTTP.URL} URL to encode or string with encoded URL
     //@return {string} URL encoding
-    encode: function (it) {
+    encode: function(it) {
       return typeof it === 'string' ? it : it.encode();
     }
   });

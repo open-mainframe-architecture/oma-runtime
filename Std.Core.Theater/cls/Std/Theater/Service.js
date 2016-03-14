@@ -1,5 +1,5 @@
 //@ A theater schedules actors on stage.
-'BaseObject+Eventful'.subclass(function (I) {
+'BaseObject+Eventful'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false,
@@ -16,7 +16,7 @@
     waitingActors: null,
     //@{Std.Ring} ring with actors in trouble whose managers decide what to do next
     troubledActors: null,
-    //@{Std.Theater.Service._.Clock} clock keeps track of real-time
+    //@{Std.Theater.Service._.Clock} clock keeps track of time
     theaterClock: null,
     //@{boolean} curtain is either open or closed
     curtainOpen: false,
@@ -27,52 +27,27 @@
     //@{integer} count number of actor performances in time slices
     slicePerformances: 0,
     //@{number} total time that curtain has been open for a time slice
-    sliceTime: 0,
-    //@{integer} count number of interrupts on stage
-    interruptCount: 0,
-    //@{number} total time that curtain has been open to handle interrupts
-    interruptTime: 0
+    sliceTime: 0
   });
   I.know({
-    unveil: function () {
+    unveil: function() {
       I.$super.unveil.call(this);
       this.idleActors = I._.Ring.create();
       this.workingActors = I._.Ring.create();
       this.activeActor = I._.Ring.create();
       this.waitingActors = I._.Ring.create();
       this.troubledActors = I._.Ring.create();
-      // register clock of this theater
-      this.theaterClock = this.$rt.register(I.Clock.create(this.wakeUp.bind(this)));
+      this.theaterClock = I.Clock.create(this.wakeUp.bind(this));
     },
-    //@ Handle external interrupt on theater stage.
-    //@param job {Std.Theater.Job} immobile job becomes interrupt handler
-    //@return nothing
-    interrupt: function (job) {
-      if (this.curtainOpen || !job.isImmobile()) {
-        this.bad();
-      }
-      var actor = job.getActor();
-      if (actor.isInTrouble()) {
-        // run job but do not open curtain to handle interrupt on stage with suspended actor
-        job.run();
-      } else {
-        // open curtain for interrupt handling on stage
-        this.curtainOpen = true;
-        ++this.interruptCount;
-        var beginning = this.theaterClock.get();
-        // actor plays first scene of interrupting job, without waking up from clock
-        this.activeActor.add(actor);
-        actor.takeStage(job.interrupting());
-        this.activeActor.clear();
-        // schedule next wake-up call after interrupt has been handled
-        this.interruptTime += this.theaterClock.sleep(this.workingActors.isEmpty()) - beginning;
-        this.curtainOpen = false;
-      }
+    //@ Get clock that ticks for this theater.
+    //@return {Std.Wait.Clock} a clock for delays and pauses
+    getClock: function() {
+      return this.theaterClock;
     },
     //@ Add actor to the appropriate ring in this theater, or remove it from this ring.
     //@param actor {Std.Theater.Actor} theater actor whose status may have changed
     //@return nothing
-    reschedActor: function (actor) {
+    reschedActor: function(actor) {
       if (actor.isDead()) {
         // remove reference to dead actor, if any
         actor.unlinkFromRing();
@@ -96,13 +71,13 @@
     },
     //@ Create event that fires when this theater ends next or current time slice.
     //@return {Std.FullEvent} event fires when curtains close
-    stageBreak: function () {
+    stageBreak: function() {
       return this.createEvent();
     },
     //@ Wake up to open curtain and to let actors work on theater stage until time's up.
     //@return nothing
     //@except when curtain is already open
-    wakeUp: function () {
+    wakeUp: function() {
       if (this.curtainOpen) {
         this.bad();
       }
@@ -120,7 +95,7 @@
         // first working actor becomes active actor on stage
         var actor = working.firstIndex();
         active.add(actor);
-        // do some actor work on stage, e.g. play scene for job
+        // actor performs some work on stage
         actor.takeStage();
         // actor must leave the stage if it didn't already
         active.clear();
@@ -133,7 +108,7 @@
     },
     //@ Walk over all actors that live in this theater.
     //@return {Std.Iterator} iterator over actors
-    walkActors: function () {
+    walkActors: function() {
       var active = this.activeActor.walk();
       var working = this.workingActors.walk();
       var waiting = this.waitingActors.walk();
@@ -142,13 +117,13 @@
     }
   });
   I.nest({
-    //@ A theater clock wakes up on time for delay events.
-    Clock: 'Wait.Clock'.subclass(function (I) {
+    //@ A theater clock wakes up on time for charged events.
+    Clock: 'Wait.Clock'.subclass(function(I) {
       I.am({
         Abstract: false
       });
       I.have({
-        //@{Rt.Closure} wake-up call
+        //@{Std.Closure} wake-up call
         wakeUp: null,
         //@{any} false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
         sleeping: true,
@@ -156,44 +131,14 @@
         deadline: null
       });
       I.know({
-        //@param wakeUp {Rt.Closure} code to wake up
-        build: function (wakeUp) {
+        //@param wakeUp {Std.Closure} code to wake up
+        build: function(wakeUp) {
           I.$super.build.call(this);
           this.wakeUp = wakeUp;
         },
-        sortCharge: function (delays, delay) {
-          var deadline = delay.deadline;
-          var i = 0, j = delays.length;
-          // binary search in sorted array of delays
-          while (i < j) {
-            var probe = Math.floor((i + j) / 2);
-            if (delays[probe].deadline <= deadline) {
-              i = probe + 1;
-            } else {
-              j = probe;
-            }
-          }
-          // is it an insertion? otherwise append delay at end
-          if (i < delays.length) {
-            // convert to one-based list index where delay should be inserted
-            return i + 1;
-          }
-        },
-        testIgnition: function (delay) {
-          if (delay.seconds <= 0) {
-            // fire immediately
-            return true;
-          }
-          // deadline is needed for sorting charged delay events
-          delay.deadline = this.get() + delay.seconds;
-          return false;
-        },
-        delay: function (seconds) {
-          return I.$outer.Delay.create(this, seconds);
-        },
         //@ Adjust clock whilst awake.
         //@return {number} current clock time
-        awake: function () {
+        awake: function() {
           this.resetAlarm(false);
           var uptime = this.get();
           // fire delay events whose deadline passed
@@ -204,7 +149,7 @@
         },
         //@ Schedule next wake-up call as soon as possible.
         //@return nothing
-        awakeSoon: function () {
+        awakeSoon: function() {
           if (this.sleeping !== null) {
             clearTimeout(this.sleeping);
             this.sleeping = this.deadline = null;
@@ -215,7 +160,7 @@
         },
         //@ Clear pending alarm and continue with new sleeping status.
         //@param sleeping {any} null, boolean or JavaScript alarm
-        resetAlarm: function (sleeping) {
+        resetAlarm: function(sleeping) {
           if (this.sleeping) {
             clearTimeout(this.sleeping);
             this.deadline = null;
@@ -225,7 +170,7 @@
         //@ Schedule wake-up call for deep sleep, otherwise wake up as soon as possible.
         //@param deep {boolean} true for deep sleep, otherwise wake up asap
         //@return {number} current clock time
-        sleep: function (deep) {
+        sleep: function(deep) {
           var delay = deep && this.getFirstCharge();
           var uptime = this.get();
           var seconds = delay ? delay.deadline - uptime : Infinity;
@@ -243,27 +188,9 @@
           return uptime;
         }
       });
-    }),
-    //@ A delay event stems from a theater clock.
-    Delay: 'FullEvent'.subclass(function (I) {
-      I.have({
-        //@{number} seconds to wait
-        seconds: null,
-        //@{number} uptime when this delay event fires
-        deadline: null
-      });
-      I.know({
-        //@param clock {Std.Theater.Service._.Clock} theater clock
-        //@param seconds {number} seconds to wait
-        build: function (clock, seconds) {
-          I.$super.build.call(this, clock);
-          this.seconds = seconds;
-        }
-      });
     })
   });
-  I.setup(function () {
-    // register theater instance and lock it for actors
-    I._.Actor.lockInstanceConstants({ $theater: I.$.$rt.register(I.$.create()) });
+  I.setup(function() {
+    I._.Actor.lockInstanceConstants({ $theater: I.$.create() });
   });
 })

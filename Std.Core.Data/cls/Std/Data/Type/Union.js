@@ -1,5 +1,5 @@
 //@ An union type describes values of alternative types.
-'AbstractType'.subclass(function (I) {
+'AbstractType'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -18,7 +18,7 @@
     //@param typespace {Std.Data.Typespace} typespace of this union type
     //@param expression {Std.Data.Definition.Expression} type expression
     //@param alternatives {[Std.Data.AbstractType]} alternative types of this union type
-    build: function (typespace, expression, alternatives) {
+    build: function(typespace, expression, alternatives) {
       I.$super.build.call(this, typespace, expression);
       this.alternativeTypes = alternatives;
       var dictionary = true, list = true, record = true;
@@ -36,13 +36,13 @@
       this.listAlternative = typeof list === 'boolean' ? null : list;
       this.recordAlternative = typeof record === 'boolean' ? null : record;
     },
-    describesValue: function (value) {
-      return this.alternativeTypes.some(function (alternative) {
+    describesValue: function(value) {
+      return this.alternativeTypes.some(function(alternative) {
         return alternative.describesValue(value);
       });
     },
     marshalValue: I.shouldNotOccur,
-    unmarshalJSON: function (json, expression) {
+    unmarshalJSON: function(json, expression) {
       if (I.Data.isBasicValue(json)) {
         return json;
       } else {
@@ -50,8 +50,8 @@
           Array.isArray(json._ || json) ? this.listAlternative :
             json._ ? this.dictionaryAlternative :
               this.recordAlternative
-          );
-        return alternative ? alternative.unmarshalJSON(json, expression) : this.bad(json);
+        );
+        return alternative ? alternative.unmarshalJSON(json, expression) : this.bad();
       }
     }
   });
@@ -61,7 +61,7 @@
     //@param expression {Std.Data.Definition.Expression} type expression
     //@param alternatives {[Std.Data.AbstractType]} alternatives of type to normalize
     //@return {Std.Data.AbstractType} normalized type, probably a union
-    normalize: function (typespace, expression, alternatives) {
+    normalize: function(typespace, expression, alternatives) {
       var flat = [];
       alternatives.forEach(function(alternative) {
         if (I.$.describes(alternative)) {

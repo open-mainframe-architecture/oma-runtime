@@ -1,5 +1,5 @@
 //@ An AST for an optional type.
-'Expression'.subclass(function (I) {
+'Expression'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -11,21 +11,21 @@
   I.know({
     //@param source {string} source text
     //@param expression {Std.Data.Definition.Expression} mandatory type
-    build: function (source, expression) {
+    build: function(source, expression) {
       I.$super.build.call(this, source);
       this.mandatoryExpression = expression;
     },
     //@return {Std.Data.Definition.Expression} expression for mandatory type
-    asMandatory: function () {
+    asMandatory: function() {
       return this.mandatoryExpression;
     },
-    popEvaluation: function (evaluator, type) {
-      return I._.Type._.Optional._.normalize(evaluator.typespace, this, type);
+    popEvaluation: function(evaluation, type) {
+      return I._.Type._.Optional._.normalize(evaluation.typespace, this, type);
     },
-    pushEvaluation: function (evaluator, stack) {
-      evaluator.pushExpressions(this.mandatoryExpression);
+    pushEvaluation: function(evaluation) {
+      evaluation.pushExpressions(this.mandatoryExpression);
     },
-    substitute: function (variables_) {
+    substitute: function(variables_) {
       var expression = this.mandatoryExpression;
       var sub = expression.substitute(variables_);
       return expression === sub ? this : I.AST.createOptional(sub);

@@ -1,5 +1,5 @@
 //@ A mixer delegates reading and writing to other streams.
-'BaseObject+Stream'.subclass(function (I) {
+'BaseObject+Stream'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -13,25 +13,17 @@
   I.know({
     //@param input {Std.Stream?} input stream to mix
     //@param output {Std.Stream?} output stream to mix
-    build: function (input, output) {
+    build: function(input, output) {
       I.$super.build.call(this);
       this.inputStream = input;
       this.outputStream = output;
     }
   });
-  I.peek({
-    isReadable: function () {
-      return !!this.inputStream && this.inputStream.isReadable();
-    },
-    isWritable: function () {
-      return !!this.outputStream && this.outputStream.isWritable();
-    }
-  });
   I.play({
-    read: function () {
+    read: function() {
       return this.inputStream.read();
     },
-    write: function (it) {
+    write: function(it) {
       return this.outputStream.write(it);
     }
   });

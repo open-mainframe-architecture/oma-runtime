@@ -1,43 +1,40 @@
 //@ A list value maps integer indices to element values.
-'AbstractValue'.subclass(function (I) {
+'AbstractValue'.subclass(function(I) {
   "use strict";
   I.know({
-    $difference: function (that) {
-      var thisArray = this._, thatArray = that._, mutations_ = I.createTable();
+    $difference: function(that) {
+      var thisArray = this._, thatArray = that._, substitutions_ = I.createTable();
       var thisLength = thisArray.length, thatLength = thatArray.length;
       var minLength = thisLength < thatLength ? thisLength : thatLength;
       for (var i = 0; i < minLength; ++i) {
         var difference = I.compareValues(thisArray[i], thatArray[i]);
         if (!difference.isZero()) {
-          mutations_[i + 1] = difference.compact();
+          substitutions_[i + 1] = difference.compact();
         }
       }
       if (thisLength > thatLength) {
-        mutations_[i + 1] = void 0;
+        substitutions_[i + 1] = void 0;
       } else if (thisLength < thatLength) {
         for (; i < thatLength; ++i) {
-          mutations_[i + 1] = thatArray[i];
+          substitutions_[i + 1] = thatArray[i];
         }
       }
-      return I.hasEnumerables(mutations_) ? I._.Difference.create(mutations_, true) :
+      return I.hasEnumerables(substitutions_) ? I._.Difference.create(substitutions_, true) :
         I._.Difference._.Zero;
     },
-    $each: function (visit) {
+    $each: function(visit) {
       return this._.enumerate(visit, 1);
     },
-    $equals: function (that) {
+    $equals: function(that) {
       var thisArray = this._, thatArray = that._;
-      if (thisArray.length !== thatArray.length) {
-        return false;
-      }
-      return thisArray.every(function (thisElement, i) {
+      return thisArray.length === thatArray.length && thisArray.every(function(thisElement, i) {
         return I.equalValues(thisElement, thatArray[i]);
       });
     },
-    $get: function (index) {
+    $get: function(index) {
       return this._[index - 1];
     },
-    $update: function (values_) {
+    $update: function(values_) {
       var elements = [], thisArray = this._, i = 0;
       for (var n = thisArray.length; i < n; ++i) {
         if (!I.isPropertyOwner(values_, i + 1)) {

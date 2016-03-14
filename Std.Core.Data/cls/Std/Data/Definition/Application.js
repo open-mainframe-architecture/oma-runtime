@@ -1,5 +1,5 @@
 //@ An AST for the application of a type macro.
-'Expression'.subclass(function (I) {
+'Expression'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -14,18 +14,18 @@
     //@param source {string} normalized source of macro application
     //@param name {string} macro name
     //@param parameters {[Std.Data.Definition.Expression]} macro parameters
-    build: function (source, name, parameters) {
+    build: function(source, name, parameters) {
       I.$super.build.call(this, source);
       this.macroName = name;
       this.macroParameters = parameters;
     },
     popEvaluation: I.returnArgument2,
-    pushEvaluation: function (evaluator) {
+    pushEvaluation: function(evaluation) {
       var name = this.macroName;
-      var definition = evaluator.lookupDefinition(name) || this.bad('name', name);
-      evaluator.pushExpressions(definition.express(this.macroParameters));
+      var definition = evaluation.typespace.getDefinition(name) || this.bad(name);
+      evaluation.pushExpressions(definition.express(this.macroParameters));
     },
-    substitute: function (variables_) {
+    substitute: function(variables_) {
       var parameters = this.macroParameters;
       var subs = I.substituteExpressions(parameters, variables_);
       return subs === parameters ? this : I.AST.createApplication(this.macroName, subs);

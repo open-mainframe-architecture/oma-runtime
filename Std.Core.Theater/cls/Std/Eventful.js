@@ -1,5 +1,5 @@
 //@ An eventful object implements a strategy to create and to manage events.
-'Trait'.subclass(function (I) {
+'Trait'.subclass(function(I) {
   "use strict";
   I.have({
     //@{any} null, false or array with events
@@ -9,7 +9,7 @@
     //@ Add charged event that didn't fire immediately.
     //@param event {Std.FullEvent} charged event to add
     //@return nothing
-    addCharge: function (event) {
+    addCharge: function(event) {
       // lazy initialization of array, because an eventful object might never charge an event
       var charged = this.chargedEvents || (this.chargedEvents = []);
       // find one-based sort index
@@ -24,21 +24,21 @@
     },
     //@ Create default event.
     //@return {Std.FullEvent} event from this origin
-    createEvent: function () {
+    createEvent: function() {
       return I._.FullEvent.create(this);
     },
     //@ Fire charged events.
     //@return nothing
-    fireAll: function () {
+    fireAll: function() {
       var charged = this.chargedEvents;
       this.chargedEvents = false;
       if (charged) {
-        charged.forEach(function (event) { event.fire(); });
+        charged.forEach(function(event) { event.fire(); });
       }
     },
     //@ Get first charge, in sort order if any.
     //@return {Std.FullEvent?} first charged event or nothing
-    getFirstCharge: function () {
+    getFirstCharge: function() {
       var charged = this.chargedEvents;
       if (charged && charged.length) {
         return charged[0];
@@ -46,7 +46,7 @@
     },
     //@ Did this origin fire all charged events?
     //@return {boolean} true if all charged events have been fired, otherwise false
-    hasFiredAll: function () {
+    hasFiredAll: function() {
       return this.chargedEvents === false;
     },
     //@ Remove charged event.
@@ -54,17 +54,17 @@
     //@param discharged {boolean} true if event was discharged, otherwise event fired
     //@return nothing
     //@exception when event is not charged by this origin
-    removeCharge: function (event, discharged) {
+    removeCharge: function(event, discharged) {
       var charged = this.chargedEvents;
       if (charged !== false) {
         var index = charged.indexOf(event);
         if (index < 0) {
-          this.bad('event');
+          this.bad();
         }
         charged.splice(index, 1);
       } else if (discharged) {
         // cannot discharge when all events should fire
-        this.bad('discharge');
+        this.bad();
       }
     },
     //@ Find sorted position for new charged event.

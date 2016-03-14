@@ -1,5 +1,5 @@
 //@ A dictionary with special instance method closures that cannot be invoked directly.
-'Dictionary'.subclass(function (I) {
+'Dictionary'.subclass(function(I) {
   "use strict";
   I.have({
     //@{Std.Logic.Behavior} behavior that has been enhanced with special methods
@@ -8,21 +8,21 @@
   I.know({
     //@param parent {Std.Dictionary} base dictionary with parent methods
     //@param behavior {Std.Logic.Behavior} enhanced behavior
-    build: function (parent, behavior) {
+    build: function(parent, behavior) {
       I.$super.build.call(this, parent);
       this.enhancedBehavior = behavior;
     },
     //@ Add closures of special methods.
     //@param module {Std.Logic.Module} defining module
-    //@param specialMethods_ {Rt.Table} mapping from method names to closures
+    //@param specialMethods_ {Std.Table} mapping from method names to closures
     //@return nothing
-    addMethods: function (module, specialMethods_) {
+    addMethods: function(module, specialMethods_) {
       var methods_ = {};
       var prefix = this.$_.SelectorPrefix;
       for (var key in specialMethods_) {
         var closure = specialMethods_[key];
         if (typeof closure !== 'function') {
-          this.bad('method', key);
+          this.bad(key);
         }
         methods_[prefix + key] = closure;
         this.store(closure, key);
@@ -31,21 +31,21 @@
     },
     //@ Get enhanced behavior.
     //@return {Std.Logic.Behavior} behavior
-    getBehavior: function () {
+    getBehavior: function() {
       return this.enhancedBehavior;
     },
     //@ Get dictionary with parent methods.
     //@return {Std.Dictionary?} dictionary or nothing
-    getParentMethods: function () {
+    getParentMethods: function() {
       return this.baseDictionary;
     },
     //@ Refine closures of special methods.
     //@param module {Std.Logic.Module} refining module
-    //@param refinedSpecials_ {Rt.Table} mapping from method names to new closures
-    //@param formerSpecials_ {Rt.Table} accumulator for former closures
+    //@param refinedSpecials_ {Std.Table} mapping from method names to new closures
+    //@param formerSpecials_ {Std.Table} accumulator for former closures
     //@return nothing
     //@except when supplied refinements are invalid
-    refineMethods: function (module, refinedSpecials_, formerSpecials_) {
+    refineMethods: function(module, refinedSpecials_, formerSpecials_) {
       var refinedMethods_ = {};
       var formerMethods_ = Object.create(this.enhancedBehavior.getParentPrototype());
       var prefix = this.$_.SelectorPrefix;
@@ -53,7 +53,7 @@
       for (key in refinedSpecials_) {
         var closure = refinedSpecials_[key];
         if (typeof closure !== 'function') {
-          this.bad('method', key);
+          this.bad(key);
         }
         refinedMethods_[prefix + key] = closure;
         this.store(closure, key);

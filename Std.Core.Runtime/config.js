@@ -1,18 +1,26 @@
 function configure(module) {
   "use strict";
-  module.description = 'This module defines standard runtime services.';
+  module.description = 'This module defines standard runtime services and datatypes.';
   module.depends = ['Std.Core.Data.Types'];
   module.datatypes = {
-    App: {
-      // byte size or record with extended info
-      AssetInfo: 'integer|App.Asset',
-      Asset: {
+    UI: {
+      // 2D pixel measurements
+      Pixel: { height: 'integer', width: 'integer' }
+    },
+    Runtime: {
+      Asset: 'integer|Runtime.AssetInfo',
+      AssetInfo: {
         // byte size
         size: 'integer',
         // data URI if binary asset is small enough
         data64: 'string?',
         // pixel dimension of large graphics image
-        px: 'Pixel?'
+        pixel: 'UI.Pixel?'
+      },
+      Startup: {
+        image: 'string|Runtime.Image',
+        main: 'string',
+        argv: '[string]'
       },
       Image: {
         // release identity of regular, light image
@@ -32,12 +40,12 @@ function configure(module) {
         },
         // location of heavy archive and bundle
         heavy: 'string?',
-        // specify versions of source archives in application image
+        // specify versions of source archives in runtime image
         archives: '<string>',
         // map bundles to their release identities
         bundles: '<string>',
-        // available modules in application image
-        modules: '<App.Module>'
+        // available modules in runtime image
+        modules: '<Runtime.Module>'
       },
       Module: {
         // bundle that distributes module (leave empty for heavy bundle)

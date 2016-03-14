@@ -1,11 +1,11 @@
-//@ A typespace manages datatypes.
-'BaseObject'.subclass(function (I) {
+//@ A typespace manages and evaluates datatypes.
+'BaseObject'.subclass(function(I) {
   "use strict";
   I.have({
     //@{Std.Dictionary} map type name to definition
     typeDefinitions: null,
-    //@{Std.Data.Typespace._.Evaluator} evaluator for type expressions
-    typeEvaluator: null,
+    //@{Std.Dictionary} map source of type definition to cached type
+    typeCache: null,
     //@{Std.Data.Type.None} none type describes null value
     noneType: null,
     //@{Std.Data.Type.Boolean} boolean type describes true and false values
@@ -20,10 +20,10 @@
     wildcardType: null
   });
   I.know({
-    unveil: function () {
+    unveil: function() {
       I.$super.unveil.call(this);
       this.typeDefinitions = I._.Dictionary.create();
-      this.typeEvaluator = I.Evaluator.create(this);
+      this.typeCache = I._.Dictionary.create();
       var AST = I._.AbstractDefinition._.AST;
       this.noneType = I._.Type._.None.create(this, AST.createNone());
       this.booleanType = I._.Type._.Boolean.create(this, AST.createBoolean());
@@ -36,9 +36,9 @@
     //@param name {string} type name
     //@param source {string} source of type definition
     //@return {Std.Data.AbstractDefinition} added type definition
-    defineType: function (name, source) {
+    defineType: function(name, source) {
       if (this.typeDefinitions.containsIndex(name)) {
-        this.bad('name', name);
+        this.bad(name);
       }
       var definition = this.parseDefinition(source);
       this.typeDefinitions.store(definition, name);
@@ -47,20 +47,30 @@
     //@ Evaluate type definition.
     //@param input {Std.Data.AbstractDefinition|string} type definition or source
     //@return {Std.Data.AbstractType} evaluated datatype
-    evaluate: function (input) {
-      return this.typeEvaluator.reduceExpression(this.express(input));
+    evaluate: function(input) {
+      var expression = this.express(input);
+      // grab evaluated expression from cache
+      return this.typeCache.lookup(expression.unparse()) ||
+        // evalate expression for the first, and only, time
+        I.Evaluation.create(this, expression).reduction();
     },
     //@ Turn source input into a type expression that can be evaluated
     //@param input {Std.Data.AbstractDefinition|string} type definition or source
     //@return {Std.Data.Definition.Expression} type expression
-    express: function (input) {
+    express: function(input) {
       return (typeof input === 'string' ? this.parseDefinition(input) : input).express();
+    },
+    //@ Look up definition, i.e. a macro or expression, with given type name.
+    //@param name {string} name to look up
+    //@return {Std.Data.AbstractDefinition?} definition or nothing
+    getDefinition: function(name) {
+      return this.typeDefinitions.lookup(name);
     },
     //@ Represent data value in JSON.
     //@param value {any} data value
     //@param inferred {Std.Data.AbstractDefinition|string} inferred type definition
     //@return {any} JSON representation
-    marshal: function (value, inferred) {
+    marshal: function(value, inferred) {
       var type = this.type(value) || this.bad(value);
       var expression = this.express(inferred || '*?');
       return type.marshalValue(value, expression);
@@ -68,13 +78,13 @@
     //@ Parse source string to build AST of type definition.
     //@param source {string} source of type macro or expression
     //@return {Std.Data.AbstractDefinition} AST of type definition
-    parseDefinition: function (source) {
+    parseDefinition: function(source) {
       return I._.AbstractDefinition._.AST.parse(source);
     },
     //@ Type of value is none, boolean, string, number, dictionary, list or record.
     //@param value {any} JavaScript object or value
     //@return {Std.Data.AbstractType?} type of value or nothing if invalid value
-    type: function (value) {
+    type: function(value) {
       if (value === null) {
         return this.noneType;
       } else if (value === false || value === true) {
@@ -92,44 +102,43 @@
     //@param json {any} JSON representation
     //@param inferred {Std.Data.AbstractDefinition|string} inferred type definition
     //@return {any} data value
-    unmarshal: function (json, inferred) {
+    unmarshal: function(json, inferred) {
       var type = this.evaluate(json && json.$ || inferred || '*?');
       var expression = this.express(inferred || '*?');
       return type.unmarshalJSON(json, expression);
     }
   });
   I.nest({
-    //@ A stack-based evaluator for a typespace.
-    Evaluator: 'BaseObject'.subclass(function (I) {
+    //@ A stack-based evaluation in a typespace.
+    Evaluation: 'BaseObject'.subclass(function(I) {
       I.have({
-        //@{Std.Data.Typespace} typespace that owns this evaluator
+        //@{Std.Data.Typespace} evaluate in some typespace
         typespace: null,
-        //@{Std.Dictionary} cache with evaluated types
-        cache: null,
         //@{[Std.Data.Definition.Expression]} stack whose top expression is being evaluated
         stack: null,
-        //@{[Std.Data.AbstractType|Rt.Closure]} array with types/callbacks, sorted on dependencies
+        //@{[Std.Data.AbstractType|Std.Closure]} types/callbacks, sorted on dependencies
         sorted: null,
-        //@{Rt.Table} table to detect cyclic evaluation
+        //@{Std.Table} table to detect cyclic evaluation
         cyclic_: null
       });
       I.know({
-        //@param typespace {Std.Data.Typespace} typespace of this evaluator
-        build: function (typespace) {
+        //@param typespace {Std.Data.Typespace} typespace of this evaluation
+        //@param expression {Std.Data.Definition.Expression} type expression
+        build: function(typespace, expression) {
           I.$super.build.call(this);
           this.typespace = typespace;
+          this.stack = [expression];
         },
-        unveil: function () {
+        unveil: function() {
           I.$super.unveil.call(this);
-          this.cache = I._.Dictionary.create();
-          this.stack = [];
           this.sorted = [];
+          this.cyclic_ = I.createTable();
         },
         //@ Cache reduction of expression on top of stack.
         //@param depth {integer} reduction depth
         //@return {Std.Data.AbstractType} evaluated type
-        cacheTopReduction: function (depth) {
-          var cache = this.cache, stack = this.stack;
+        cacheTopReduction: function(depth) {
+          var cache = this.typespace.typeCache, stack = this.stack;
           var top = stack.length;
           var expression = stack[top - 1];
           var source = expression.unparse();
@@ -145,8 +154,9 @@
           if (initial) {
             cache.store(initial, source);
           } else if (cyclic_[source]) {
-            this.bad('cyclic', source);
+            this.bad(source);
           } else {
+            // detect cyclic evaluation on third attempt that checks same source
             cyclic_[source] = (cyclic_[source] === false);
           }
           // reduce subexpressions on stack if any
@@ -160,22 +170,16 @@
           // pop with reductions of subexpressions
           type = expression.popEvaluation(this, reductions, initial) || initial;
           if (!type || initial && initial !== type) {
-            this.bad('type', source);
+            this.bad(source);
           }
           // add reduction to cache
           cache.store(type, source);
           return type;
         },
-        //@ Look up definition, i.e. a macro or expression, with given type name.
-        //@param name {string} name to look up
-        //@return {Std.Data.AbstractDefinition?} definition or nothing
-        lookupDefinition: function (name) {
-          return this.typespace.typeDefinitions.lookup(name);
-        },
         //@ Push one or more expressions on the stack.
         //@param expressions {Std.Data.Definition.Expression|[Std.Data.Definition.Expression]}
         //@return nothing
-        pushExpressions: function (expressions) {
+        pushExpressions: function(expressions) {
           var stack = this.stack;
           if (Array.isArray(expressions)) {
             stack.push.apply(stack, expressions);
@@ -184,17 +188,17 @@
           }
         },
         //@ Reduce top expressions on stack.
-        //@param depth {integer} reduction depth
+        //@param depth {integer} current reduction depth
         //@param expected {integer} expected number of type reductions
         //@param {Std.Data.AbstractType|[Std.Data.AbstractType]} one or more reduced types
-        reduce: function (depth, expected) {
+        reduce: function(depth, expected) {
           if (depth > 100) {
             // assume infinite recursion after 100 nested reductions
-            this.bad('recursion');
+            this.bad();
           }
           var stack = this.stack, sorted = this.sorted;
           if (stack.length < expected) {
-            this.bad('expectation');
+            this.bad();
           }
           var results = [];
           while (results.length !== expected) {
@@ -214,38 +218,21 @@
           }
           return expected === 1 ? results[0] : results;
         },
-        //@ Reduce type expression to type.
-        //@param expression {Std.Data.Definition.Expression} type expression
+        //@ Evaluate resulting type.
         //@return {Std.Data.AbstractType} reduced type
-        reduceExpression: function (expression) {
-          var type = this.cache.lookup(expression.unparse());
-          // skip stack-based evaluation if expression has already been evaluated
-          if (!type) {
-            if (this.stack.length) {
-              this.bad();
-            }
-            this.cyclic_ = I.createTable();
-            // push one expression one stack
-            this.stack.push(expression);
-            try {
-              // expect one type after reduction
-              type = this.reduce(0, 1);
-              if (this.stack.length || this.sorted.length) {
-                this.bad();
-              }
-            } finally {
-              this.cyclic_ = null;
-              this.stack.length = this.sorted.length = 0;
-            }
+        reduction: function() {
+          var type = this.reduce(0, 1);
+          if (this.stack.length || this.sorted.length) {
+            this.bad();
           }
           return type;
         },
         //@ Add callback in sorted array with dependencies.
         //@param types {[Std.Data.AbstractType]} type dependencies to sort
         //@param preliminary {Std.Data.AbstractType} preliminary type to sort
-        //@param callback {Rt.Closure} called after preliminary has been evaluated
+        //@param callback {Std.Closure} called after preliminary has been evaluated
         //@return nothing
-        sortCallback: function (types, preliminary, callback) {
+        sortCallback: function(types, preliminary, callback) {
           var dependencies = null;
           // collect preliminary types that have to be evaluated first
           types.forEach(function(type) {
@@ -266,13 +253,13 @@
         //@param dependencies {[Std.Data.AbstractType]} preliminary type dependencies
         //@param preliminary {Std.Data.AbstractType} preliminary type
         //@return {integer} sorted position of preliminary type
-        sortPreliminary: function (dependencies, preliminary) {
+        sortPreliminary: function(dependencies, preliminary) {
           var sorted = this.sorted;
           var position = sorted.indexOf(preliminary);
           if (position < 0) {
             position = sorted.push(preliminary) - 1;
             if (typeof sorted[position - 1] === 'function') {
-              this.bad('dependency');
+              this.bad();
             }
           }
           var stack = this.stack;
@@ -281,7 +268,7 @@
             var expression = dependency.typeExpression;
             if (stack.indexOf(expression) < 0) {
               // circular dependency was popped earlier from the stack
-              this.bad('cyclic', expression.unparse());
+              this.bad(expression.unparse());
             }
             var index = sorted.indexOf(dependency);
             if (index < 0) {
@@ -291,7 +278,7 @@
               for (var j = position + 1; j < index; ++j) {
                 if (typeof sorted[j] === 'function') {
                   //  cannot jump over a callback closure when dependencies are swapped
-                  this.bad('cycle');
+                  this.bad();
                 }
               }
               sorted[index] = sorted[position];

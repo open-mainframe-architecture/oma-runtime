@@ -1,5 +1,5 @@
 //@ An AST for a dictionary or list type.
-'Expression'.subclass(function (I) {
+'Expression'.subclass(function(I) {
   "use strict";
   I.have({
     //@{Std.Data.Definition.Expression} expression for element type
@@ -8,11 +8,11 @@
   I.know({
     //@param source {string} normalized source of macro application
     //@param expression {Std.Data.Definition.Expression} element type expression
-    build: function (source, expression) {
+    build: function(source, expression) {
       I.$super.build.call(this, source);
       this.elementExpression = expression;
     },
-    popEvaluation: function (evaluator, elementType, preliminary) {
+    popEvaluation: function(evaluation, elementType, preliminary) {
       preliminary.setElement(this.elementExpression, elementType);
     }
   });

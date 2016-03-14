@@ -1,20 +1,9 @@
 //@ Constants of HTTP 1.1 standard.
-'BaseObject'.subclass(function (I) {
+'BaseObject'.subclass(function(I) {
   "use strict";
   I.share({
-    //@{Object} HTTP method names.
-    Method: {
-      Connect: 'CONNECT',
-      Delete: 'DELETE',
-      Get: 'GET',
-      Head: 'HEAD',
-      Options: 'OPTIONS',
-      Post: 'POST',
-      Put: 'PUT',
-      Trace: 'TRACE'
-    },
-    //@{Object} HTTP status names and codes.
-    StatusCode: {
+    //@{Object} HTTP status names and codes
+    StatusCode: Object.freeze({
       Accepted: 202,
       BadGateway: 502,
       BadRequest: 400,
@@ -55,14 +44,16 @@
       Unauthorized: 401,
       UnsupportedMediaType: 415,
       UseProxy: 305
-    }
+    })
   });
-  I.share({
-    //@{Object} HTTP status codes and names.
-    CodeStatus: Object.keys(I.StatusCode).reduce(function (accu, name) {
-      // derive reverse mapping from numeric code to textual status
-      accu[I.StatusCode[name]] = name;
-      return accu;
-    }, {})
+  I.setup({
+    //@{Object} HTTP status codes and names
+    CodeStatus: function() {
+      return Object.freeze(Object.keys(I.StatusCode).reduce(function(accu, name) {
+        // derive reverse mapping from numeric code to textual status
+        accu[I.StatusCode[name]] = name;
+        return accu;
+      }, {}));
+    }
   });
 })

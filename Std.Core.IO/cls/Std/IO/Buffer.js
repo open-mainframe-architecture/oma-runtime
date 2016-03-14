@@ -1,5 +1,5 @@
 //@ A FIFO buffer is a stream that buffers written items until the capacity is exhausted.
-'BaseObject+Stream'.subclass(function (I) {
+'BaseObject+Stream'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -14,38 +14,30 @@
   });
   I.know({
     //@param capacity {integer} maximum number of buffered items
-    build: function (capacity) {
+    build: function(capacity) {
       I.$super.build.call(this);
       this.bufferedItems = [];
       this.readProtection = I._.Wait._.Semaphore.create(0);
       this.writeProtection = I._.Wait._.Semaphore.create(capacity || 1);
     }
   });
-  I.peek({
-    //@return true
-    isReadable: I.returnTrue,
-    //@return true
-    isWritable: I.returnTrue
-  });
   I.play({
-    read: function () {
-      var items = this.bufferedItems, writeProtection = this.writeProtection;
+    read: function() {
       // wait for at least one item in buffer
-      return this.readProtection.decrement().triggers(function () {
+      return this.readProtection.decrement().triggers(function() {
         // there's now room to write one more item
-        writeProtection.increment();
+        this.writeProtection.increment();
         // remove read item from buffer
-        return items.shift();
+        return this.bufferedItems.shift();
       });
     },
-    write: function (it) {
-      var items = this.bufferedItems, readProtection = this.readProtection;
+    write: function(it) {
       // wait for available capacity to write an item in buffer
-      return this.writeProtection.decrement().triggers(function () {
+      return this.writeProtection.decrement().triggers(function() {
         // there's now room to read one more item
-        readProtection.increment();
+        this.readProtection.increment();
         // add written item to buffer
-        items.push(it);
+        this.bufferedItems.push(it);
       });
     }
   });

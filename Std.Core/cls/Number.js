@@ -1,2 +1,2 @@
 //@ I am the class of JavaScript number.
-'Object'.subclass(Number, function () { })
+'Object'.subclass(Number, function() { })

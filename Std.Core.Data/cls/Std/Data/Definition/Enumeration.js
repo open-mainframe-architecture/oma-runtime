@@ -1,5 +1,5 @@
 //@ An AST for an enumeration type.
-'Expression'.subclass(function (I) {
+'Expression'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -11,12 +11,12 @@
   I.know({
     //@param source {string} normalized source of enumeration
     //@param choices {[string]} choices of enumeration
-    build: function (source, choices) {
+    build: function(source, choices) {
       I.$super.build.call(this, source);
       this.enumerationChoices = choices;
     },
-    pushEvaluation: function (evaluator) {
-      return I._.Type._.Enumeration.create(evaluator.typespace, this, this.enumerationChoices);
+    pushEvaluation: function(evaluation) {
+      return I._.Type._.Enumeration.create(evaluation.typespace, this, this.enumerationChoices);
     }
   });
 })

@@ -1,15 +1,16 @@
 'super'.subclass({
+  // configured type definitions are added to the default typespace of the runtime system
   data$: 'Std.Data'
-}, function (I) {
+}, function(I) {
   "use strict";
   I.access({
-    //@{Rt.Table} get configured type definitions
-    datatypes: function () {
+    //@{Std.Table} get configured type definitions
+    datatypes: function() {
       return this.getTable('datatypes');
     }
   });
   I.refine({
-    installModule: function (module) {
+    installModule: function(module) {
       I.$former.installModule.call(this, module);
       I.data$.defineTypes('', this.datatypes);
     }

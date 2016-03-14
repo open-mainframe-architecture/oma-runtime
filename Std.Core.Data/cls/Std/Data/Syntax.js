@@ -1,13 +1,13 @@
 //@ An abstract parser for the type definition language.
-'BaseObject+Parsable'.subclass(function (I) {
+'BaseObject+Parsable'.subclass(function(I) {
   "use strict";
   I.know({
-    parse: function (source) {
+    parse: function(source) {
       var scanner = I.Scanner.create(source);
       var ast = this.parseTypeDef(scanner);
       if (scanner.token) {
         // expected empty token on end of input
-        this.bad('syntax');
+        this.bad();
       }
       return ast;
     },
@@ -33,7 +33,7 @@
     createEnumeration: I.burdenSubclass,
     //@ Create expression for record field.
     //@param expression {Std.Data.Definition.Expression} expression for field type
-    //@param annotations_ {Rt.Table} mapping from annotation name to values
+    //@param annotations_ {Std.Table} mapping from annotation name to values
     //@return {Std.Data.Definition.Record._.Field} AST for record field
     createField: I.burdenSubclass,
     //@ Create expression for integer type.
@@ -59,7 +59,7 @@
     //@return {Std.Data.Definition.Optional} AST for optional type
     createOptional: I.burdenSubclass,
     //@ Create expression for record type.
-    //@param fields_ {Rt.Table} mapping from field name to expression
+    //@param fields_ {Std.Table} mapping from field name to expression
     //@return {Std.Data.Definition.Record} AST for record type
     createRecord: I.burdenSubclass,
     //@ Create expression for type reference.
@@ -84,7 +84,7 @@
     //@param name {string} consumed type name before left parenthesis
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Application} application AST
-    parseApplication: function (name, scanner) {
+    parseApplication: function(name, scanner) {
       scanner.consume('(');
       var exprs = [this.parseTypeExpr(scanner)];
       while (scanner.consumed(',')) {
@@ -96,7 +96,7 @@
     //@ Parse rule: TypeExpr3 = "<" TypeExpr ">"
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Dictionary} dictionary AST
-    parseDictionary: function (scanner) {
+    parseDictionary: function(scanner) {
       scanner.consume('<');
       var expr = this.parseTypeExpr(scanner);
       scanner.consume('>');
@@ -105,7 +105,7 @@
     //@ Parse rule: TypeExpr3 = CHOICE {"_" CHOICE}
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Enumeration} enumeration AST
-    parseEnumeration: function (scanner) {
+    parseEnumeration: function(scanner) {
       var choice = scanner.text(CHOICE);
       var choices = [choice.substr(1, choice.length - 2)];
       while (scanner.consumed('_')) {
@@ -117,7 +117,7 @@
     //@ Parse rule: FieldDescriptor = ":" TypeExpr MetaField
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Record._.Field} record field AST
-    parseField: function (scanner) {
+    parseField: function(scanner) {
       scanner.consume(':');
       var expr = this.parseTypeExpr(scanner);
       // MetaField = {"@" FIELD "=" Annotation}
@@ -125,12 +125,12 @@
       while (scanner.consumed('@')) {
         var annotationName = scanner.text(FIELD);
         if (annotationName in annotations_) {
-          this.bad('annotation', annotationName);
+          this.bad(annotationName);
         }
         scanner.consume('=');
         // Annotation = CHOICE | FIELD
         if (scanner.token !== CHOICE && scanner.token !== FIELD) {
-          this.bad('annotation value', scanner.text());
+          this.bad(scanner.text());
         }
         annotations_[annotationName] = scanner.text();
       }
@@ -139,7 +139,7 @@
     //@ Parse rule: TypeExpr3 = "none" | "boolean" | "integer" | "number" | "string"
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Expression} type expression
-    parseKeyword: function (keyword) {
+    parseKeyword: function(keyword) {
       switch (keyword) {
         case 'none':
           return this.createNone();
@@ -152,13 +152,13 @@
         case 'string':
           return this.createString();
         default:
-          this.bad('type', keyword);
+          this.bad(keyword);
       }
     },
     //@ Parse rule: TypeExpr3 = "[" TypeExpr "]"
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.List} list AST
-    parseList: function (scanner) {
+    parseList: function(scanner) {
       scanner.consume('[');
       var expr = this.parseTypeExpr(scanner);
       scanner.consume(']');
@@ -167,14 +167,14 @@
     //@ Parse rule: TypeExpr3 = "{" [FIELD FieldDescriptor {"," FIELD FieldDescriptor}] "}"
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Record} record AST
-    parseRecord: function (scanner) {
+    parseRecord: function(scanner) {
       scanner.consume('{');
       var fields_ = I.createTable();
       if (scanner.token === FIELD) {
         do {
           var name = scanner.text(FIELD);
           if (name in fields_) {
-            this.bad('field', name);
+            this.bad(name);
           }
           fields_[name] = this.parseField(scanner);
         } while (scanner.consumed(','));
@@ -185,20 +185,20 @@
     //@ Parse rule: TypeDef = TypeMacro | TypeExpr
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.AbstractDefinition} macro or expression AST
-    parseTypeDef: function (scanner) {
+    parseTypeDef: function(scanner) {
       return scanner.token === '(' ? this.parseTypeMacro(scanner) : this.parseTypeExpr(scanner);
     },
     //@ Parse rule: TypeExpr = TypeExpr1 ["?"]
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Optional|Std.Data.Definition.Expression} expression AST
-    parseTypeExpr: function (scanner) {
+    parseTypeExpr: function(scanner) {
       var expr1 = this.parseTypeExpr1(scanner);
       return scanner.consumed('?') ? this.createOptional(expr1) : expr1;
     },
     //@ Parse rule: TypeExpr1 = TypeExpr2 {"|" TypeExpr2}
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Union|Std.Data.Definition.Expression} expression AST
-    parseTypeExpr1: function (scanner) {
+    parseTypeExpr1: function(scanner) {
       var expr2s = [this.parseTypeExpr2(scanner)];
       while (scanner.consumed('|')) {
         expr2s.push(this.parseTypeExpr2(scanner));
@@ -208,7 +208,7 @@
     //@ Parse rule: TypeExpr2 = TypeExpr3 {"+" TypeExpr3}
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Addition|Std.Data.Definition.Expression} expression AST
-    parseTypeExpr2: function (scanner) {
+    parseTypeExpr2: function(scanner) {
       var expr3s = [this.parseTypeExpr3(scanner)];
       while (scanner.consumed('+')) {
         expr3s.push(this.parseTypeExpr3(scanner));
@@ -218,7 +218,7 @@
     //@ Parse rule: TypeExpr3 = '*' | VARIABLE | NAME
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Expression} expression AST
-    parseTypeExpr3: function (scanner) {
+    parseTypeExpr3: function(scanner) {
       switch (scanner.token) {
         case '*':
           scanner.consume();
@@ -239,20 +239,20 @@
         case VARIABLE:
           return this.createVariable(scanner.text());
         default:
-          this.bad('syntax', scanner.token);
+          this.bad(scanner.token);
       }
     },
     //@ Parse rule: TypeMacro = "(" TypeArg {"," TypeArg} ")" TypeExpr
     //@param scanner {Std.Data.Definition.Syntax._.Scanner} token scanner
     //@return {Std.Data.Definition.Macro} macro AST
-    parseTypeMacro: function (scanner) {
+    parseTypeMacro: function(scanner) {
       scanner.consume('(');
       var typeArgs = [], letters = {};
       do {
         // TypeArg = VARIABLE "=" TypeExpr
         var letter = scanner.text(VARIABLE);
         if (letters[letter]) {
-          this.bad('macro argument', letter);
+          this.bad(letter);
         }
         scanner.consume('=');
         letters[letter] = true;
@@ -266,18 +266,18 @@
     //@ Unparse addition of record types.
     //@param cascade {[Std.Data.Definition.Expression]} record expressions
     //@return {string} normalized source of addition
-    unparseAddition: function (cascade) {
-      return cascade.map(function (expr) { return expr.unparse(); }).join('+');
+    unparseAddition: function(cascade) {
+      return cascade.map(function(expr) { return expr.unparse(); }).join('+');
     },
     //@ Unparse annotations of record field.
-    //@param annotations_ {Rt.Table} mapping from annotation name to value
+    //@param annotations_ {Std.Table} mapping from annotation name to value
     //@return {string} normalized source of field annotations
-    unparseAnnotations: function (annotations_) {
+    unparseAnnotations: function(annotations_) {
       if (!I.hasEnumerables(annotations_)) {
         return '';
       }
       var accu = [];
-      Object.getOwnPropertyNames(annotations_).sort().forEach(function (name) {
+      Object.getOwnPropertyNames(annotations_).sort().forEach(function(name) {
         accu.push(' @', name, '=', annotations_[name]);
       });
       return accu.join('');
@@ -286,26 +286,26 @@
     //@param name {string} macro name
     //@param parameters {[Std.Data.Definition.Expression]} macro parameters
     //@return {string} normalized source of macro application
-    unparseApplication: function (name, parameters) {
+    unparseApplication: function(name, parameters) {
       var accu = [name, '('];
-      parameters.forEach(function (expr, i) { accu.push(i ? ',' : '', expr.unparse()); });
+      parameters.forEach(function(expr, i) { accu.push(i ? ',' : '', expr.unparse()); });
       accu.push(')');
       return accu.join('');
     },
     //@ Unparse dictionary type.
     //@param expr {Std.Data.Definition.Expression} element type expression
     //@return {string} normalized source of dictionary type
-    unparseDictionary: function (expr) {
+    unparseDictionary: function(expr) {
       return '<' + expr.unparse() + '>';
     },
     //@ Unparse enumeration type.
     //@param choices {[string]} enumerated choices
     //@return {string} normalized source of enumeration type
-    unparseEnumeration: function (choices) {
+    unparseEnumeration: function(choices) {
       var distinct_ = {};
-      choices.forEach(function (choice) { distinct_[choice] = true; });
+      choices.forEach(function(choice) { distinct_[choice] = true; });
       var accu = [];
-      Object.getOwnPropertyNames(distinct_).sort().forEach(function (choice, i) {
+      Object.getOwnPropertyNames(distinct_).sort().forEach(function(choice, i) {
         accu.push(i ? '_"' : '"', choice, '"');
       });
       return accu.join('');
@@ -313,14 +313,14 @@
     //@ Unparse list type.
     //@param expr {Std.Data.Definition.Expression} element type expression
     //@return {string} normalized source of list type
-    unparseList: function (expr) {
+    unparseList: function(expr) {
       return '[' + expr.unparse() + ']';
     },
     //@ Unparse type macro.
     //@param formals {[string|Std.Data.Definition.Expression]} formal macro arguments
     //@param expr {Std.Data.Definition.Expression} macro body expression
     //@return {string} normalized source of type macro
-    unparseMacro: function (formals, expr) {
+    unparseMacro: function(formals, expr) {
       var accu = ['('];
       for (var i = 0, n = formals.length; i < n; i += 2) {
         accu.push(i ? ',' : '', formals[i], '=', formals[i + 1].unparse());
@@ -331,15 +331,15 @@
     //@ Unparse optional type.
     //@param mandatory {Std.Data.Definition.Expression} mandatory type expression
     //@return {string} normalized source of optional type
-    unparseOptional: function (mandatory) {
+    unparseOptional: function(mandatory) {
       return mandatory.unparse() + '?';
     },
     //@ Unparse record type.
-    //@param fields_ {Rt.Table} mapping from field name to definition
+    //@param fields_ {Std.Table} mapping from field name to definition
     //@return {string} normalized source of record type
-    unparseRecord: function (fields_) {
+    unparseRecord: function(fields_) {
       var accu = ['{'];
-      Object.getOwnPropertyNames(fields_).sort().forEach(function (name, i) {
+      Object.getOwnPropertyNames(fields_).sort().forEach(function(name, i) {
         var field = fields_[name];
         var typeSource = field.expression.unparse();
         var annotationsSource = I.unparseAnnotations(field.annotations_);
@@ -351,15 +351,15 @@
     //@ Unparse union type.
     //@param alternatives {[Std.Data.Definition.Expression]} alternative expressions
     //@return {string} normalized source of union type
-    unparseUnion: function (alternatives) {
+    unparseUnion: function(alternatives) {
       var distinct_ = {};
-      alternatives.forEach(function (expr) { distinct_[expr.unparse()] = true; });
+      alternatives.forEach(function(expr) { distinct_[expr.unparse()] = true; });
       return Object.getOwnPropertyNames(distinct_).sort().join('|');
     }
   });
   I.nest({
     //@ A scanner for the tokens of the type definition language.
-    Scanner: 'BaseObject'.subclass(function (I) {
+    Scanner: 'BaseObject'.subclass(function(I) {
       I.have({
         //@{string} source to scan
         source: null,
@@ -372,7 +372,7 @@
       });
       I.know({
         //@param source {string} source text to scan for tokens
-        build: function (source) {
+        build: function(source) {
           I.$super.build.call(this);
           this.source = source;
           this.stop = 0;
@@ -382,10 +382,10 @@
         //@ Consume token, unconditionally if token is undefined, and scan for next token.
         //@param token {integer|string?} if defined, either token type or one-character token
         //@return nothing
-        consume: function (token) {
+        consume: function(token) {
           if (token && this.token !== token) {
             // expected some other token at given position
-            this.bad('token', this.start, this.token, token);
+            this.bad(this.start, this.token, token);
           }
           var source = this.source, n = source.length, i = this.stop, ch;
           // skip whitespaces
@@ -400,7 +400,7 @@
             // quoted choice token
             for (++i; i < n && Quoted[ch = source.charAt(i)];) { ++i; }
             if (i === n || i === this.start + 1 || ch !== '"') {
-              this.bad('choice');
+              this.bad();
             }
             this.stop = i + 1;
             this.token = CHOICE;
@@ -422,7 +422,7 @@
                   break;
                 }
                 if (++i + 1 >= n || !Upper[source.charAt(i)] || !Alphanum[source.charAt(i + 1)]) {
-                  this.bad('name');
+                  this.bad();
                 }
               }
               this.stop = i;
@@ -434,13 +434,13 @@
             }
           } else {
             // unmatched character in source input
-            this.bad('source', ch);
+            this.bad(ch);
           }
         },
         //@ Test whether token is consumed by scanner.
         //@param token {integer|string} token type or one-character token
         //@return {boolean} true if token was consumed, otherwise false
-        consumed: function (token) {
+        consumed: function(token) {
           if (this.token === token) {
             this.consume();
             return true;
@@ -450,7 +450,7 @@
         //@ Consume token and returns its textual content.
         //@param token {integer|string} token type or one-character token
         //@return {string} textual content of consumed token
-        text: function (token) {
+        text: function(token) {
           var textContent = this.source.substring(this.start, this.stop);
           this.consume(token);
           return textContent;

@@ -3,12 +3,12 @@ function refine(I) {
   I.know({
     //@ Add type definitions from module configuration.
     //@param home {string} name of type package where to add definitions
-    //@param definitions_ {Rt.Table} map name to type definition or nested type package
+    //@param definitions_ {Std.Table} map name to type definition or nested type package
     //@return nothing
-    defineTypes: function (home, definitions_) {
+    defineTypes: function(home, definitions_) {
       for (var key in definitions_) {
         if (!Key.test(key)) {
-          this.bad('type definition', key);
+          this.bad(key);
         }
         var source = definitions_[key];
         var name = home ? home + '.' + key : key;

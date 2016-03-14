@@ -1,12 +1,12 @@
 //@ An AST that evaluates the wildcard type.
-'Expression'.subclass(function (I) {
+'Expression'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    pushEvaluation: function (evaluator) {
-      return evaluator.typespace.wildcardType;
+    pushEvaluation: function(evaluation) {
+      return evaluation.typespace.wildcardType;
     }
   });
 })

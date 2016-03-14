@@ -1,11 +1,11 @@
 //@ A dictionary type describes dictionary values.
-'Collection'.subclass(function (I) {
+'Collection'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function (value) {
+    describesValue: function(value) {
       if (I._.Value._.Dictionary.describes(value) && value.$type.typespace === this.typespace) {
         var table = value._;
         var elementType = this.elementType;
@@ -18,7 +18,7 @@
       }
       return false;
     },
-    marshalValue: function (value, expression) {
+    marshalValue: function(value, expression) {
       var typespace = this.typespace, elementExpression = this.elementExpression;
       var nested = {}, values_ = value._;
       for (var key in values_) {
@@ -26,7 +26,7 @@
       }
       return expression === value.$expr ? { _: nested } : { _: nested, $: value.$expr.unparse() };
     },
-    unmarshalJSON: function (json, expression) {
+    unmarshalJSON: function(json, expression) {
       var typespace = this.typespace, elementExpression = this.elementExpression;
       var values_ = I.createTable(), nested = json._;
       for (var key in nested) {
@@ -34,7 +34,7 @@
       }
       return this.createValue(expression, values_);
     },
-    createPrototype: function () {
+    createPrototype: function() {
       return Object.create(I._.Value._.Dictionary.getPrototype());
     }
   });

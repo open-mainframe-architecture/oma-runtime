@@ -1,5 +1,5 @@
 //@ A parser for the type definition language.
-'Syntax'.subclass(function (I) {
+'Syntax'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -23,7 +23,7 @@
     wildcardExpression: null
   });
   I.know({
-    unveil: function () {
+    unveil: function() {
       I.$super.unveil.call(this);
       this.definitionCache = I._.Dictionary.create();
       this.fieldCache = I._.Dictionary.create();
@@ -34,7 +34,7 @@
       this.stringExpression = this.cache(I._.Definition._.String.create('string'));
       this.wildcardExpression = this.cache(I._.Definition._.Wildcard.create('*'));
     },
-    parse: function (source) {
+    parse: function(source) {
       var cached = this.definitionCache.lookup(source);
       if (cached) {
         // no need to parse. use parsed definition from cache
@@ -47,30 +47,30 @@
       }
       return definition;
     },
-    createAddition: function (cascade) {
+    createAddition: function(cascade) {
       var source = I.unparseAddition(cascade);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Addition.create(source, cascade));
     },
-    createApplication: function (name, parameters) {
+    createApplication: function(name, parameters) {
       var source = I.unparseApplication(name, parameters);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Application.create(source, name, parameters));
     },
-    createBoolean: function () {
+    createBoolean: function() {
       return this.booleanExpression;
     },
-    createDictionary: function (expression) {
+    createDictionary: function(expression) {
       var source = I.unparseDictionary(expression);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Dictionary.create(source, expression));
     },
-    createEnumeration: function (choices) {
+    createEnumeration: function(choices) {
       var source = I.unparseEnumeration(choices);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Enumeration.create(source, choices));
     },
-    createField: function (expression, annotations_) {
+    createField: function(expression, annotations_) {
       var fieldSource = expression.unparse() + I.unparseAnnotations(annotations_);
       var cached = this.fieldCache.lookup(fieldSource);
       if (cached) {
@@ -80,58 +80,58 @@
       this.fieldCache.store(field, fieldSource);
       return field;
     },
-    createInteger: function () {
+    createInteger: function() {
       return this.integerExpression;
     },
-    createList: function (expression) {
+    createList: function(expression) {
       var source = I.unparseList(expression);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.List.create(source, expression));
     },
-    createMacro: function (formals, expression) {
+    createMacro: function(formals, expression) {
       var source = I.unparseMacro(formals, expression);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Macro.create(source, formals, expression));
     },
-    createNone: function () {
+    createNone: function() {
       return this.noneExpression;
     },
-    createNumber: function () {
+    createNumber: function() {
       return this.numberExpression;
     },
-    createOptional: function (mandatory) {
+    createOptional: function(mandatory) {
       var source = I.unparseOptional(mandatory);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Optional.create(source, mandatory));
     },
-    createRecord: function (fields_) {
+    createRecord: function(fields_) {
       var source = I.unparseRecord(fields_);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Record.create(source, fields_));
     },
-    createReference: function (name) {
+    createReference: function(name) {
       var cached = this.definitionCache.lookup(name);
       return cached || this.cache(I._.Definition._.Reference.create(name));
     },
-    createString: function () {
+    createString: function() {
       return this.stringExpression;
     },
-    createUnion: function (alternatives) {
+    createUnion: function(alternatives) {
       var source = I.unparseUnion(alternatives);
       var cached = this.definitionCache.lookup(source);
       return cached || this.cache(I._.Definition._.Union.create(source, alternatives));
     },
-    createVariable: function (letter) {
+    createVariable: function(letter) {
       var cached = this.definitionCache.lookup(letter);
       return cached || this.cache(I._.Definition._.Variable.create(letter));
     },
-    createWildcard: function () {
+    createWildcard: function() {
       return this.wildcardExpression;
     },
     //@ Cache type definition under its normalized source.
     //@param definition {Std.Data.AbstractDefinition} type definiton to cache
     //@return {Std.Data.AbstractDefinition} cached definition
-    cache: function (definition) {
+    cache: function(definition) {
       this.definitionCache.store(definition, definition.unparse());
       return definition;
     }

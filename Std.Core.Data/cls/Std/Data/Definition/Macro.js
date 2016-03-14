@@ -1,5 +1,5 @@
 //@ An AST for a macro definition.
-'AbstractDefinition'.subclass(function (I) {
+'AbstractDefinition'.subclass(function(I) {
   "use strict";
   I.am({
     Abstract: false
@@ -14,12 +14,12 @@
     //@param source {string} macro source
     //@param formalArguments {[string|Std.Data.Definition.Expression]} names and expressions
     //@param expression {Std.Data.Definition.Expression} macro body
-    build: function (source, formalArguments, expression) {
+    build: function(source, formalArguments, expression) {
       I.$super.build.call(this, source);
       this.macroArguments = formalArguments;
       this.macroExpression = expression;
     },
-    express: function (parameters) {
+    express: function(parameters) {
       var variables_ = I.createTable();
       var formals = this.macroArguments;
       for (var i = 0, j = 0, n = formals.length; i < n; i += 2, ++j) {
