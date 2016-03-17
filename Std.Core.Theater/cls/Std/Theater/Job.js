@@ -38,7 +38,7 @@
     },
     get: function() {
       // this job is an indirection to the result when available, otherwise it directs to itself
-      return this.hasResult() ? this.jobResult : this;
+      return this.isDone() ? this.jobResult : this;
     },
     addCharge: function(event) {
       I.$super.addCharge.call(this, event);
@@ -58,7 +58,7 @@
       }
     },
     testIgnition: function(event, blooper) {
-      if (this.hasResult()) {
+      if (this.isDone()) {
         if (blooper && I.isError(this.jobResult)) {
           // fail immediately with blooper when job produced error result
           blooper.failWith(this.jobResult);
@@ -75,17 +75,17 @@
     completion: function(faulty) {
       return faulty ? this.createEvent() : I.Tryout.create(this);
     },
-    //@ Create job that performs same scene as this job.
+    //@ Create job that performs same scene as this job. Completed jobs cannot be forked.
     //@return {Std.Theater.Job} new job
     forkScene: function() {
       return this.getActor().createJob(this.sceneSelector, this.sceneParameters, this.jobPurpose);
     },
-    //@ Get actor that is working on this job.
+    //@ Get actor that is working on this job. Once completed, a job does not have an actor.
     //@return {Std.Theater.Actor} theater actor
     getActor: function() {
       return this.getLinkingRing().actor;
     },
-    //@ Get agent that represent the actor of this job.
+    //@ Get agent that represent the actor of this job. Completed jobs do not have agents.
     //@return {Std.Theater.Agent} theater agent
     getAgent: function() {
       return this.getActor().getAgent();
@@ -95,9 +95,9 @@
     getPurpose: function() {
       return this.jobPurpose;
     },
-    //@ Has this job completed?
+    //@ Has this job completed with a result?
     //@return {boolean} true if job has result, otherwise false
-    hasResult: function() {
+    isDone: function() {
       // a running job only fires once, and when it fires, it fires all completions
       return !!this.sceneCount && this.hasFiredAll();
     },
@@ -135,7 +135,7 @@
     //@ Quit this job if it is hasn't completed yet.
     //@return nothing
     quit: function() {
-      if (!this.hasResult()) {
+      if (!this.isDone()) {
         if (this.jobShowstopper) {
           this.jobShowstopper.cancel();
         }
@@ -173,7 +173,7 @@
     //@param performance {Std.Theater.Showstopper|Std.Theater.Job|any} showstopper, job or result
     //@return nothing
     setPerformance: function(performance) {
-      if (this.hasResult() || performance === this || this.jobShowstopper) {
+      if (this.isDone() || performance === this || this.jobShowstopper) {
         this.bad();
       }
       if (I._.Showstopper.describes(performance)) {
@@ -184,18 +184,19 @@
         this.repost();
       } else if (!I.$.describes(performance)) {
         // if performance is neither a showstopper nor another job, complete this job with result
+        var actor = this.getActor();
         this.jobResult = performance;
         this.unlinkFromRing();
         this.fireAll();
         // make sure actor reschedules when this job was not busy, e.g. it was unexpectedly quit
-        this.getActor().resched();
+        actor.resched();
       } else if (!performance.sceneCount) {
         // forward this job to same actor scene as other immobile job
         ++this.sceneCount;
         this.sceneSelector = performance.sceneSelector;
         this.sceneParameters = performance.sceneParameters;
         performance.getActor().post(this);
-      } else if (performance.hasResult()) {
+      } else if (performance.isDone()) {
         // complete this job with same result as other completed job
         this.setPerformance(performance.jobResult);
       } else {
@@ -248,7 +249,7 @@
         },
         discharge: function() {
           // avoid discharge when it resulted from blooper failure
-          if (!this.origin().hasResult()) {
+          if (!this.origin().isDone()) {
             I.$super.discharge.call(this);
           }
         },

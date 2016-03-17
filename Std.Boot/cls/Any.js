@@ -27,7 +27,8 @@
     describe: function(it) {
       return it === null || it === void 0 ? I.$ : I.$.downcast(Object(it));
     },
-    //@{Std.Closure} always do and return nothing
+    //@ Always do and return nothing.
+    //@return nothing
     doNothing: function() { },
     //@ Is it not null and not undefined?
     //@param it {any} JavaScript object or value
@@ -62,11 +63,13 @@
         I._.Std._.Illustrative.describes(it) ? it.createPortrait() :
           'a ' + I.describe(it).getName();
     },
-    //@{Std.Closure} always return false
+    //@ Always return false.
+    //@return false
     returnFalse: function() {
       return false;
     },
-    //@{Std.Closure} always return receiver
+    //@ Always return receiver.
+    //@return {any} JavaScript object or value
     returnThis: function() {
       return this;
     },

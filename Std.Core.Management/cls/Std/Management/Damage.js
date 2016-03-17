@@ -39,9 +39,11 @@
     }),
   });
   I.setup({
-    //@{Std.Closure} always return lethal damage that kills the failing actor
+    //@ Always return lethal damage that kills the failing actor.
+    //@return {Std.Management.Damage} lethal damage
     returnLethal: function() { return I.returnWith(I.Lethal.create()); },
-    //@{Std.Closure} always return minimal damage that resumes the failing actor
+    //@ Always return minimal damage that resumes the failing actor.
+    //@return {Std.Management.Damage} minimal damage
     returnMinimal: function() { return I.returnWith(I.Minimal.create()); }
   });
 })

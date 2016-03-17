@@ -1,4 +1,4 @@
-//@ A runtime environment embeds a runtime system. It may be a subsidiary of a parent environment.
+//@ A runtime environment embeds a runtime system. It may be a child of a parent environment.
 'BaseObject+Manager'.subclass(['Std.Core.Theater.Util', 'Std.Core.IO'], {
   // environment-specific constants
   constants$: 'Std.Runtime.Constants',
@@ -18,16 +18,17 @@
   I.know({
     initialize: function(agent) {
       I.$super.initialize.call(this, agent);
-      if (I.constants$.parentEmitter) {
-        // this subsidiary environment is commanded by parent environment
-        agent.controlWith(this.$_.MessageStream.spawn(agent, I.constants$.parentEmitter)).run();
+      var parentEmitter = I.constants$.parentEmitter;
+      if (parentEmitter) {
+        // this child environment is controlled by parent environment
+        agent.controlOver(this.$_.Crossover.spawn(agent, parentEmitter)).run();
       }
     },
     assessDamage: I._.Management._.Damage._.returnMinimal,
-    //@ Create environment-specific emitter of subsidiary environment.
+    //@ Create environment-specific emitter for child environment.
     //@return {Any} environment-specific emitter
     createSubsidiaryEmitter: I.burdenSubclass,
-    //@ Clean up emitter of subsidiary environment.
+    //@ Clean up emitter of child environment.
     //@param emitter {Any} environment-specific emitter
     //@return nothing
     destroySubsidiaryEmitter: I.burdenSubclass
@@ -79,39 +80,39 @@
       }
       console.log(moduleName, argv, this.$rt.getUptime());
     },
-    //@ Create and start subsidiary environment of this runtime environment.
+    //@ Create and start child environment of this runtime environment.
     //@param manager {Std.Theater.Agent} manager of subsidiary
     //@promise {Std.Theater.Agent} agent of new subsidiary
     spawnSubsidiary: function(manager) {
       if (!this.imageValue) {
         this.bad();
       }
-      // start subsidiary environment with environment-specific emitter
-      var emitter = this.createSubsidiaryEmitter();
-      var messageStream = this.$_.MessageStream.spawn(this.$agent, emitter);
-      var subsidiary = I._.Service.commandWith(manager, messageStream);
+      // start child environment with environment-specific emitter
+      var agent = this.$agent, emitter = this.createSubsidiaryEmitter();
+      var stream = this.$_.Crossover.spawn(agent, emitter);
+      var subsidiary = I._.Subsidiary.spawn(manager, stream, this.imageValue);
       // monitor subsidiary and destroy emitter when it dies
-      this.$agent.performScene(function() {
+      agent.performScene(function() {
         return subsidiary.death().triggers(function() {
           this.destroySubsidiaryEmitter(emitter);
-          return messageStream.kill();
+          return stream.kill();
         });
       }).run();
-      // install same image in subsidiary environment
-      var json = I.data$.marshal(this.imageValue, 'Runtime.Image');
-      return subsidiary.installImage(json).triggers(subsidiary);
+      return subsidiary;
     },
     //@ Load image and start main module.
     //@param json {Object} JSON representation of startup record
     //@promise nothing
     startupMain: function(json) {
+      // verify JSON representation of startup value
+      I.data$.unmarshal(json, 'Runtime.Startup');
       var agent = this.$agent;
       return agent.installImage(json.image).triggers(agent.runModule(json.main, json.argv));
     }
   });
   I.nest({
-    //@ Message streams between runtime environments.
-    MessageStream: 'BaseObject+Stream'.subclass(function(I) {
+    //@ Streams for serialized messages between parent and child runtime environments.
+    Crossover: 'BaseObject+Stream'.subclass(function(I) {
       I.have({
         //@{Any} environment-specific emitter of message events
         emitter: null,

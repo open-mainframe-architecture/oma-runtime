@@ -56,7 +56,7 @@
     }
   });
   I.share({
-    //@ Normalize alternative types.
+    //@ Normalize type alternatives.
     //@param typespace {Std.Data.Typespace} typespace of new type
     //@param expression {Std.Data.Definition.Expression} type expression
     //@param alternatives {[Std.Data.AbstractType]} alternatives of type to normalize

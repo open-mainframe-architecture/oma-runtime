@@ -1,10 +1,10 @@
 'super'.subclass(['Std.Core.IO'], function(I) {
   "use strict";
   I.know({
-    // Control this agent with a stream.
+    // Control this agent over a stream.
     //@param stream {Std.Agent} stream with command messages
     //@return {Std.Theater.Job} immobile job to control this agent
-    controlWith: function(stream) {
+    controlOver: function(stream) {
       var agent = this;
       return agent.performScene(function readCommands() {
         return stream.read().yields(function(command) {
@@ -23,14 +23,14 @@
               return stream.write(reply);
             });
           }).run();
-          // continue reading commands
+          // continue reading command messages
           return agent.performScene(readCommands);
         });
       });
     }
   });
   I.nest({
-    //@ An agent proxy commands another agent over a stream.
+    //@ An agent proxy controls another agent over a stream.
     Proxy: 'BaseObject+Role'.subclass(function(I) {
       I.am({
         Abstract: false
@@ -49,12 +49,19 @@
           I.$super.build.call(this);
           this.stream = stream;
         },
+        improvise: function(selector, parameters) {
+          var sequence = ++this.sequence, setters_ = this.setters_;
+          var command = { sequence: sequence, selector: selector, parameters: parameters || [] };
+          var result = I.When.available(function(setter) { setters_[sequence] = setter; });
+          // write command message and wait for asynchronous result to become available
+          return this.stream.write(command).triggers(result.get());
+        },
         initialize: function(agent) {
           I.$super.initialize.call(this, agent);
-          var setters_ = this.setters_ = I.createTable();
+          var stream = this.stream, setters_ = this.setters_ = I.createTable();
           // read replies and set results
-          function processReplies() { //jshint validthis:true
-            return this.stream.read().yields(function(reply) {
+          function processReplies() {
+            return stream.read().yields(function(reply) {
               var sequence = reply.sequence, setter = setters_[sequence];
               delete setters_[sequence];
               // set available result and unblock job
@@ -64,17 +71,10 @@
                 setter(reply.result);
               }
               // continue reading replies
-              return this.$agent.performScene(processReplies);
+              return agent.performScene(processReplies);
             });
           }
           agent.performScene(processReplies).run();
-        },
-        performUnknownScene: function(selector, parameters) {
-          var sequence = ++this.sequence, setters_ = this.setters_;
-          var command = { sequence: sequence, selector: selector, parameters: parameters };
-          var result = I.When.available(function(setter) { setters_[sequence] = setter; });
-          // write command and wait for asynchronous result to become available
-          return this.stream.write(command).triggers(result.get());
         }
       });
     }),

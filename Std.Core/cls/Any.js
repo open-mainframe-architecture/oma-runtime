@@ -91,23 +91,34 @@ function refine(I) {
       }
       return it;
     },
-    //@{Std.Closure} always return first argument
+    //@ Always return first argument.
+    //@param argument {any} JavaScript object or value
+    //@return {any} first argument
     returnArgument: function(argument) {
       return argument;
     },
-    //@{Std.Closure} always return second argument
+    //@ Always return second argument.
+    //@param ignore {any} JavaScript object or value
+    //@param argument {any} JavaScript object or value
+    //@return {any} second argument
     returnArgument2: function(ignore, argument) {
       return argument;
     },
-    //@{Std.Closure} always return third argument
+    //@ Always return third argument.
+    //@param ignore1 {any} JavaScript object or value
+    //@param ignore2 {any} JavaScript object or value
+    //@param argument {any} JavaScript object or value
+    //@return {any} third argument
     returnArgument3: function(ignore1, ignore2, argument) {
       return argument;
     },
-    //@{Std.Closure} always return null
+    //@ Always return null.
+    //@return null
     returnNull: function() {
       return null;
     },
-    //@{Std.Closure} always return true
+    //@ Always return true.
+    //@return true
     returnTrue: function() {
       return true;
     },

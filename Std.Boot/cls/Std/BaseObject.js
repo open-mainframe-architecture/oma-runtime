@@ -41,7 +41,8 @@
     }
   });
   I.share({
-    //@{Std.Closure} an abstract method burdens a subclass with the implementation
+    ///@ An abstract method burdens a subclass with the implementation.
+    //@return never
     burdenSubclass: function() {
       this.bad();
     },
@@ -64,7 +65,8 @@
       // seal new object after ownership of instance variables has been established
       Object.seal(object);
     },
-    //@{Std.Closure} this method should never be invoked
+    //@ This method should never be invoked.
+    //@return never
     shouldNotOccur: function() {
       this.bad();
     }

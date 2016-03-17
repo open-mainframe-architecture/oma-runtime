@@ -6,14 +6,14 @@ function refine(I) {
     //@param onRejection {Std.Closure} called with intermediate error/failure of this job
     //@return {Std.Theater.Job} promise to fulfill or reject with result of this job
     then: function(onFulfillment, onRejection) {
-      var promise = this;
-      return !onFulfillment && !onRejection ? promise.running() :
+      var job = this;
+      return !onFulfillment && !onRejection ? job.running() :
         // create a promise to resolve/reject this job
         function() {
           // this code executes on stage, with receiver bound to some actor role
-          return promise.hasResult() ? I.promised(promise.jobResult, onFulfillment, onRejection) :
-            promise.completion(true).triggers(function() {
-              return I.promised(promise.jobResult, onFulfillment, onRejection);
+          return job.isDone() ? I.promised(job.jobResult, onFulfillment, onRejection) :
+            job.completion(true).triggers(function() {
+              return I.promised(job.jobResult, onFulfillment, onRejection);
             });
         }.play();
     }

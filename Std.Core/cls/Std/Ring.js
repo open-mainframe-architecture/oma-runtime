@@ -49,7 +49,7 @@
         var link = first;
         do {
           var nextLink = link.nextInRing;
-          link.prevInRing = link.nextInRing = null;
+          link.prevInRing = link.nextInRing = link.linkingRing = null;
           link = nextLink;
         } while (link !== first);
       }
@@ -64,7 +64,7 @@
       ++this.modificationCount;
       var nextLink = prevLink.nextInRing = ix.nextInRing;
       nextLink.prevInRing = prevLink;
-      ix.prevInRing = ix.nextInRing = null;
+      ix.prevInRing = ix.nextInRing = ix.linkingRing = null;
       --this.ringLength;
       if (this.firstLink === ix) {
         this.firstLink = this.ringLength ? nextLink : null;

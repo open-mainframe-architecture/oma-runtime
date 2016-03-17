@@ -4,7 +4,7 @@
   I.have({
     //@{Std.Dictionary} map type name to definition
     typeDefinitions: null,
-    //@{Std.Dictionary} map source of type definition to cached type
+    //@{Std.Dictionary} map source of type definition to datatype
     typeCache: null,
     //@{Std.Data.Type.None} none type describes null value
     noneType: null,
@@ -96,7 +96,7 @@
       } else if (I.Data.isComposedValue(value) && value.$type.typespace === this) {
         return value.$type;
       }
-      // else type is undefined
+      // else type is not defined in this typespace
     },
     //@ Construct value from JSON representation.
     //@param json {any} JSON representation

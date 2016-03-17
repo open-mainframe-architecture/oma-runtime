@@ -12,15 +12,15 @@
     }
   });
   I.know({
+    //@ Perform unknown scene when selector does not designate a scene method.
+    //@param selector {string} scene name
+    //@param parameters {[any]?} scene parameters
+    //@return result of unknown scene
+    improvise: I.shouldNotOccur,
     //@ Initialize new agent/actor/role triple.
     //@param agent {Std.Theater.Agent} new agent
     //@return nothing
     initialize: I.doNothing,
-    //@ Find method for unknown scene and perform it.
-    //@param selector {string} scene name
-    //@param parameters {[any]} scene parameters
-    //@return result of unknown scene
-    performUnknownScene: I.shouldNotOccur,
     //@ Play next scene on stage.
     //@param job {Std.Theater.Job} job of scene to play
     //@param selector {string|Std.Closure} scene name or scene closure
@@ -31,11 +31,9 @@
         this.bad();
       }
       this.theaterJob = job;
+      var method = typeof selector === 'function' ? selector : this.$.sceneMethods._[selector];
       try {
-        var sceneMethod = typeof selector === 'function' ? selector :
-          this.$.sceneMethods._[selector];
-        return sceneMethod ? sceneMethod.apply(this, parameters) :
-          this.performUnknownScene(selector, parameters || []);
+        return method ? method.apply(this, parameters) : this.improvise(selector, parameters);
       } finally {
         this.theaterJob = null;
       }

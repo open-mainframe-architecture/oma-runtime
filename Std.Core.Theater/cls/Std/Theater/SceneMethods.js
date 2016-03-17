@@ -47,8 +47,7 @@
     //@param manager {Std.Theater.Agent?} supervising manager
     //@return {Std.Theater.Agent} theater agent of triple
     spawnAgent: function(role, manager) {
-      var actor = I._.Actor.create(role, this, manager);
-      var agent = actor.getAgent();
+      var actor = I._.Actor.create(role, this, manager), agent = actor.getAgent();
       role.initialize(agent);
       actor.resched();
       return agent;
@@ -58,10 +57,10 @@
     SelectorPrefix: 'scene' + I.SelectorPrefix
   });
   function scriptPlay(methods_) { //jshint validthis:true
-    var sceneMethods = this.$.getSceneMethods();
+    var sceneMethods = this.$.getSceneMethods(), agentPrototype = sceneMethods.agentPrototype;
     sceneMethods.addMethods(this.$module, methods_);
     for (var key in methods_) {
-      I.defineConstant(sceneMethods.agentPrototype, key, I._.Agent._.createScenePerformer(key));
+      I.defineConstant(agentPrototype, key, I._.Agent._.createScenePerformer(key));
     }
   }
   function scriptRefine(refinedMethods_) { //jshint validthis:true

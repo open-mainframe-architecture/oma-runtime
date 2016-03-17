@@ -5,7 +5,7 @@ function configure(module) {
     loose: 'Std.Management.Loose'
   };
   module.provides = {
-    'Std.Runtime.Node': function(roleClass, required) {
+    'Std.Runtime.Environment.Node': function(roleClass, required) {
       return roleClass.spawn(required.loose);
     }
   };

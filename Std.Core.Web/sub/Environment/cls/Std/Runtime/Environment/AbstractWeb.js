@@ -1,5 +1,5 @@
 //@ Common runtime environment of web browsers and workers.
-'Environment.Service'.subclass(['Std.Core.Runtime'], {
+'Service'.subclass(['Std.Core.Runtime'], {
   constants$: 'Std.Runtime.Constants'
 }, function(I) {
   "use strict";
@@ -15,8 +15,8 @@
     }
   });
   I.nest({
-    //@ Message streams between web browser/worker and worker/worker environments.
-    MessageStream: 'Environment.Service._.MessageStream'.subclass(function(I) {
+    //@ Streams that cross between web browser/worker and worker/worker environments.
+    Crossover: 'Environment.Service._.Crossover'.subclass(function(I) {
       I.am({
         Abstract: false
       });

@@ -1,5 +1,5 @@
 //@ A web browser runtime environment.
-'Web.AbstractEnvironment'.subclass(['Std.Core.Web.Environment', 'Std.Core.HTTP'], function(I) {
+'AbstractWeb'.subclass(['Std.Core.Web.Environment', 'Std.Core.HTTP'], function(I) {
   "use strict";
   /*global document*/
   I.am({

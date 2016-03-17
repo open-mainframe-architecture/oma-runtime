@@ -15,17 +15,18 @@
     buildRingLink: function(ring) {
       this.linkingRing = ring;
     },
-    //@ Get current ring of this link, or most recent ring if this link has been removed.
-    //@return {Std.Ring} ring container
+    //@ Get current ring of this link.
+    //@return {Std.Ring?} ring container or nothing if this link is unlinked
     getLinkingRing: function() {
       return this.linkingRing;
     },
-    //@ Remove this link from linking ring or leave link untouched if it's not part of a ring.
+    //@ Remove this link from linking ring.
     //@return nothing
     unlinkFromRing: function() {
       if (this.prevInRing) {
         this.linkingRing.remove(this);
       }
+      this.linkingRing = null;
     }
   });
 })

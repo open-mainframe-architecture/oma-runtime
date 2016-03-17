@@ -1,5 +1,5 @@
 //@ A Node.js runtime environment.
-'Environment.Service'.subclass(['Std.Core.Runtime'], function(I) {
+'Service'.subclass(['Std.Core.Runtime'], function(I) {
   "use strict";
   /*global require*/
   I.am({
@@ -14,8 +14,8 @@
     }
   });
   I.nest({
-    //@ Message streams between Node.js environments.
-    MessageStream: 'Environment.Service._.MessageStream'.subclass(function(I) {
+    //@ Streams that cross between Node.js environments.
+    Crossover: 'Environment.Service._.Crossover'.subclass(function(I) {
       I.am({
         Abstract: false
       });
