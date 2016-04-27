@@ -2,11 +2,11 @@
 function refine(I) {
   "use strict";
   /*global performance*/
-  var uptimeOffset = I.$.$rt.getUptime() - performance.now() / 1000;
+  const OFFSET = I.$.$rt.getUptime() - performance.now() / 1000;
   I.refine({
     //@ Replace Date.now implementation with high-resolution time.
     getUptime: function() {
-      return performance.now() / 1000 + uptimeOffset;
+      return performance.now() / 1000 + OFFSET;
     }
   });
 }

@@ -1,5 +1,5 @@
 //@ An enumeration type describes string choices.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -14,8 +14,10 @@
     //@param choices {[string]} string choices
     build: function(typespace, expression, choices) {
       I.$super.build.call(this, typespace, expression);
-      var choices_ = this.enumeratedChoices_ = I.createTable();
-      choices.forEach(function(s) { choices_[s] = true; });
+      const choices_ = this.enumeratedChoices_ = I.createTable();
+      for (let choice of choices) {
+        choices_[choice] = true;
+      }
     },
     describesValue: function(value) {
       return typeof value === 'string' && !!this.enumeratedChoices_[value];
@@ -33,10 +35,10 @@
       if (enumerations.length === 1) {
         return enumerations[0];
       }
-      var choices_ = I.createTable();
-      enumerations.forEach(function(enumeration) {
+      const choices_ = I.createTable();
+      for (let enumeration of enumerations) {
         Object.assign(choices_, enumeration.enumeratedChoices_);
-      });
+      }
       return I.$.create(typespace, expression, Object.getOwnPropertyNames(choices_));
     }
   });

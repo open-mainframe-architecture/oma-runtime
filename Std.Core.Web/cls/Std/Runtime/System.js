@@ -2,20 +2,16 @@
 function refine(I) {
   "use strict";
   /*global MessageChannel*/
+  const SIGNALS = new MessageChannel(), TASKS = [];
+  // execute macro tasks when they become available
+  SIGNALS.port1.addEventListener('message', () => { TASKS.shift()(); });
+  SIGNALS.port1.start();
   I.refine({
     //@ Replace setTimeout implementation with MessageChannel.
     asap: function(closure) {
-      // use postMessage of message channel to call closure in macrotask as soon as possible
-      asapChannel.port2.postMessage(null);
-      asapQueue.push(closure);
+      // post message to signal availability of macro task
+      SIGNALS.port2.postMessage(null);
+      TASKS.push(closure);
     }
   });
-  I.setup(function() {
-    asapChannel.port1.addEventListener('message', function() {
-      var closure = asapQueue.shift();
-      closure();
-    });
-    asapChannel.port1.start();
-  });
-  var asapChannel = new MessageChannel(), asapQueue = [];
 }

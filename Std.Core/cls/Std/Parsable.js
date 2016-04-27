@@ -1,5 +1,5 @@
 //@ A parser processes source texts.
-'Trait'.subclass(function(I) {
+'Trait'.subclass(I => {
   "use strict";
   I.know({
     //@ Parse source text.

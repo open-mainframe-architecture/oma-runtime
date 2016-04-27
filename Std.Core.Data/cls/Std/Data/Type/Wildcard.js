@@ -1,5 +1,5 @@
 //@ A wildcard type describes all data values except null.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -13,16 +13,15 @@
     unmarshalJSON: function(json, expression) {
       if (I.Data.isBasicValue(json)) {
         return json;
-      } else if (json) {
-        var typespace = this.typespace;
+      } else {
+        this.assert(json);
+        const typespace = this.typespace;
         // list with values
         return Array.isArray(json._ || json) ? typespace.unmarshal(json, '[*?]') :
           // dictionary with entries
           json._ ? typespace.unmarshal(json, '<*?>') :
-            // empty record
+            // useles, empty record
             typespace.unmarshal(json, '{}');
-      } else {
-        this.bad();
       }
     }
   });

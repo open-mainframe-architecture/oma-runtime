@@ -1,5 +1,5 @@
 //@ A container stores, retrieves and removes indexed elements.
-'BaseObject+Indexable'.subclass(function(I) {
+'BaseObject+Indexable'.subclass(I => {
   "use strict";
   I.have({
     //@{integer} modification count is increased after every modification

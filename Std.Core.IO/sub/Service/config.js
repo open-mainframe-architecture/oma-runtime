@@ -5,8 +5,6 @@ function configure(module) {
     loose: 'Std.Management.Loose'
   };
   module.provides = {
-    'Std.IO.Transfer': function(roleClass, required) {
-      return roleClass.spawn(required.loose);
-    }
+    'Std.IO.Transfer': (roleClass, required) => roleClass.spawn(required.loose)
   };
 }

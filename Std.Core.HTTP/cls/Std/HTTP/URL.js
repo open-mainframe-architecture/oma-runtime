@@ -1,6 +1,10 @@
 //@ A decoded URL.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
+  // regular expression to match URL scheme, authority, path, query and fragment
+  const COMPONENTS = /^(?:([^:/?#]+):)?(?:\/\/([^/?#]*))?([^?#]+)?(?:\?([^#]*))?(?:#(.*))?$/;
+  // regular expression to match user, password, host and port in nonempty URL authority
+  const AUTHORITY = /^(?:([^:]+)(?::(.*))@)?([^:]+)(?::([0-9]{1,5}))?$/;
   I.have({
     //@{string} URL scheme, e.g. http or ftp or about
     urlScheme: null,
@@ -42,7 +46,7 @@
     //@ Compute encoded representation of this URL.
     //@return {string} URL in encoded string
     encode: function() {
-      var output = [];
+      const output = [];
       if (this.urlScheme) {
         output.push(encodeURIComponent(this.urlScheme), ':');
       }
@@ -70,24 +74,10 @@
     //@param visit {Std.Closure} called with parameter value and name
     //@return {boolean} false if a visit returned false, otherwise true
     enumerateParameters: function(visit) {
-      var query = this.urlQuery;
+      const query = this.urlQuery;
       if (query) {
-        for (var i = 0, n = query.length; i < n; ++i) {
-          if (visit(query[i][1], query[i][0]) === false) {
-            return false;
-          }
-        }
-      }
-      return true;
-    },
-    //@ Enumarate path elements.
-    //@param visit {Std.Closure} called with path element and one-based index
-    //@return {boolean} false if a visit returned false, otherwise true
-    enumeratePathElements: function(visit) {
-      var path = this.urlPath;
-      if (path) {
-        for (var first = path[0] ? 0 : 1, i = first, n = path.length; i < n; ++i) {
-          if (visit(path[i], i + 1 - first) === false) {
+        for (let pair of query) {
+          if (visit(pair[1], pair[0]) === false) {
             return false;
           }
         }
@@ -97,7 +87,7 @@
     //@ Get filename from last path element.
     //@return {string} filename or empty string if path is empty
     getFilename: function() {
-      var path = this.urlPath;
+      const path = this.urlPath;
       return path ? path[path.length - 1] : '';
     },
     //@ Get URL fragment.
@@ -114,16 +104,6 @@
     //@return {string} password, possible empty
     getPassword: function() {
       return this.urlPassword;
-    },
-    //@ Get URL path.
-    //@return {string} path or empty string if path is empty
-    getPath: function() {
-      return this.urlPath ? this.urlPath.join('/') : '';
-    },
-    //@ Get individual elements of URL path.
-    //@return {[string]} path elements
-    getPathElements: function() {
-      return this.urlPath ? this.urlPath.slice() : [];
     },
     //@ Get port number on host.
     //@return {string} port number, possible empty
@@ -150,16 +130,26 @@
     isAbsolute: function() {
       return !!this.urlPath && !this.urlPath[0];
     },
+    //@ Iterate path elements.
+    //@return {Std.Iterator} iterator over path elements
+    walkPath: function() {
+      const path = this.urlPath;
+      if (!path) {
+        return I.Loop.Empty;
+      }
+      const iterator = path.walk();
+      if (!path[0]) {
+        // skip empty header element of absolute paths
+        iterator.step();
+      }
+      return iterator;
+    },
     //@ Clone this URL except for credentials, i.e. user and password.
     //@return {Std.HTTP.URL} this or a new URL
     withoutCredentials: function() {
       if (this.urlUser) {
-        var scheme = this.urlScheme;
-        var host = this.urlHost;
-        var port = this.urlPort;
-        var path = this.urlPath;
-        var query = this.urlQuery;
-        var fragment = this.urlFragment;
+        const scheme = this.urlScheme, host = this.urlHost, port = this.urlPort;
+        const path = this.urlPath, query = this.urlQuery, fragment = this.urlFragment;
         return I.$.create(scheme, '', '', host, port, path, query, fragment);
       }
       return this;
@@ -168,13 +158,9 @@
     //@return {Std.HTTP.URL} this or a new URL
     withoutFragment: function() {
       if (this.urlFragment) {
-        var scheme = this.urlScheme;
-        var user = this.urlUser;
-        var password = this.urlPassword;
-        var host = this.urlHost;
-        var port = this.urlPort;
-        var path = this.urlPath;
-        var query = this.urlQuery;
+        const user = this.urlUser, password = this.urlPassword;
+        const scheme = this.urlScheme, host = this.urlHost, port = this.urlPort;
+        const path = this.urlPath, query = this.urlQuery;
         return I.$.create(scheme, user, password, host, port, path, query);
       }
       return this;
@@ -186,18 +172,18 @@
     //@return {Std.HTTP.URL?} decoded URL or nothing
     //@more https://url.spec.whatwg.org, https://tools.ietf.org/html/rfc3986#appendix-B
     decode: function(input) {
-      var components = SyntaxURL.exec(input);
+      const components = COMPONENTS.exec(input);
       if (components) {
-        var authority = components[2] && SyntaxAuthority.exec(components[2]);
+        const authority = components[2] && AUTHORITY.exec(components[2]);
         if (!components[2] || authority) {
-          var scheme = components[1] && decodeURIComponent(components[1]);
-          var user = authority && authority[1] && decodeURIComponent(authority[1]);
-          var password = authority && authority[2] && decodeURIComponent(authority[2]);
-          var host = authority && authority[3] && decodeURIComponent(authority[3]);
-          var port = authority && authority[4] && decodeURIComponent(authority[4]);
-          var path = components[3] && components[3].split('/').map(decodeURIComponent);
-          var query = components[4] && components[4].split('&').map(decodeParameter);
-          var fragment = components[5] && decodeURIComponent(components[5]);
+          const scheme = components[1] && decodeURIComponent(components[1]);
+          const user = authority && authority[1] && decodeURIComponent(authority[1]);
+          const password = authority && authority[2] && decodeURIComponent(authority[2]);
+          const host = authority && authority[3] && decodeURIComponent(authority[3]);
+          const port = authority && authority[4] && decodeURIComponent(authority[4]);
+          const path = components[3] && components[3].split('/').map(decodeURIComponent);
+          const query = components[4] && components[4].split('&').map(decodeParameter);
+          const fragment = components[5] && decodeURIComponent(components[5]);
           return I.$.create(scheme, user, password, host, port, path, query, fragment);
         }
       }
@@ -209,15 +195,11 @@
       return typeof it === 'string' ? it : it.encode();
     }
   });
-  // regular expression to match URL scheme, authority, path, query and fragment
-  var SyntaxURL = /^(?:([^:/?#]+):)?(?:\/\/([^/?#]*))?([^?#]+)?(?:\?([^#]*))?(?:#(.*))?$/;
-  // regular expression to match user, password, host and port in nonempty URL authority
-  var SyntaxAuthority = /^(?:([^:]+)(?::(.*))@)?([^:]+)(?::([0-9]{1,5}))?$/;
   // hoist decoder/encoder of URL parameters
   function decodeParameter(parameter) {
     return parameter.split('=').map(decodeURIComponent);
   }
   function encodeParameter(pair) {
-    return encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]);
+    return `${encodeURIComponent(pair[0])}=${encodeURIComponent(pair[1])}`;
   }
 })

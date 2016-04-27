@@ -1,5 +1,5 @@
 //@ An asynchronous stream supports read and/or write operations.
-'Role'.subclass(['Std.Core.Theater'], function(I) {
+'Role'.subclass(['Std.Core.Theater'], I => {
   "use strict";
   I.play({
     //@ Read item from this readable stream.

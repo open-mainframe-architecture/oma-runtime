@@ -1,21 +1,12 @@
-'Object'.subclass(Array, function(I) {
+'Object'.subclass(Array, I => {
   "use strict";
   I.know({
-    //@ Add things from iterator to this array.
-    //@param iterator {Std.Iterator} iterator over things to add
-    //@return this array
-    accumulate: function(iterator) {
-      for (; iterator.has(); iterator.step()) {
-        this.push(iterator.get());
-      }
-      return this;
-    },
     //@ Visit elements of this array.
     //@param visit {Std.Closure} called with element and index
-    //@param firstIndex {integer?} index of first enumerated element, e.g. 1
+    //@param offset {integer?} optional offset from zero-based array index
     //@return {boolean} false if some visit returned false, otherwise true
-    enumerate: function(visit, firstIndex) {
-      return I.enumerate(this, visit, firstIndex);
+    enumerate: function(visit, offset) {
+      return I.enumerate(this, visit, offset);
     },
     //@ Create iterator over array elements. The iterator assumes this array is not modified.
     //@return {Std.Iterator} iterator over array elements
@@ -27,10 +18,12 @@
     //@ Visit elements of array-like object.
     //@param arrayLike {[any]} array or array-like object, e.g. arguments
     //@param visit {Std.Closure} called with element and index
-    //@param firstIndex {integer?} index of first enumerated element, e.g. 1
+    //@param offset {integer?} optional offset from zero-based array index
     //@return {boolean} false if some visit returned false, otherwise true
-    enumerate: function(arrayLike, visit, firstIndex) {
-      for (var i = 0, n = arrayLike.length, offset = firstIndex || 0; i < n; ++i) {
+    enumerate: function(arrayLike, visit, offset) {
+      offset = offset || 0;
+      const n = arrayLike.length;
+      for (let i = 0; i < n; ++i) {
         if (visit(arrayLike[i], i + offset) === false) {
           return false;
         }

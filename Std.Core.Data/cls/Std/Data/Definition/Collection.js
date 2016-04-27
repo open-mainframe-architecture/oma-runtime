@@ -1,5 +1,5 @@
 //@ An AST for a dictionary or list type.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Data.Definition.Expression} expression for element type

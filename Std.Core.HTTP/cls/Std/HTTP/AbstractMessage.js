@@ -1,5 +1,5 @@
 //@ An HTTP message is a request or a response.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -15,8 +15,8 @@
     //@param body {string|binary} textual or binary body
     build: function(headers_, body) {
       I.$super.build.call(this);
-      var table = I.createTable();
-      for (var headerName in headers_) {
+      const table = I.createTable();
+      for (let headerName in headers_) {
         // header names are case-insensitive
         table[headerName.toLowerCase()] = headers_[headerName];
       }

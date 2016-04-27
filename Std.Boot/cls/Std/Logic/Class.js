@@ -1,16 +1,17 @@
 //@ I describe how the instance side of a class behaves.
-'Behavior'.subclass(function(I) {
+'Behavior'.subclass(I => {
   "use strict";
+  const Field = I._.Field, Metaclass = I._.Metaclass;
   I.know({
     //@ Add package field substance to this class and add new package field to the metaclass.
     //@param module {Std.Logic.Module} module that defines package field
-    //@param Field {Std.Logic.Field.$} class of package field
+    //@param fieldClass {Std.Logic.Field.$} class of package field
     //@param key {string} unique key of package field
     //@param substance {any} field substance
     //@return nothing
-    addPackageField: function(module, Field, key, substance) {
-      var metaclsPackage = this.$.getPackage();
-      metaclsPackage.store(Field.create(metaclsPackage, key, module, substance), key);
+    addPackageField: function(module, fieldClass, key, substance) {
+      const metaclsPackage = this.$.getPackage();
+      metaclsPackage.store(fieldClass.create(metaclsPackage, key, module, substance, false), key);
       this.getPackage().storeConstant(substance, key);
     },
     //@ Add package field substances to this class and add new package fields to the metaclass.
@@ -18,8 +19,8 @@
     //@param fields_ {Std.Table} mapping from field keys to package field specifications
     //@return nothing
     addPackageFields: function(module, fields_) {
-      for (var key in fields_) {
-        this.addPackageField(module, I._.Field, key, fields_[key]);
+      for (let key in fields_) {
+        this.addPackageField(module, Field, key, fields_[key]);
       }
     },
     //@ Test whether this behavior is a mixin class.
@@ -41,11 +42,9 @@
     //@param legacyConstructor {Std.Closure?} instance constructor of new class or nothing
     //@return {Std.Logic.Class} new class
     subclass: function(context, key, module, legacyConstructor) {
-      if (this.isFinal()) {
-        this.bad(key, this.getName());
-      }
-      var metacls = this.$.addNewChildBehavior(I._.Metaclass);
-      var instCls = this.addNewChildBehavior(metacls, legacyConstructor);
+      this.assert(!this.isFinal());
+      const metacls = this.$.addNewChildBehavior(Metaclass);
+      const instCls = this.addNewChildBehavior(metacls, legacyConstructor);
       I.defineConstant(metacls.getPrototype(), '$', metacls);
       instCls.buildLogical(context, key, module);
       metacls.buildLogical(instCls, '$', module);

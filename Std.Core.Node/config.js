@@ -5,15 +5,9 @@ function configure(module) {
   module.requires = {
     loose: 'Std.Management.Loose'
   };
-  module.test = function() {
-    return typeof process !== 'undefined';
-  };
+  module.test = () => typeof process !== 'undefined';
   module.provides = {
-    'Std.HTTP.NodeClient': function(roleClass, required) {
-      return roleClass.spawn(required.loose);
-    },
-    'Std.Runtime.NodeConstants': function(serviceClass) {
-      return serviceClass.create();
-    }
+    'Std.HTTP.NodeClient': (roleClass, required) => roleClass.spawn(required.loose),
+    'Std.Runtime.NodeConstants': serviceClass => serviceClass.create()
   };
 }

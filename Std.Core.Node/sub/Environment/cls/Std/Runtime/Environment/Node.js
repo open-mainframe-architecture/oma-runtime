@@ -1,5 +1,5 @@
 //@ A Node.js runtime environment.
-'Service'.subclass(['Std.Core.Runtime'], function(I) {
+'Service'.subclass(['Std.Core.Runtime'], I => {
   "use strict";
   /*global require*/
   I.am({
@@ -15,17 +15,17 @@
   });
   I.nest({
     //@ Streams that cross between Node.js environments.
-    Crossover: 'Environment.Service._.Crossover'.subclass(function(I) {
+    Crossover: 'Environment.Service._.Crossover'.subclass(I => {
       I.am({
         Abstract: false
       });
       I.know({
-        install: function(receiver) {
-          this.emitter.on('message', receiver);
+        install: function(emitter, receiver) {
+          emitter.on('message', receiver);
         },
         receive: I.returnArgument,
-        send: function(it) {
-          this.emitter.send(it);
+        send: function(emitter, it) {
+          emitter.send(it);
         }
       });
     })

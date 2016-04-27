@@ -1,5 +1,5 @@
 //@ An AST for a type expression can be evaluated, unless it contains variables.
-'AbstractDefinition'.subclass(function(I) {
+'AbstractDefinition'.subclass(I => {
   "use strict";
   I.know({
     //@return this expression
@@ -28,12 +28,12 @@
     //@param variables_ {Std.Table} mapping from variable names to expressions
     //@return {[Std.Data.Definition.Expression]} expressions without variables
     substituteExpressions: function(expressions, variables_) {
-      var subs = [];
-      var distinct = false;
-      for (var i = 0, n = expressions.length; i < n; ++i) {
-        var expression = expressions[i];
-        subs[i] = expression.substitute(variables_);
-        distinct = distinct || expression !== subs[i];
+      const subs = [];
+      let distinct = false;
+      for (let expression of expressions) {
+        const substitution = expression.substitute(variables_);
+        subs.push(substitution);
+        distinct = distinct || expression !== substitution;
       }
       return distinct ? subs : expressions;
     }

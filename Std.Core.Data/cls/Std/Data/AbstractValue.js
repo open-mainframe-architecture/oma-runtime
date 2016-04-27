@@ -1,19 +1,19 @@
 //@ A composed value is an immutable list, dictionary or record value.
-'Any'.subclass(function(I) {
+'Any'.subclass(I => {
   "use strict";
+  const Difference = I._.Difference;
   I.know({
-    //@{Std.Data.Type.Dictionary|Std.Data.Type.List|Std.Data.Type.Record} type of this value
+    //@{Std.Data.Type.Dictionary|Std.Data.Type.List|Std.Data.Type.Record} concrete type of value
     $type: null,
     //@{Std.Data.Definition.Expression} type expression restricts concrete type of this value
     $expr: null,
     //@{Std.Table|[any]} frozen table or array with child values
     _: null,
-    //@ Abort with failure.
-    //@param ... {any} failure reasons are concatenated
-    //@return never
-    $bad: function() {
-      throw I._.Failure.create(this, Array.prototype.join.call(arguments, ' '));
-    },
+    //@ Assert conditions.
+    //@param ... {any} truthy condition to test
+    //@return true
+    //@except when one of the conditions is falsy
+    $assert: I.assert,
     //@ Determine difference with other value of same type and expression.
     //@param that {Std.Data.AbstractValue} other value
     //@return {Std.Data.Difference} difference between this and other value
@@ -47,14 +47,20 @@
     //@return {Std.Data.Difference} difference between left and right value
     compareValues: function(lhs, rhs) {
       // replace left-hand side with bottom
-      return !I.isValue(rhs) ? I._.Difference._.Bottom :
+      return !I.isValue(rhs) ? Difference._.Bottom :
         // identical values are equal values
-        lhs === rhs ? I._.Difference._.Zero :
+        lhs === rhs ? Difference._.Zero :
           I.isComposedValue(lhs) && I.isComposedValue(rhs) &&
             // compare values of same type and expression
             lhs.$expr === rhs.$expr && lhs.$type === rhs.$type ? lhs.$difference(rhs) :
             // replace left-hand side with right value
-            I._.Difference.create(rhs);
+            Difference.create(rhs);
+    },
+    //@ Get immutable array or table from composed value. Otherwise decompose to null.
+    //@param it {any|Std.Data.AbstractValue} composed value or other JavaScript object/value
+    //@return {[any]|Std.Table?} immutable array, immutable table or nothing
+    decomposeValues: function(it) {
+      return I.isComposedValue(it) ? it._ : null;
     },
     //@ Test deep equality.
     //@param lhs {any} JavaScript object or value on left-hand side
@@ -84,7 +90,7 @@
       return it === null || I.isBasicValue(it) || I.isComposedValue(it);
     }
   });
-  function burdenValueClass() {//jshint validthis:true
-    this.$bad();
+  function burdenValueClass() { //jshint validthis:true
+    this.$assert(false);
   }
 })

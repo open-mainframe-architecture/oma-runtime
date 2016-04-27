@@ -1,61 +1,60 @@
 function boot(bundleName, bootModuleName) {
   "use strict";
   // runtime system boots at t0
-  var t0 = new Date();
-  // create subclass method for strings, e.g. 'Std.BaseObject'.subclass(function(I) { ... })
+  const t0 = new Date();
+  // create subclass method for strings, e.g. 'BaseObject'.subclass(function(I) { ... })
   Object.defineProperty(String.prototype, 'subclass', {
     configurable: true, enumerable: false, writable: false, value: function() {
-      var n = arguments.length - 1, clsSpec = { super: this, script: arguments[n] };
-      for (var i = 0; i < n; ++i) {
-        var argument = arguments[i];
+      const n = arguments.length - 1, clsSpec = { super: this, script: arguments[n] };
+      for (let i = 0; i < n; ++i) {
+        const argument = arguments[i];
         if (typeof argument === 'function') {
+          // legacy constructor function
           clsSpec.legacy = argument;
         } else if (Array.isArray(argument)) {
+          // array with module names specifies dependencies 
           clsSpec.depends = argument;
         } else {
+          // pojo specifies required services
           clsSpec.requires = argument;
         }
       }
       return clsSpec;
     }
   });
-  // return object with bundle method (like strings do when runtime system has been loaded)
   return {
+    // same interface as bundle method of strings after runtime is operational
     bundle: function(moduleSpecs_) {
       delete this.bundle;
-      var bootSpec_ = moduleSpecs_[bootModuleName];
+      const bootSpec_ = moduleSpecs_[bootModuleName];
       delete moduleSpecs_[bootModuleName];
       // JavaScript constants and primitives
-      var protoObject = Object.prototype;
-      var create = Object.create;
-      var defineProperty = Object.defineProperty;
-      var freeze = Object.freeze;
-      var owns = protoObject.hasOwnProperty;
-      var push = Array.prototype.push;
-      var seal = Object.seal;
+      const protoObject = Object.prototype, owns = protoObject.hasOwnProperty;
+      const defineProperty = Object.defineProperty, freeze = Object.freeze, seal = Object.seal;
+      const create = Object.create;
       // add constant property (non-configurable, non-enumerable and non-writable)
-      function defineConstant(it, key, value) {
-        var descriptor = { value: value, configurable: false, enumerable: false, writable: false };
-        defineProperty(it, key, descriptor);
+      function defineConstant(it, key, constant) {
+        defineProperty(it, key, {
+          value: constant, configurable: false, enumerable: false, writable: false
+        });
       }
-      // runtime tables are not polluted with properties from Object.prototype
-      var protoTable = freeze(create(null));
+      // tables are not polluted with properties from Object.prototype
+      const protoTable = freeze(create(null));
       // create tables that hold namespace entries
-      var Root_ = create(protoTable), Std_ = create(Root_), Logic_ = create(Std_);
+      const Root_ = create(protoTable), Std_ = create(Root_), Logic_ = create(Std_);
       // create chain of prototypes to Class and Metaclass
-      var protoBaseObject = create(protoObject);
-      var protoBaseObjectCtxl = create(protoBaseObject);
-      var protoBaseObjectLgcl = create(protoBaseObjectCtxl);
-      var protoBaseObjectLgclIx = create(protoBaseObjectLgcl);
-      var protoBaseObjectLgclCtxt = create(protoBaseObjectLgclIx);
-      var protoBehavior = create(protoBaseObjectLgclCtxt);
-      var protoClass = create(protoBehavior);
-      var protoMetaclass = create(protoBehavior);
+      const protoBaseObject = create(protoObject);
+      const protoBaseObjectCtxl = create(protoBaseObject);
+      const protoBaseObjectLgcl = create(protoBaseObjectCtxl);
+      const protoBaseObjectLgclIx = create(protoBaseObjectLgcl);
+      const protoBaseObjectLgclCtxt = create(protoBaseObjectLgclIx);
+      const protoBehavior = create(protoBaseObjectLgclCtxt);
+      const protoClass = create(protoBehavior);
+      const protoMetaclass = create(protoBehavior);
       // create class/metaclass pair
       function pair(superCls, instancePrototype, legacyConstructor) {
-        var metacls = create(protoMetaclass);
-        var classPrototype = create(superCls ? superCls.$.instancePrototype : protoClass);
-        var instCls = create(classPrototype);
+        const classPrototype = create(superCls ? superCls.$.instancePrototype : protoClass);
+        const metacls = create(protoMetaclass), instCls = create(classPrototype);
         defineConstant(classPrototype, '$', metacls);
         metacls.instancePrototype = classPrototype;
         metacls.homeContext = instCls;
@@ -77,57 +76,57 @@ function boot(bundleName, bootModuleName) {
       }
       // create named class/metaclass pair
       function cls(ns_, key, superCls, instancePrototype, legacyConstructor) {
-        var instCls = pair(superCls, instancePrototype, legacyConstructor);
+        const instCls = pair(superCls, instancePrototype, legacyConstructor);
         instCls.contextKey = key;
         ns_[key] = instCls;
         return instCls;
       }
       // create mixed-in class/metaclass pair
       function mix(superCls, mixin, instancePrototype) {
-        var instCls = pair(superCls, instancePrototype);
-        var mixedIns = mixin.mixedInClasses || (mixin.mixedInClasses = []);
+        const instCls = pair(superCls, instancePrototype);
+        const mixedIns = mixin.mixedInClasses || (mixin.mixedInClasses = []);
         instCls.traitBehavior = mixin;
         instCls.behaviorFlags_.Abstract = true;
         mixedIns.push(instCls);
         return instCls;
       }
       // setup initial class hierarchy with bootstrapped prototypes
-      var Any = cls(Root_, 'Any');
+      const Any = cls(Root_, 'Any');
       cls(Std_, 'Table', Any, protoTable);
-      var Pojo = cls(Root_, 'Object', Any, protoObject, Object);
-      var BaseObject = cls(Std_, 'BaseObject', Pojo, protoBaseObject);
-      var Trait = cls(Std_, 'Trait', BaseObject);
-      var Ix = cls(Std_, 'Indexable', Trait);
-      var Ctxl = cls(Std_, 'Contextual', Trait);
-      var Lgcl = cls(Std_, 'Logical', Ctxl);
-      var Ctxt = cls(Std_, 'Context', mix(Ctxl, Ix));
-      var BaseObjectCtxl = mix(BaseObject, Ctxl, protoBaseObjectCtxl);
-      var BaseObjectLgcl = mix(BaseObjectCtxl, Lgcl, protoBaseObjectLgcl);
-      var BaseObjectLgclIx = mix(BaseObjectLgcl, Ix, protoBaseObjectLgclIx);
-      var BaseObjectLgclCtxt = mix(BaseObjectLgclIx, Ctxt, protoBaseObjectLgclCtxt);
-      var Behavior = cls(Logic_, 'Behavior', BaseObjectLgclCtxt, protoBehavior);
-      var Class = cls(Logic_, 'Class', Behavior, protoClass);
-      var Metaclass = cls(Logic_, 'Metaclass', Behavior, protoMetaclass);
+      const PlainObject = cls(Root_, 'Object', Any, protoObject, Object);
+      const BaseObject = cls(Std_, 'BaseObject', PlainObject, protoBaseObject);
+      const Trait = cls(Std_, 'Trait', BaseObject);
+      const Ix = cls(Std_, 'Indexable', Trait);
+      const Ctxl = cls(Std_, 'Contextual', Trait);
+      const Lgcl = cls(Std_, 'Logical', Ctxl);
+      const Ctxt = cls(Std_, 'Context', mix(Ctxl, Ix));
+      const BaseObjectCtxl = mix(BaseObject, Ctxl, protoBaseObjectCtxl);
+      const BaseObjectLgcl = mix(BaseObjectCtxl, Lgcl, protoBaseObjectLgcl);
+      const BaseObjectLgclIx = mix(BaseObjectLgcl, Ix, protoBaseObjectLgclIx);
+      const BaseObjectLgclCtxt = mix(BaseObjectLgclIx, Ctxt, protoBaseObjectLgclCtxt);
+      const Behavior = cls(Logic_, 'Behavior', BaseObjectLgclCtxt, protoBehavior);
+      const Class = cls(Logic_, 'Class', Behavior, protoClass);
+      const Metaclass = cls(Logic_, 'Metaclass', Behavior, protoMetaclass);
       // create classes that are necessary to execute class scripts of boot module
-      var Field = cls(Logic_, 'Field', BaseObjectLgcl);
-      var Container = cls(Std_, 'Container', mix(BaseObject, Ix));
-      var Dictionary = cls(Std_, 'Dictionary', Container);
-      var DictionaryLgcl = mix(mix(Dictionary, Ctxl), Lgcl);
-      var ClassPackage = cls(Logic_, 'ClassPackage', DictionaryLgcl);
-      var LogicalContainer = cls(Logic_, 'LogicalContainer', mix(DictionaryLgcl, Ctxt));
-      var Module = cls(Logic_, 'Module', LogicalContainer);
-      var Namespace = cls(Logic_, 'Namespace', LogicalContainer);
-      var FieldContainer = cls(Logic_, 'FieldContainer', LogicalContainer);
-      var InstanceFields = cls(Logic_, 'InstanceFields', FieldContainer);
-      var MetaclassPackage = cls(Logic_, 'MetaclassPackage', FieldContainer);
+      const Field = cls(Logic_, 'Field', BaseObjectLgcl);
+      const Container = cls(Std_, 'Container', mix(BaseObject, Ix));
+      const Dictionary = cls(Std_, 'Dictionary', Container);
+      const DictionaryLgcl = mix(mix(Dictionary, Ctxl), Lgcl);
+      const ClassPackage = cls(Logic_, 'ClassPackage', DictionaryLgcl);
+      const LogicalContainer = cls(Logic_, 'LogicalContainer', mix(DictionaryLgcl, Ctxt));
+      const Module = cls(Logic_, 'Module', LogicalContainer);
+      const Namespace = cls(Logic_, 'Namespace', LogicalContainer);
+      const FieldContainer = cls(Logic_, 'FieldContainer', LogicalContainer);
+      const InstanceFields = cls(Logic_, 'InstanceFields', FieldContainer);
+      const MetaclassPackage = cls(Logic_, 'MetaclassPackage', FieldContainer);
       // create uninitialized instance of class
       function basicCreate(instCls) {
         return create(instCls.instancePrototype);
       }
       // create (and collect) namespace object
-      var bootNamespaces = [];
+      const bootNamespaces = [];
       function createNamespace(parentNs, key, ns_) {
-        var ns = basicCreate(Namespace);
+        const ns = basicCreate(Namespace);
         if (parentNs) {
           ns.homeContext = ns.baseDictionary = parentNs;
         } else {
@@ -136,9 +135,7 @@ function boot(bundleName, bootModuleName) {
         ns.contextKey = key;
         if (ns_) {
           // claim ownership of logicals in existing table
-          Object.getOwnPropertyNames(ns._ = ns_).forEach(function(key) {
-            ns_[key].homeContext = ns;
-          });
+          for (let key of Object.getOwnPropertyNames(ns._ = ns_)) { ns_[key].homeContext = ns; }
         }
         else {
           ns._ = create(parentNs._);
@@ -148,32 +145,33 @@ function boot(bundleName, bootModuleName) {
         return ns;
       }
       // wrap tables of bootstrapped namespaces in proper namespace objects
-      var Root = createNamespace(null, 'Root', Root_), Std = createNamespace(Root, 'Std', Std_);
+      const Root = createNamespace(null, 'Root', Root_), Std = createNamespace(Root, 'Std', Std_);
       createNamespace(Std, 'Logic', Logic_);
       // visit inheritance tree in top-down or bottom-up order
       function enumerateBehaviors(behavior, visitFirst, bottomUp, visit) {
-        var children = behavior.childBehaviors;
+        const children = behavior.childBehaviors;
         if (visitFirst && !bottomUp) {
           visit(behavior);
         }
-        children.forEach(function(child) { enumerateBehaviors(child, true, bottomUp, visit); });
+        for (let child of children) {
+          enumerateBehaviors(child, true, bottomUp, visit);
+        }
         if (visitFirst && bottomUp) {
           visit(behavior);
         }
       }
       // bottom-up construction of metaclass hierarchy
-      enumerateBehaviors(Any, true, true, function(instCls) {
-        var metacls = instCls.$;
-        var parentBehavior = instCls.parentBehavior;
+      enumerateBehaviors(Any, true, true, instCls => {
+        const metacls = instCls.$, parentBehavior = instCls.parentBehavior;
         // metaclass hierarchy mirrors class hierarchy, except in the root class
-        var metaParent = parentBehavior === instCls ? Class : parentBehavior.$;
+        const metaParent = parentBehavior === instCls ? Class : parentBehavior.$;
         metacls.parentBehavior = metaParent;
         metaParent.childBehaviors.push(metacls);
       });
       // generic function to initialize behavior package and instance fields
       function addBehaviorDictionary(behavior, ivar, key, dictionaryClass) {
-        var dictionary = basicCreate(dictionaryClass);
-        var baseDictionary = behavior.parentBehavior[ivar];
+        const dictionary = basicCreate(dictionaryClass);
+        const baseDictionary = behavior.parentBehavior[ivar];
         dictionary.homeContext = behavior;
         dictionary.contextKey = key;
         dictionary.baseDictionary = baseDictionary;
@@ -186,7 +184,7 @@ function boot(bundleName, bootModuleName) {
         behavior._ = addBehaviorDictionary(behavior, 'behaviorPackage', '_', packageClass)._;
       }
       // top-down initialization of metaclass package and behavior flags
-      enumerateBehaviors(Class, false, false, function(metacls) {
+      enumerateBehaviors(Class, false, false, metacls => {
         addBehaviorPackage(metacls, MetaclassPackage);
         metacls.behaviorFlags_ = create(metacls.parentBehavior.behaviorFlags_);
       });
@@ -196,7 +194,7 @@ function boot(bundleName, bootModuleName) {
       }
       // derive base class of mixin operation that created mixed-in class
       function mixinBase(instCls, traitCls) {
-        var mixin = instCls.traitBehavior;
+        const mixin = instCls.traitBehavior;
         if (!mixin || mixin !== traitCls && mixin !== traitCls.traitBehavior) {
           return instCls;
         }
@@ -207,7 +205,8 @@ function boot(bundleName, bootModuleName) {
         if (logical.logicName) {
           return logical.logicName;
         }
-        var keys = [logical.contextKey], home = logical.homeContext, nextHome;
+        const keys = [logical.contextKey];
+        let home = logical.homeContext, nextHome;
         while ((nextHome = home.homeContext) !== home) {
           keys.unshift(home.contextKey);
           home = nextHome;
@@ -216,15 +215,14 @@ function boot(bundleName, bootModuleName) {
         return logical.logicName;
       }
       // top-down initialization of instance side
-      enumerateBehaviors(Class, false, false, function(metacls) {
-        var instCls = metacls.homeContext;
-        var mixin = instCls.traitBehavior;
+      enumerateBehaviors(Class, false, false, metacls => {
+        const instCls = metacls.homeContext, mixin = instCls.traitBehavior;
         addInstanceFieldContainer(instCls);
         addBehaviorPackage(instCls, ClassPackage);
         if (mixin) {
           metacls.traitBehavior = mixin.$;
           instCls.homeContext = instCls.parentBehavior.homeContext;
-          instCls.contextKey = mixinBase(instCls, mixin).contextKey + '+' + logicName(mixin);
+          instCls.contextKey = `${mixinBase(instCls, mixin).contextKey}+${logicName(mixin)}`;
         }
       });
       // complete initialization of metaclasses
@@ -234,35 +232,29 @@ function boot(bundleName, bootModuleName) {
         if (mixin === Trait) {
           return true;
         }
-        for (var childCls; childCls !== cls; childCls = cls, cls = cls.parentBehavior) {
+        for (let previous = null; previous !== cls; previous = cls, cls = cls.parentBehavior) {
           if (cls.traitBehavior === mixin) {
             return true;
           }
         }
         return false;
       }
-      // find mixed-in subclass
-      function mixedSubclass(superCls, mixin) {
-        for (var i = 0, children = superCls.childBehaviors, n = children.length; i < n; ++i) {
-          if (children[i].traitBehavior === mixin) {
-            return children[i];
-          }
-        }
-      }
       // find or create namespace for new logical
       function createHomeContext(keys) {
-        for (var i = 0, n = keys.length - 1, home = Root; i < n; ++i) {
+        const n = keys.length - 1;
+        let home = Root;
+        for (let i = 0; i < n; ++i) {
           home = owns.call(home._, keys[i]) ? home._[keys[i]] : createNamespace(home, keys[i]);
         }
         return home;
       }
       // resolve logic name
       function resolveKeys(relative, keys) {
-        var n = keys.length;
+        const n = keys.length;
         if (n) {
           // look up first key, possibly in ancestor namespace
           relative = relative._[keys[0]];
-          for (var i = 1; relative && i < n; ++i) {
+          for (let i = 1; relative && i < n; ++i) {
             // other keys must be owned by namespace
             relative = relative._ && owns.call(relative._, keys[i]) && relative._[keys[i]];
           }
@@ -274,9 +266,9 @@ function boot(bundleName, bootModuleName) {
       }
       // create new child of parent behavior
       function addChildBehavior(key, parentBehavior, behaviorClass, packageClass, legacy) {
-        var childBehavior = basicCreate(behaviorClass);
+        const childBehavior = basicCreate(behaviorClass);
         childBehavior.contextKey = key;
-        var prototype = legacy ? legacy.prototype : create(parentBehavior.instancePrototype);
+        const prototype = legacy ? legacy.prototype : create(parentBehavior.instancePrototype);
         childBehavior.instancePrototype = prototype;
         childBehavior.instanceConstructor = legacy;
         childBehavior.parentBehavior = parentBehavior;
@@ -289,19 +281,20 @@ function boot(bundleName, bootModuleName) {
       }
       // create new class/metaclass pair
       function createClassPair(ns, key, clsSpec, superCls) {
-        var metacls = addChildBehavior('$', superCls.$, Metaclass, MetaclassPackage);
-        var instCls = addChildBehavior(key, superCls, metacls, ClassPackage, clsSpec.legacy);
+        const metacls = addChildBehavior('$', superCls.$, Metaclass, MetaclassPackage);
+        const instCls = addChildBehavior(key, superCls, metacls, ClassPackage, clsSpec.legacy);
         defineConstant(metacls.instancePrototype, '$', metacls);
         metacls.homeContext = instCls;
         instCls.homeContext = ns;
         return instCls;
       }
       // create and store instance field
-      function addInstanceField(behavior, key, substance) {
-        var field = basicCreate(Field), fields = behavior.instanceFields;
+      function addInstanceField(behavior, key, substance, variable) {
+        const field = basicCreate(Field), fields = behavior.instanceFields;
         field.homeContext = fields;
         field.contextKey = key;
         field.fieldSubstance = substance;
+        field.variableSubstance = variable;
         fields._[key] = field;
         return field;
       }
@@ -318,12 +311,12 @@ function boot(bundleName, bootModuleName) {
       }
       // create mixed-in class and register appropriate class loader
       function addMixin(superCls, traitCls, bootLoading_) {
-        var instCls, mixin = traitCls.traitBehavior;
+        const mixin = traitCls.traitBehavior;
         if (!mixin) {
           if (hasMixin(superCls, traitCls)) {
             return superCls;
           }
-          instCls = mixedSubclass(superCls, traitCls);
+          const instCls = superCls.childBehaviors.find(cls => cls.traitBehavior === traitCls);
           if (instCls) {
             return instCls;
           }
@@ -334,23 +327,23 @@ function boot(bundleName, bootModuleName) {
           return addMixin(superCls, mixin, bootLoading_);
         }
         // create mixed-in class
-        var mixinName = logicName(traitCls), clsSpec = bootSpec_[mixinName];
-        var key = mixinBase(superCls, traitCls.parentBehavior).contextKey + '+' + mixinName;
-        instCls = createClassPair(superCls.homeContext, key, clsSpec, superCls);
+        const mixinName = logicName(traitCls), clsSpec = bootSpec_[mixinName];
+        const key = `${mixinBase(superCls, traitCls.parentBehavior).contextKey}+${mixinName}`;
+        const instCls = createClassPair(superCls.homeContext, key, clsSpec, superCls);
         instCls.traitBehavior = traitCls;
         instCls.$.traitBehavior = traitCls.$;
         instCls.behaviorFlags_.Abstract = true;
-        var mixedIns = traitCls.mixedInClasses || (traitCls.mixedInClasses = []);
+        const mixedIns = traitCls.mixedInClasses || (traitCls.mixedInClasses = []);
         mixedIns.push(instCls);
         bootLoading_[logicName(instCls)] = new Loader(instCls, clsSpec);
         return instCls;
       }
       // attempt to create class of loader
       function createClass(loader, bootLoading_) {
-        var ns = loader.home, superParts = loader.superParts, i, n = superParts.length;
-        for (i = 0; i < n; ++i) {
+        const ns = loader.home, superParts = loader.superParts, n = superParts.length;
+        for (let i = 0; i < n; ++i) {
           if (typeof superParts[i] === 'string') {
-            var part = resolve(ns, superParts[i]);
+            const part = resolve(ns, superParts[i]);
             if (!part) {
               // unable to create part now, but perhaps it's possible later on
               return;
@@ -359,54 +352,53 @@ function boot(bundleName, bootModuleName) {
           }
         }
         // add mixins in specified order (first part is class, other parts are mixins)
-        var superCls = superParts[0];
-        for (i = 1; i < n; ++i) {
+        let superCls = superParts[0];
+        for (let i = 1; i < n; ++i) {
           superCls = addMixin(superCls, superParts[i], bootLoading_);
         }
-        var instCls = ns._[loader.key] = createClassPair(ns, loader.key, loader.spec, superCls);
+        const instCls = ns._[loader.key] = createClassPair(ns, loader.key, loader.spec, superCls);
         return instCls;
       }
       // execute keywords in class scripts
       function scriptAm(flags_) { //jshint validthis:true
-        var behaviorFlags_ = this.$.behaviorFlags_;
-        for (var key in flags_) {
+        const behaviorFlags_ = this.$.behaviorFlags_;
+        for (let key in flags_) {
           behaviorFlags_[key] = flags_[key];
         }
       }
       function scriptHave(variables_) { //jshint validthis:true
-        var behavior = this.$, proto = behavior.instancePrototype;
-        var descriptor = { configurable: false, enumerable: true, writable: true };
-        for (var key in variables_) {
+        const behavior = this.$, proto = behavior.instancePrototype;
+        const descriptor = { configurable: false, enumerable: true, writable: true };
+        for (let key in variables_) {
           descriptor.value = variables_[key];
           defineProperty(proto, key, descriptor);
-          addInstanceField(behavior, key, descriptor.value);
+          addInstanceField(behavior, key, descriptor.value, true);
         }
       }
       function scriptAccess(getters_) { //jshint validthis:true
-        var behavior = this.$, proto = behavior.instancePrototype;
-        var descriptor = { configurable: true, enumerable: false };
-        for (var key in getters_) {
-          var getter = descriptor.get = getters_[key];
+        const behavior = this.$, proto = behavior.instancePrototype;
+        const descriptor = { configurable: true, enumerable: false };
+        for (let key in getters_) {
+          const getter = descriptor.get = getters_[key];
           defineProperty(proto, key, descriptor);
-          addInstanceField(behavior, key, { get: getter });
+          addInstanceField(behavior, key, { get: getter }, false);
         }
       }
       function scriptKnow(knowledge_) { //jshint validthis:true
-        var behavior = this.$, proto = behavior.instancePrototype;
-        var descriptor = { configurable: true, enumerable: false, writable: false };
-        for (var key in knowledge_) {
-          var substance = descriptor.value = knowledge_[key];
+        const behavior = this.$, proto = behavior.instancePrototype;
+        const descriptor = { configurable: true, enumerable: false, writable: false };
+        for (let key in knowledge_) {
+          const substance = descriptor.value = knowledge_[key];
           defineProperty(proto, key, descriptor);
-          addInstanceField(behavior, key, substance);
+          addInstanceField(behavior, key, substance, false);
         }
       }
       function scriptShare(substances_) { //jshint validthis:true
-        var instCls = this.$, metacls = instCls.$, packageFields = metacls.behaviorPackage;
-        var fieldSubstances_ = instCls.behaviorPackage._;
-        var descriptor = { configurable: false, enumerable: true, writable: false };
-        for (var key in substances_) {
-          var substance = substances_[key];
-          var field = basicCreate(Field);
+        const instCls = this.$, metacls = instCls.$, packageFields = metacls.behaviorPackage;
+        const fieldSubstances_ = instCls.behaviorPackage._;
+        const descriptor = { configurable: false, enumerable: true, writable: false };
+        for (let key in substances_) {
+          const substance = substances_[key], field = basicCreate(Field);
           field.homeContext = packageFields;
           field.contextKey = key;
           field.fieldSubstance = substance;
@@ -415,11 +407,16 @@ function boot(bundleName, bootModuleName) {
           defineProperty(fieldSubstances_, key, descriptor);
         }
       }
-      var bootSetup = [], scriptSetup = push.bind(bootSetup);
+      const bootSetup = [], scriptSetup = bootSetup.push.bind(bootSetup);
+      // create basic boot module
+      const bootKeys = bootModuleName.split('.'), bootNs = createHomeContext(bootKeys);
+      const Boot = bootNs._[bootKeys[bootKeys.length - 1]] = basicCreate(Module);
+      Boot.homeContext = bootNs;
+      Boot.contextKey = bootKeys[bootKeys.length - 1];
       // load class by executing class script
       function loadClass(loader) {
-        var instCls = loader.subject, scriptInst = create(instCls._);
-        var metacls = instCls.$, scriptMeta = create(protoTable);
+        const instCls = loader.subject, scriptInst = create(instCls._);
+        const metacls = instCls.$, scriptMeta = create(protoTable);
         // non-enumerable script keywords remain visible
         defineConstant(scriptInst, '$', instCls);
         defineConstant(scriptMeta, '$', metacls);
@@ -437,51 +434,50 @@ function boot(bundleName, bootModuleName) {
         scriptInst.know = scriptMeta.know = scriptKnow;
         scriptInst.share = scriptShare;
         scriptInst.setup = scriptSetup;
-        var script = loader.spec.script;
+        const script = loader.spec.script;
         script(freeze(create(scriptInst)), freeze(create(scriptMeta)));
         if (Trait.$.instancePrototype.isPrototypeOf(instCls) && !instCls.traitBehavior) {
-          // hold on to class spec, because creation of mixed-in class runs class script again
+          // hold on to mixin spec, because creation of mixed-in class runs class script again
           instCls.mixedInClasses = instCls.mixedInClasses || [];
           instCls.definingSpecs = [loader.spec, Boot];
         }
         // remove enumerable script keywords
-        var keyword;
-        for (keyword in scriptInst) {
+        for (let keyword in scriptInst) {
           delete scriptInst[keyword];
         }
-        for (keyword in scriptMeta) {
+        for (let keyword in scriptMeta) {
           delete scriptMeta[keyword];
         }
       }
       // load and execute class scripts of boot module
       function loadClasses() {
         // add loaders for bootstrapped classes
-        var bootLoading_ = {}, loaders = [];
-        enumerateBehaviors(Class, false, false, function(metacls) {
-          var instCls = metacls.homeContext, mixin = instCls.traitBehavior;
-          var name = logicName(instCls);
+        const bootLoading_ = {}, loaders = [];
+        enumerateBehaviors(Class, false, false, metacls => {
+          const instCls = metacls.homeContext, mixin = instCls.traitBehavior;
+          const name = logicName(instCls);
           bootLoading_[name] = new Loader(instCls, bootSpec_[mixin ? logicName(mixin) : name]);
         });
         // add loaders for other classes
-        for (var name in bootSpec_) {
+        for (let name in bootSpec_) {
           if (name) {
-            var keys = name.split('.');
+            const keys = name.split('.');
             if (!resolveKeys(Root, keys)) {
-              var loader = new Loader(keys, bootSpec_[name]);
+              const loader = new Loader(keys, bootSpec_[name]);
               bootLoading_[name] = loader;
               loaders.push(loader);
             }
           }
         }
         // create classes until creation is no longer possible
-        var loading, limit = loaders.length;
+        let loading, limit = loaders.length;
         do {
           loading = 0;
-          for (var i = 0; i < limit; ++i) {
-            var creator = loaders[i];
-            var subject = creator.subject = createClass(creator, bootLoading_);
+          for (let i = 0; i < limit; ++i) {
+            const loader = loaders[i];
+            const subject = loader.subject = createClass(loader, bootLoading_);
             if (!subject) {
-              loaders[loading++] = creator;
+              loaders[loading++] = loader;
             }
           }
         } while (loading < limit && (limit = loading));
@@ -489,16 +485,16 @@ function boot(bundleName, bootModuleName) {
           throw 'Unbootable module.';
         }
         // run class scripts in breadth-first traversal
-        var queue = Class.childBehaviors.slice();
+        const queue = Class.childBehaviors.slice();
         while (queue.length) {
-          var metacls = queue.shift();
-          push.apply(queue, metacls.childBehaviors);
+          const metacls = queue.shift();
+          queue.push(...metacls.childBehaviors);
           loadClass(bootLoading_[logicName(metacls.homeContext)]);
         }
       }
       function unveilObject(object) {
-        // copy uninitialized variable from prototype to ensure ownership
-        for (var iv in object) {
+        // copy uninitialized, enumerable variable from prototype to ensure ownership
+        for (let iv in object) {
           object[iv] = object[iv];
         }
         // seal owned properties and unveil new object
@@ -517,50 +513,58 @@ function boot(bundleName, bootModuleName) {
         unveilLogical(behavior.behaviorPackage);
         unveilLogical(behavior);
       }
-      // create basic boot module
-      var bootKeys = bootModuleName.split('.'), bootNs = createHomeContext(bootKeys);
-      var Boot = bootNs._[bootKeys[bootKeys.length - 1]] = basicCreate(Module);
-      Boot.homeContext = bootNs;
-      Boot.contextKey = bootKeys[bootKeys.length - 1];
       // run class scripts, but not the setup routines
       loadClasses();
       // unveil all objects built by boot module so far
       Any.inheritanceDepth = -1;
       enumerateBehaviors(Any, true, false, unveilBehavior);
-      enumerateBehaviors(Class, false, false, function(metacls) {
+      enumerateBehaviors(Class, false, false, metacls => {
         metacls.behaviorPackage.enumerate(unveilLogical);
       });
-      bootNamespaces.forEach(function(ns) { unveilLogical(ns); });
+      for (let ns of bootNamespaces) {
+        unveilLogical(ns);
+      }
       // run setup routines and complete initialization of boot module
-      bootSetup.forEach(function(closure) { closure(); });
-      var bootBundle = Boot.assetBundle = Std_.Runtime._.Image._.Bundle.create(bundleName);
+      for (let closure of bootSetup) {
+        closure();
+      }
+      const bootBundle = Boot.assetBundle = Std_.Runtime._.Image._.Bundle.create(bundleName);
       Boot.logicConfig = Logic_.Config.create(bootSpec_['']);
       unveilLogical(Boot);
       Boot.$rt.bootTimestamp = t0;
       Boot.beLoaded(true);
-      // load other modules from bundle
-      var loading, loaders = [], names = Object.keys(moduleSpecs_), limit = names.length;
-      // sorted names ensure a child module is created after its parent
-      names.sort().forEach(function(name) {
-        loaders.push(bootBundle.createModuleLoader(name, moduleSpecs_[name]));
-      });
-      // attempt to load modules until it's no longer possible
-      do {
-        loading = 0;
-        for (var i = 0; i < limit; ++i) {
-          if (loaders[i].isReady()) {
-            loaders[i].loadModule();
+      // load other modules from bundle (sorting ensures child module is created after parent)
+      const loaders = Object.keys(moduleSpecs_).sort().map(name =>
+        bootBundle.createModuleLoader(name, moduleSpecs_[name])
+      );
+      let loading, limit = loaders.length;
+      // load modules until it's no longer possible
+      function loadModules() {
+        do {
+          loading = 0;
+          for (let i = 0; i < limit; ++i) {
+            if (loaders[i].isReady()) {
+              loaders[i].loadModule();
+            }
+            else {
+              loaders[loading++] = loaders[i];
+            }
           }
-          else {
-            loaders[loading++] = loaders[i];
-          }
-        }
-      } while (loading < limit && (limit = loading));
-      if (loading) {
-        throw 'Unbootable bundle.';
+        } while (loading < limit && (limit = loading));
       }
-      // promise to return bundle object
-      return function() { return bootBundle; }.play();
+      loadModules();
+      // promise to load remaining modules, although most or all modules should be loaded by now
+      return function() {
+        // stage break gives parent environment opportunity to register service providers
+        return this.$theater.stageBreak().triggers(() => {
+          // load any remaining modules that depend on services from parent environment
+          loadModules();
+          if (loading) {
+            this.$rt.asap(() => { throw 'Unbootable runtime.'; });
+          }
+          return bootBundle;
+        });
+      }.play();
     }
   };
 }

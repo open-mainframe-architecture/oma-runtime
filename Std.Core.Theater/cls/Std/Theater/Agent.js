@@ -1,5 +1,5 @@
-//@ An agent represents an actor with a convenient calling interface to create jobs.
-'BaseObject+Immutable'.subclass(function(I, We) {
+//@ An agent is a job factory for the actor it represents.
+'BaseObject+Immutable'.subclass((I, We) => {
   "use strict";
   I.am({
     Final: true
@@ -13,6 +13,12 @@
     build: function(actor) {
       I.$super.build.call(this);
       this.agentActor = actor;
+    },
+    //@ Create job to perform scene code on stage.
+    //@param code {Std.Closure} scene code to perform on stage for this agent
+    //@return {Std.Theater.Job} inert theater job
+    createScene: function(code) {
+      return this.agentActor.createJob(code);
     },
     //@ Create event that fires when the actor of this agent dies.
     //@return {Std.Event} event fires upon and after death
@@ -60,27 +66,21 @@
     isManager: function() {
       return this.agentActor.isManaging();
     },
-    //@ Create job to perform scene code on stage.
+    //@ Run code on stage.
     //@param code {Std.Closure} scene code to perform on stage for this agent
-    //@param ... {any} scene parameters
-    //@return {Std.Theater.Job} immobile theater job
-    performScene: function(code) {
-      return this.agentActor.createJob(code, I.slice(arguments, 1));
+    //@return {Std.Theater.Job} running theater job
+    runScene: function(code) {
+      return this.createScene(code).running();
     },
     //@ Walk over managers of this agent.
     //@return {Std.Iterator} iterator over managing agents
     walkManagers: function() {
-      return I.Loop.collect(this.agentActor.walkManagers(), getAgent);
-    },
-    //@ Walk over agents that are managed by this agent.
-    //@return {Std.Iterator} iterator over managed agents, directly and indirectly
-    walkSubordinates: function() {
-      return I.Loop.collect(this.agentActor.walkSubordinates(), getAgent);
+      return I.Loop.collect(this.agentActor.walkManagers(), actor => actor.getAgent());
     },
     //@ Walk over agents that are directly managed by this agent.
     //@return {Std.Iterator} iterator over managed agents
     walkTeam: function() {
-      return I.Loop.collect(this.agentActor.walkTeam(), getAgent);
+      return I.Loop.collect(this.agentActor.walkTeam(), actor => actor.getAgent());
     }
   });
   We.know({
@@ -99,6 +99,4 @@
       };
     }
   });
-  // hoist code to get agent from actor
-  function getAgent(actor) { return actor.getAgent(); }
 })

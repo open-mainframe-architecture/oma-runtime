@@ -1,6 +1,7 @@
 //@ I am the root mixin.
-'BaseObject'.subclass(function(I, We) {
+'BaseObject'.subclass((I, We) => {
   "use strict";
+  const BaseObject = I._.BaseObject;
   I.am({
     Abstract: true
   });
@@ -19,7 +20,7 @@
     },
     describes: function(it) {
       // if it is an object, test whether class of object is derived from this trait class
-      return I._.BaseObject.describes(it) && this.isTraitFor(it.$);
+      return BaseObject.describes(it) && this.isTraitFor(it.$);
     },
     //@return {boolean} false if this trait class is mixed-in, otherwise true
     isMixin: function() {
@@ -29,7 +30,9 @@
       We.$super.prepareLoad.call(this, loader);
       if (!this.traitBehavior) {
         // run the class script of this mixin against existing mixed-in classes
-        this.mixedInClasses.forEach(function(instCls) { loader.addClassLoader(instCls); });
+        for (let instCls of this.mixedInClasses) {
+          loader.addClassLoader(instCls);
+        }
         // register spec and module for future applications of this mixin
         this.definingSpecs.push(loader.getSpec(), loader.getModule());
       }
@@ -47,8 +50,8 @@
     //@param visit {Std.Closure} closure is called with class specification and module
     //@return {boolean} false if some visit returned false, otherwise true
     enumerateSpecs: function(visit) {
-      var specs = this.definingSpecs;
-      for (var i = 0, n = specs.length; i < n; i += 2) {
+      const specs = this.definingSpecs, n = specs.length;
+      for (let i = 0; i < n; i += 2) {
         if (visit(specs[i], specs[i + 1]) === false) {
           return false;
         }

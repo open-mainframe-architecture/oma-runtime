@@ -1,6 +1,7 @@
 //@ An AST for an enumeration type.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
+  const Type = I._.Type;
   I.am({
     Abstract: false
   });
@@ -16,7 +17,7 @@
       this.enumerationChoices = choices;
     },
     pushEvaluation: function(evaluation) {
-      return I._.Type._.Enumeration.create(evaluation.typespace, this, this.enumerationChoices);
+      return Type._.Enumeration.create(evaluation.typespace, this, this.enumerationChoices);
     }
   });
 })

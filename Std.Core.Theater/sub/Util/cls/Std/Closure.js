@@ -5,11 +5,11 @@
   "use strict";
   I.know({
     //@ Perform code of this closure on theater stage.
-    //@param immobile {boolean?} true for immobile job, otherwise running job
-    //@return {Std.Theater.Job} immobile or running job
-    play: function(immobile) {
-      var job = I.extra$.performScene(this);
-      return immobile ? job : job.running();
+    //@param inert {boolean?} true for inert job, otherwise running job
+    //@return {Std.Theater.Job} inert or running job
+    play: function(inert) {
+      const job = I.extra$.createScene(this);
+      return inert ? job : job.running();
     }
   });
 })

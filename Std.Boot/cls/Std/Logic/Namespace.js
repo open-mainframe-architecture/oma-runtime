@@ -1,6 +1,7 @@
 //@ A namespace contains classes, modules and namespaces.
-'LogicalContainer'.subclass(function(I) {
+'LogicalContainer'.subclass(I => {
   "use strict";
+  const Class = I._.Class, Module = I._.Module;
   I.am({
     Abstract: false
   });
@@ -14,25 +15,23 @@
     },
     checkStorage: function(it, ix) {
       return I.$super.checkStorage.call(this, it, ix) &&
-        (I._.Class.describes(it) || I.$.describes(it) || I._.Module.describes(it));
+        (Class.describes(it) || I.$.describes(it) || Module.describes(it));
     },
     //@ Evaluate an expression that designates a class
     //@param classExpr {string} class expression, e.g. BaseObject+Indirect
     //@return {Std.Logic.Class?} class or nothing if expression cannot be evaluated
     evaluateClassExpression: function(classExpr) {
-      var parts = classExpr.split('+');
-      var n = parts.length;
-      var i;
-      for (i = 0; i < n; ++i) {
+      const parts = classExpr.split('+'), n = parts.length;
+      for (let i = 0; i < n; ++i) {
         // resolve expression parts relative to this namespace
         parts[i] = this.resolve(parts[i].trim());
         // first part must be class, other parts must be mixins
-        if (!I._.Class.describes(parts[i]) || i && !parts[i].isMixin()) {
+        if (!Class.describes(parts[i]) || i && !parts[i].isMixin()) {
           return;
         }
       }
-      var instCls = parts[0];
-      for (i = 1; i < n && instCls; ++i) {
+      let instCls = parts[0];
+      for (let i = 1; i < n && instCls; ++i) {
         // find mixed-in classes in specified order 
         instCls = parts[i].getMixedClass(instCls);
       }

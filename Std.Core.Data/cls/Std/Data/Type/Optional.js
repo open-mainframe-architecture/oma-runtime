@@ -1,6 +1,7 @@
 //@ An optional type describes null and values of the mandatory type.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
+  const None = I._.None;
   I.am({
     Abstract: false
   });
@@ -25,11 +26,8 @@
     },
     marshalValue: I.shouldNotOccur,
     unmarshalJSON: function(json, expression) {
-      if (json === null) {
-        return null;
-      } else {
-        return this.mandatoryType.unmarshalJSON(json, expression.asMandatory());
-      }
+      return json === null ? null :
+        this.mandatoryType.unmarshalJSON(json, expression.asMandatory());
     }
   });
   I.share({
@@ -39,8 +37,8 @@
     //@param type {Std.Data.AbstractType} candidate mandatory type
     //@return {Std.Data.Type.Optional|Std.Data.Type.None} optional or none type
     normalize: function(typespace, expression, type) {
-      var nullable = I.$.describes(type) || I._.None.describes(type);
-      return nullable ? type : I.$.create(typespace, expression, type);
+      return I.$.describes(type) || None.describes(type) ? type :
+        I.$.create(typespace, expression, type);
     }
   });
 })

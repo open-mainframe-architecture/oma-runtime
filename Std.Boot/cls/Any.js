@@ -1,16 +1,31 @@
 //@ I am the root class with two defunct instances: null and undefined.
-'Any'.subclass(function(I) {
+'Any'.subclass(I => {
   "use strict";
+  const Root = I._.Root, Failure = I._.Std._.Failure, Table = I._.Std._.Table;
+  const PRIMITIVES = { undefined: true, boolean: true, number: true, string: true };
   I.am({
     Abstract: true,
     Final: false,
     Service: false
   });
   I.share({
+    //@ Assert conditions. The receiver is the origin of a failure, if any.
+    //@param ... {any} truthy condition to test
+    //@return this receiver
+    //@except when one of the conditions is falsey
+    assert: function() {
+      const n = arguments.length;
+      for (let i = 0; i < n; ++i) {
+        if (!arguments[i]) {
+          throw Failure.create(this, i + 1);
+        }
+      }
+      return this;
+    },
     //@ Create a methodless table.
     //@return {Std.Table} new table
     createTable: function() {
-      return I._.Std._.Table.create();
+      return Table.create();
     },
     //@ Define an immutable property value of it.
     //@param it {Object} JavaScript object
@@ -18,8 +33,9 @@
     //@param value {any} property value
     //@return nothing
     defineConstant: function(it, key, value) {
-      var descriptor = { value: value, configurable: false, enumerable: false, writable: false };
-      Object.defineProperty(it, key, descriptor);
+      Object.defineProperty(it, key, {
+        value: value, configurable: false, enumerable: false, writable: false
+      });
     },
     //@ Find the most specific behavior that describes it.
     //@param it {any} JavaScript object or value
@@ -30,6 +46,21 @@
     //@ Always do and return nothing.
     //@return nothing
     doNothing: function() { },
+    //@ Does it have at least one enumerable property?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if at least one property is enumerable, otherwise false
+    hasEnumerables: function(it) {
+      for (let ignore in it) { //jshint ignore:line
+        return true;
+      }
+      return false;
+    },
+    //@ Is it a closure?
+    //@param it {any} JavaScript object or value
+    //@return {boolean} true if it is a JavaScript function, otherwise false
+    isClosure: function(it) {
+      return typeof it === 'function';
+    },
     //@ Is it not null and not undefined?
     //@param it {any} JavaScript object or value
     //@return {boolean} true if it is defined (not null and not undefined), otherwise false
@@ -40,13 +71,7 @@
     //@param it {any} JavaScript object or value
     //@return {boolean} true if it is a primitive thing, otherwise false
     isPrimitiveThing: function(it) {
-      switch (typeof it) {
-        case 'undefined': case 'boolean': case 'number': case 'string':
-          return true;
-        case 'object':
-          return it === null;
-      }
-      return false;
+      return it === null || PRIMITIVES[typeof it] || false;
     },
     //@ Test whether it owns a property, even when it does not have a hasOwnProperty method.
     //@param it {any} JavaScript object or value
@@ -55,13 +80,11 @@
     isPropertyOwner: function(it, key) {
       return it !== null && it !== void 0 && Object.prototype.hasOwnProperty.call(it, key);
     },
-    //@ Create a portrait of it. A portrait reveals information to assist logging/debugging.
-    //@param it {any} JavaScript object or value
-    //@return {any|Object} primitive or JSON-like representation
-    portray: function(it) {
-      return I.isPrimitiveThing(it) ? it :
-        I._.Std._.Illustrative.describes(it) ? it.createPortrait() :
-          'a ' + I.describe(it).getName();
+    //@ Resolve full qualified name of a logical object, e.g. a class.
+    //@param name {string} name to resolve
+    //@return {Std.Logical?} a logical or nothing
+    resolveLogical: function(name) {
+      return Root.resolve(name);
     },
     //@ Always return false.
     //@return false

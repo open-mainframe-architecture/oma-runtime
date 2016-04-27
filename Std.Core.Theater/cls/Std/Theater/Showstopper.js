@@ -1,7 +1,9 @@
-//@ A showstopper is a root event that blocks a job.
-'Event'.subclass(function(I) {
+//@ A showstopper blocks the scene of a job until the child event fires.
+'AbstractEvent+Production'.subclass(I => {
   "use strict";
+  const Blooper = I._.Blooper, Production = I._.Production;
   I.am({
+    Abstract: false,
     Final: true
   });
   I.have({
@@ -21,45 +23,52 @@
     //@param effect {any|Std.Closure} ignition effect
     build: function(event, effect) {
       I.$super.build.call(this);
-      // root event is its own parent
-      this.parentEvent = this;
       this.childEvent = event;
       this.ignitionEffect = effect;
     },
-    //@ A showstopper is a root event that cannot be charged.
-    charge: I.shouldNotOccur,
-    //@ A showstopper is a root event that cannot be discharged.
-    discharge: I.shouldNotOccur,
     fire: function(ignition, fromChild) {
-      var child = this.childEvent, blooper = this.blooperEvent;
-      if (this.ignitionEvent) {
-        this.bad();
-      }
+      this.assert(!this.ignitionEvent);
+      const child = this.childEvent, blooper = this.blooperEvent;
       if (fromChild === child) {
         if (blooper) {
           blooper.discharge();
         }
-      } else if (fromChild === blooper) {
-        child.discharge();
       } else {
-        this.bad();
+        this.assert(fromChild === blooper);
+        child.discharge();
       }
       // repost job to produce effect of ignition on stage
       this.ignitionEvent = ignition;
       this.blockedJob.repost();
       this.childEvent = this.blooperEvent = this.blockedJob = null;
     },
+    propels: function(progress) {
+      this.assert(!this.blockedJob, this.childEvent);
+      // install new effect that continues after old effect
+      const oldEffect = this.ignitionEffect;
+      this.ignitionEffect = function(ignition) {
+        const intermediate = I.isClosure(oldEffect) ? oldEffect.call(this, ignition) : oldEffect;
+        // intermediate error result prevents progress
+        return I.isErroneous(intermediate) ? intermediate :
+          // intermediate production result propels future progress
+          Production.describes(intermediate) ? intermediate.propels(progress) :
+            // if progress is a closure, apply closure on successful intermediate result
+            I.isClosure(progress) ? progress.call(this, intermediate) :
+              // ignore successful intermediate result and proceed job with given progress
+              progress;
+      };
+      // reuse this showstopper to propel more progress
+      return this;
+    },
     //@ Charge event and block scene until event fires.
     //@param job {Std.Theater.Job} job to block
     //@return nothing
     blockScene: function(job) {
-      if (this.blockedJob) {
-        this.bad();
-      }
+      this.assert(!this.blockedJob);
       this.blockedJob = job;
-      var child = this.childEvent;
+      const child = this.childEvent;
       if (child.isFallible()) {
-        var blooper = this.blooperEvent = I._.Blooper.create();
+        const blooper = this.blooperEvent = Blooper.create();
         // charge with blooper for asynchronous failures
         this.ignitionEvent = child.charge(this, blooper) || blooper.charge(this);
       } else {
@@ -71,7 +80,7 @@
     //@return nothing
     cancel: function() {
       if (!this.ignitionEvent && this.childEvent) {
-        var child = this.childEvent, blooper = this.blooperEvent;
+        const child = this.childEvent, blooper = this.blooperEvent;
         this.childEvent = this.blooperEvent = this.ignitionEffect = this.blockedJob = null;
         child.discharge();
         if (blooper) {
@@ -90,16 +99,14 @@
     //@except when this showstopper does not have an ignition
     //@except when the ignition is a blooper with an asynchronous failure
     produceEffect: function(role) {
-      var ignition = this.ignitionEvent, effect = this.ignitionEffect;
-      if (!ignition) {
-        this.bad();
-      }
+      const ignition = this.ignitionEvent, effect = this.ignitionEffect;
+      this.assert(ignition);
       this.ignitionEffect = this.ignitionEvent = null;
-      if (I._.Blooper.describes(ignition)) {
+      if (Blooper.describes(ignition)) {
         // throw failure while on theater stage to produce effect of blooper
         throw ignition.getFailure();
       }
-      return typeof effect === 'function' ? effect.call(role, ignition) : effect;
+      return I.isClosure(effect) ? effect.call(role, ignition) : effect;
     }
   });
 })

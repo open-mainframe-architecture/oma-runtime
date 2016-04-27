@@ -1,5 +1,5 @@
 //@ Node-specific runtime constants.
-'Constants'.subclass(function(I) {
+'Constants'.subclass(I => {
   "use strict";
   /*global global,require,process*/
   I.am({

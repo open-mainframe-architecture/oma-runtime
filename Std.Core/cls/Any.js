@@ -1,5 +1,9 @@
 function refine(I) {
   "use strict";
+  const Table = I._.Std._.Table;
+  const Exception = I._.Std._.Runtime._.Exception, Failure = I._.Std._.Failure;
+  // prevent jshint from complaining about a form of eval
+  const Compilation = Function;
   I.share({
     //@{Std.Table} an immutable, empty table is the prototype of all tables
     EmptyTable: I._.Std._.Table.getPrototype(),
@@ -9,9 +13,9 @@ function refine(I) {
     //@param characters {string} string with characters
     //@return {Std.Table} table that maps distinct characters to true
     charset: function(characters) {
-      var table = I.createTable();
-      for (var i = 0, n = characters.length; i < n; ++i) {
-        table[characters.charAt(i)] = true;
+      const table = I.createTable();
+      for (let ch of characters) {
+        table[ch] = true;
       }
       return table;
     },
@@ -19,7 +23,7 @@ function refine(I) {
     //@param body {string} source code of closure body
     //@return {Std.Closure} parameterless closure with compiled body
     compileClosure: function(body) {
-      return new GlobalEval('"use strict";' + body);
+      return new Compilation(`"use strict";${body}`);
     },
     //@ Define property whose value is obtained with getter closure.
     //@param it {Any} JavaScript object
@@ -27,15 +31,16 @@ function refine(I) {
     //@param getter {Std.Closure} getter closure
     //@return nothing
     defineGetter: function(it, key, getter) {
-      var descriptor = { configurable: true, enumerable: false, get: getter };
-      Object.defineProperty(it, key, descriptor);
+      Object.defineProperty(it, key, {
+        get: getter, configurable: true, enumerable: false
+      });
     },
     //@ Enumerate JavaScript properties until visit returns false.
     //@param it {Any} JavaScript object
     //@param visit {Std.Closure} called with property value and name
     //@return {boolean} false if some visit returned false, otherwise true
     enumerate: function(it, visit) {
-      for (var key in it) {
+      for (let key in it) {
         if (visit(it[key], key) === false) {
           return false;
         }
@@ -46,18 +51,8 @@ function refine(I) {
     //@param origin {any} origin of new failure
     //@param reason {Std.Failure|Std.Runtime.Exception} existing failure or runtime exception
     //@return {Std.Failure} existing or new failure
-    failWith: function(origin, reason) {
-      return I._.Std._.Failure.describes(reason) ? reason :
-        I._.Std._.Failure.create(origin, reason);
-    },
-    //@ Does it have at least one enumerable property?
-    //@param it {any} JavaScript object or value
-    //@return {boolean} true if at least one property is enumerable, otherwise false
-    hasEnumerables: function(it) {
-      for (var ignore in it) { //jshint ignore:line
-        return true;
-      }
-      return false;
+    failHere: function(origin, reason) {
+      return Failure.describes(reason) ? reason : Failure.create(origin, reason);
     },
     //@ Is it an opaque ArrayBuffer or a typed view on an ArrayBuffer?
     //@param it {any} JavaScript object or value
@@ -68,8 +63,8 @@ function refine(I) {
     //@ Is it a runtime exception or a standard failure?
     //@param it {any} JavaScript object or value
     //@return {boolean} true if it is an exception or failure, otherwise false
-    isError: function(it) {
-      return I._.Std._.Runtime._.Exception.describes(it) || I._.Std._.Failure.describes(it);
+    isErroneous: function(it) {
+      return Exception.describes(it) || Failure.describes(it);
     },
     //@ Is it a finite number? NaN and Infinity are not finite numbers.
     //@param it {any} JavaScript object or value
@@ -77,16 +72,18 @@ function refine(I) {
     isFiniteNumber: function(it) {
       return typeof it === 'number' && isFinite(it);
     },
-    //@ Is it a runtime table?
+    //@ Is it a table?
     //@param it {any} JavaScript object or value
     //@return {boolean} true if it is a table, otherwise false
-    isTable: Object.prototype.isPrototypeOf.bind(I._.Std._.Table.getPrototype()),
+    isTable: function(it) {
+      return Table.describes(it);
+    },
     //@ Get opaque ArrayBuffer from typed array view or leave it as is.
     //@param it {any} JavaScript object or value
     //@return {any} arraybuffer if it is a buffer view, otherwise just it
     opaqueBytes: function(it) {
       if (ArrayBuffer.isView(it)) {
-        var buffer = it.buffer, bytes = it.byteLength;
+        const buffer = it.buffer, bytes = it.byteLength;
         return bytes === buffer.byteLength ? buffer : buffer.slice(it.byteOffset, bytes);
       }
       return it;
@@ -126,9 +123,7 @@ function refine(I) {
     //@param constant {any|Std.Closure} JavaScript object/value or closure to compute constant
     //@return {Std.Closure} closure that returns constant
     returnWith: function(constant) {
-      return I.returnThis.bind(typeof constant === 'function' ? constant() : constant);
+      return I.returnThis.bind(I.isClosure(constant) ? constant() : constant);
     }
   });
-  // prevent jshint from complaining about a form of eval
-  var GlobalEval = Function;
 }

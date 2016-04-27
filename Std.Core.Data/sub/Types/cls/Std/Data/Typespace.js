@@ -1,53 +1,36 @@
 function refine(I) {
   "use strict";
+  const NAME = /^[A-Z][0-9A-Za-z]+(?:\.[A-Z][0-9A-Za-z]+)*$/;
   I.know({
     //@ Add type definitions from module configuration.
-    //@param home {string} name of type package where to add definitions
-    //@param definitions_ {Std.Table} map name to type definition or nested type package
+    //@param definitions_ {Std.Table} map type names to type definitions
     //@return nothing
-    defineTypes: function(home, definitions_) {
-      for (var key in definitions_) {
-        if (!Key.test(key)) {
-          this.bad(key);
-        }
-        var source = definitions_[key];
-        var name = home ? home + '.' + key : key;
-        if (typeof source === 'string') {
-          this.defineType(name, source);
-        } else {
-          for (var probe in source) {
-            if (Key.test(probe)) {
-              // recursively add types to the specified home
-              this.defineTypes(name, source);
-            } else {
-              // compute source of record type from specified fields
-              this.defineType(name, record(source));
-            }
-            break;
-          }
-        }
+    defineTypes: function(definitions_) {
+      for (let name in definitions_) {
+        this.assert(NAME.test(name));
+        const source = definitions_[name];
+        this.defineType(name, typeof source === 'string' ? source : record(source));
       }
     }
   });
-  var Key = /^[A-Z][0-9A-Za-z]+$/;
   // compute source of record type from module configuration
   function record(fields_) {
-    var accu = [];
+    const accu = [];
     if (fields_.$macro) {
       accu.push('(');
-      for (var i = 0, n = fields_.$macro.length; i < n; ++i) {
-        accu.push(i ? ',' : '', fields_.$macro[i]);
-      }
+      fields_.$macro.forEach((formal, i) => {
+        accu.push(i ? ',' : '', formal);
+      });
       accu.push(')');
     }
     if (fields_.$super) {
       accu.push(fields_.$super, '+');
     }
     accu.push('{');
-    var comma = '';
-    for (var key in fields_) {
+    let comma = '';
+    for (let key in fields_) {
       if (key.charAt(0) !== '$') {
-        var source = fields_[key];
+        const source = fields_[key];
         accu.push(comma, key, ':', typeof source === 'string' ? source : record(source));
         comma = ',';
       }

@@ -1,12 +1,13 @@
-//@ A job performs one or more actor scenes to complete asynchronously.
-'BaseObject+Indirect+Eventful+RingLink'.subclass(function(I) {
+//@ A job performs one or more scenes.
+'BaseObject+Indirect+Production+Eventful+RingLink'.subclass(I => {
   "use strict";
+  const Failure = I._.Failure, Showstopper = I._.Showstopper;
   I.am({
     Abstract: false,
     Final: true
   });
   I.have({
-    //@{integer} number of scenes this job spans
+    //@{integer} number of scenes this job spans (negated when job completes)
     sceneCount: 0,
     //@{string|Std.Closure} selector or closure of scene method
     sceneSelector: null,
@@ -38,7 +39,7 @@
     },
     get: function() {
       // this job is an indirection to the result when available, otherwise it directs to itself
-      return this.isDone() ? this.jobResult : this;
+      return this.sceneCount < 0 ? this.jobResult : this;
     },
     addCharge: function(event) {
       I.$super.addCharge.call(this, event);
@@ -58,8 +59,8 @@
       }
     },
     testIgnition: function(event, blooper) {
-      if (this.isDone()) {
-        if (blooper && I.isError(this.jobResult)) {
+      if (this.sceneCount < 0) {
+        if (blooper && I.isErroneous(this.jobResult)) {
           // fail immediately with blooper when job produced error result
           blooper.failWith(this.jobResult);
         } else {
@@ -69,23 +70,28 @@
       }
       return false;
     },
-    //@ Create completion event that fires after this job completes.
-    //@param faulty {boolean?} true for all results, including failures, otherwise false
+    propels: function(progress) {
+      const future = this;
+      return !I.isClosure(progress) ? this.done().triggers(progress) :
+        this.done().triggers(function() { return progress.call(this, future.jobResult); });
+    },
+    //@ Create completion event that fires when this job is done.
+    //@param faulty {boolean?} true for all completions, including failures, otherwise false
     //@return {Std.FullEvent} completion event
-    completion: function(faulty) {
+    done: function(faulty) {
       return faulty ? this.createEvent() : I.Tryout.create(this);
     },
     //@ Create job that performs same scene as this job. Completed jobs cannot be forked.
-    //@return {Std.Theater.Job} new job
+    //@return {Std.Theater.Job} new inert job
     forkScene: function() {
       return this.getActor().createJob(this.sceneSelector, this.sceneParameters, this.jobPurpose);
     },
-    //@ Get actor that is working on this job. Once completed, a job does not have an actor.
+    //@ Get actor that is working on this job. Completed jobs do not have an actor.
     //@return {Std.Theater.Actor} theater actor
     getActor: function() {
       return this.getLinkingRing().actor;
     },
-    //@ Get agent that represent the actor of this job. Completed jobs do not have agents.
+    //@ Get agent that represent the actor of this job. Completed jobs do not have an agent.
     //@return {Std.Theater.Agent} theater agent
     getAgent: function() {
       return this.getActor().getAgent();
@@ -95,15 +101,23 @@
     getPurpose: function() {
       return this.jobPurpose;
     },
-    //@ Has this job completed with a result?
-    //@return {boolean} true if job has result, otherwise false
-    isDone: function() {
-      // a running job only fires once, and when it fires, it fires all completions
-      return !!this.sceneCount && this.hasFiredAll();
+   //@ Prepare this inert job for interrupt handling on stage.
+   //@return {Std.Theater.Job} this job
+    interrupting: function() {
+      this.assert(!this.sceneCount);
+      // claim first scene for interrupt handler
+      ++this.sceneCount;
+      // do not post interrupting job, because actor immediately takes the stage to work on job
+      return this;
     },
-    //@ Is this an immobile job that hasn't started running yet?
-    //@return {boolean} true if job is immobile, otherwise false
-    isImmobile: function() {
+    //@ Is this job done?
+    //@return {boolean} true if job completed with a result (failure or success), otherwise false
+    isDone: function() {
+      return this.sceneCount < 0;
+    },
+    //@ Is this an inert job that hasn't started running yet?
+    //@return {boolean} true if job is inert, otherwise false
+    isInert: function() {
       return !this.sceneCount;
     },
     //@ Is this job postponed until the showstopper fires?
@@ -112,45 +126,47 @@
       // this running job is postponed if the showstopper does not yet have an ignition
       return !!this.jobShowstopper && !this.jobShowstopper.hasIgnition();
     },
-    //@ Is this job running? Immobile and completed jobs are not running.
+    //@ Is this job running? Inert and completed jobs are not running.
     //@return {boolean} true if job is running, otherwise false
     isRunning: function() {
       // a running job promises to produce a future result
-      return !!this.sceneCount && !this.hasFiredAll();
+      return this.sceneCount > 0;
     },
     //@ Perform scene on stage.
     //@param role {Std.Role} actor role
     //@return {any} scene result
     performOnStage: function(role) {
-      var showstopper = this.jobShowstopper;
+      this.assert(this.sceneCount > 0);
+      const showstopper = this.jobShowstopper;
       if (showstopper) {
         this.jobShowstopper = null;
         // produce effect caused by ignition of showstopper
-        return role.playScene(this, function() { return showstopper.produceEffect(role); });
+        return role.playScene(this, () => showstopper.produceEffect(role));
       } else {
         // play scene with parameters
         return role.playScene(this, this.sceneSelector, this.sceneParameters);
       }
     },
-    //@ Quit this job if it is hasn't completed yet.
+    //@ Quit this job if it is running.
     //@return nothing
     quit: function() {
-      if (!this.isDone()) {
-        if (this.jobShowstopper) {
-          this.jobShowstopper.cancel();
-        }
+      if (this.sceneCount > 0) {
+        const showstopper = this.jobShowstopper;
         this.jobShowstopper = null;
         // complete job with a termination failure
-        this.setPerformance(I._.Failure.create(this, 'termination'));
+        this.setPerformance(Failure.create(this, 'termination'));
+        if (showstopper) {
+          showstopper.cancel();
+        }
       }
     },
-    //@ Post this job to the actor that should work on it.
+    //@ Post this job to the actor that should work on it. Completed jobs cannot be reposted.
     //@return nothing
     repost: function() {
       this.getActor().post(this);
     },
-    //@ Start running this immobile job.
-    //@return {boolean} false if this job is not immobile, otherwise true
+    //@ Start running this inert job.
+    //@return {boolean} false if this job is not inert, otherwise true
     run: function() {
       if (!this.sceneCount) {
         // schedule first scene on stage to start working on this job
@@ -162,21 +178,19 @@
       // this job is already running or done
       return false;
     },
-    //@ Make sure this job is running when it's immobile.
+    //@ Make sure this job is running if it was inert.
     //@return this job
     running: function() {
       this.run();
-      // return with running or completed job
+      // return with running or completed job, but never inert
       return this;
     },
     //@ Complete this job after last stage performance, or prepare it for more stage performances.
     //@param performance {Std.Theater.Showstopper|Std.Theater.Job|any} showstopper, job or result
     //@return nothing
     setPerformance: function(performance) {
-      if (this.isDone() || performance === this || this.jobShowstopper) {
-        this.bad();
-      }
-      if (I._.Showstopper.describes(performance)) {
+      this.assert(this.sceneCount > 0, performance !== this, !this.showstopper);
+      if (Showstopper.describes(performance)) {
         // showstopper event blocks this job
         performance.blockScene(this);
         this.jobShowstopper = performance;
@@ -184,45 +198,32 @@
         this.repost();
       } else if (!I.$.describes(performance)) {
         // if performance is neither a showstopper nor another job, complete this job with result
-        var actor = this.getActor();
+        const actor = this.getActor();
         this.jobResult = performance;
+        this.sceneCount = -this.sceneCount;
+        this.sceneSelector = this.sceneParameters = null;
         this.unlinkFromRing();
         this.fireAll();
         // make sure actor reschedules when this job was not busy, e.g. it was unexpectedly quit
         actor.resched();
+      } else if (performance.sceneCount < 0) {
+        // complete this job with same result as other completed job
+        this.setPerformance(performance.jobResult);
       } else if (!performance.sceneCount) {
-        // forward this job to same actor scene as other immobile job
+        // forward this job to same actor scene as other inert job
         ++this.sceneCount;
         this.sceneSelector = performance.sceneSelector;
         this.sceneParameters = performance.sceneParameters;
         performance.getActor().post(this);
-      } else if (performance.isDone()) {
-        // complete this job with same result as other completed job
-        this.setPerformance(performance.jobResult);
       } else {
         // complete this job with the same result, when other running job completes
-        this.setPerformance(performance.completion(true).triggers(performance));
+        this.setPerformance(performance.done(true).triggers(performance));
       }
-    },
-    //@ Install effect for successful completion of this job.
-    //@param effect {any|Std.Closure} plain or computed effect of ignition
-    //@return {Std.Theater.Showstopper} shopstopper event for this job
-    triggers: function(effect) {
-      return this.completion().triggers(effect);
-    },
-    //@ Install effect for successful result of this job.
-    //@param effect {any|Std.Closure} plain of computed effect of result
-    //@return {Std.Theater.Showstopper} shopstopper event for this job
-    yields: function(effect) {
-      var job = this;
-      return typeof effect === 'function' ?
-        job.triggers(function() { return effect.call(this, job.jobResult); }) :
-        job.triggers(effect);
     }
   });
   I.nest({
     //@ A dedicated ring for jobs of actors.
-    Ring: 'Ring'.subclass(function(I) {
+    Ring: 'Ring'.subclass(I => {
       I.have({
         //@{Std.Theater.Actor} actor of jobs in this ring
         actor: null
@@ -236,7 +237,7 @@
       });
     }),
     //@ A try-out is a fallible event that fires when a job completes successfully.
-    Tryout: 'FullEvent'.subclass(function(I) {
+    Tryout: 'FullEvent'.subclass(I => {
       I.have({
         //@{Std.Theater.Blooper} blooper fails with unsuccessful job result
         blooper: null
@@ -249,13 +250,13 @@
         },
         discharge: function() {
           // avoid discharge when it resulted from blooper failure
-          if (!this.origin().isDone()) {
+          if (this.origin().sceneCount > 0) {
             I.$super.discharge.call(this);
           }
         },
         fire: function() {
-          var result = this.origin().jobResult;
-          if (I.isError(result)) {
+          const result = this.origin().jobResult;
+          if (I.isErroneous(result)) {
             // fail asynchronously with blooper
             this.blooper.failWith(result);
           } else {

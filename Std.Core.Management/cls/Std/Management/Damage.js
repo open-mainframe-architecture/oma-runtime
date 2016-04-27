@@ -1,5 +1,5 @@
 //@ Manage damage of exceptions on stage.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.am({
     Abstract: true
@@ -13,8 +13,8 @@
     repair: I.burdenSubclass
   });
   I.nest({
-    //@ Lethal damage cannot be repaired.
-    Lethal: 'Damage'.subclass(function(I) {
+    //@ Lethal damage kills the actor, because it cannot be repaired.
+    Lethal: 'Damage'.subclass(I => {
       I.am({
         Abstract: false
       });
@@ -25,8 +25,8 @@
         }
       });
     }),
-    //@ Minimal damage only causes the job to fail.
-    Minimal: 'Damage'.subclass(function(I) {
+    //@ Minimal damage causes the job to fail, but the actor continues to operate.
+    Minimal: 'Damage'.subclass(I => {
       I.am({
         Abstract: false
       });
@@ -37,6 +37,17 @@
         }
       });
     }),
+    //@ Progressive damage causes the manager to fail as well.
+    Progressive: 'Damage'.subclass(I => {
+      I.am({
+        Abstract: false
+      });
+      I.know({
+        repair: function(manager, job, exception) {
+          throw I.failHere(job.getAgent(), exception);
+        }
+      });
+    })
   });
   I.setup({
     //@ Always return lethal damage that kills the failing actor.
@@ -44,6 +55,9 @@
     returnLethal: function() { return I.returnWith(I.Lethal.create()); },
     //@ Always return minimal damage that resumes the failing actor.
     //@return {Std.Management.Damage} minimal damage
-    returnMinimal: function() { return I.returnWith(I.Minimal.create()); }
+    returnMinimal: function() { return I.returnWith(I.Minimal.create()); },
+    //@ Always return progressive damage that propagates damage in the management hierarchy.
+    //@return {Std.Management.Damage} progressive damage
+    returnProgressive: function() { return I.returnWith(I.Progressive.create()); }
   });
 })

@@ -1,6 +1,7 @@
 //@ The definition of a logical object spans one or more modules.
-'Contextual'.subclass(function(I) {
+'Contextual'.subclass(I => {
   "use strict";
+  const Namespace = I._.Logic._.Namespace;
   I.have({
     //@{[Std.Logic.Module]} modules that define this logical and all logicals inside it
     logicModules: null,
@@ -46,15 +47,15 @@
       if (this.logicName) {
         return this.logicName;
       }
-      var home = this.getContext(), key = this.getKey();
-      this.logicName = home.isRootContext() ? key : home.getName() + '.' + key;
+      const home = this.getContext(), key = this.getKey();
+      this.logicName = home.isRootContext() ? key : `${home.getName()}.${key}`;
       return this.logicName;
     },
     //@ Get the namespace in which this logical is contained, either directly or indirectly.
     //@return {Std.Logic.Namespace} most specific namespace that contains this logical
     getNamespace: function() {
-      var context = this.getContext();
-      while (!I._.Logic._.Namespace.describes(context)) {
+      let context = this.getContext();
+      while (!Namespace.describes(context)) {
         context = context.getContext();
       }
       return context;

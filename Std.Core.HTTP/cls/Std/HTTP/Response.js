@@ -1,5 +1,5 @@
 //@ An HTTP response from a server.
-'AbstractMessage'.subclass(function(I) {
+'AbstractMessage'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

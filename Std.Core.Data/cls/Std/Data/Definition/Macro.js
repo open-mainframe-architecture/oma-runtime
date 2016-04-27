@@ -1,5 +1,5 @@
 //@ An AST for a macro definition.
-'AbstractDefinition'.subclass(function(I) {
+'AbstractDefinition'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -20,9 +20,8 @@
       this.macroExpression = expression;
     },
     express: function(parameters) {
-      var variables_ = I.createTable();
-      var formals = this.macroArguments;
-      for (var i = 0, j = 0, n = formals.length; i < n; i += 2, ++j) {
+      const variables_ = I.createTable(), formals = this.macroArguments, n = formals.length;
+      for (let i = 0, j = 0; i < n; i += 2, ++j) {
         variables_[formals[i]] = parameters && parameters[j] || formals[i + 1];
       }
       // express this macro as body expression with substituted variables

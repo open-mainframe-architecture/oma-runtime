@@ -1,5 +1,5 @@
 //@ Environment-specific runtime constants.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.am({
     Abstract: true,

@@ -12,12 +12,13 @@ function refine(I) {
     //@return {Std.Container} this or new container
     //@except when this container does not store an element at index
     replace: function(it, ix) {
-      return this.containsIndex(ix) ? this.store(it, ix) : this.bad();
+      this.assert(this.containsIndex(ix));
+      return this.store(it, ix);
     },
     //@ Create iterator that walks over indexed elements of this container.
     //@return {Std.Iterator} iterator over elements
     walk: function() {
-      return I.Loop.collect(this.walkIndices(), this.lookup.bind(this));
+      return I.Loop.collect(this.walkIndices(), ix => this.lookup(ix));
     },
     //@ Create iterator that walks over indices of this container.
     //@return {Std.Iterator} iterator over indices
@@ -30,7 +31,7 @@ function refine(I) {
   });
   I.nest({
     //@ A fail-fast iterator fails when the iterated container has been modified.
-    FailFastIterator: 'Iterator._.Verifier'.subclass(function(I) {
+    FailFastIterator: 'Iterator._.Verifier'.subclass(I => {
       I.have({
         //@{Std.Container} iterated container
         container: null,
@@ -43,14 +44,15 @@ function refine(I) {
         build: function(decoratee, container) {
           I.$super.build.call(this, decoratee);
           this.container = container;
-          this.revision = container.modificationCount;
+        },
+        unveil: function() {
+          I.$super.unveil.call(this);
+          this.revision = this.container.modificationCount;
         },
         //@ Verify the iterated container has not been modified.
         //@except when the container is concurrently modified
         verifyCondition: function() {
-          if (this.revision !== this.container.modificationCount) {
-            this.bad();
-          }
+          this.assert(this.revision === this.container.modificationCount);
         }
       });
     })

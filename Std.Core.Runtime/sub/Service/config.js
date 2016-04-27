@@ -1,12 +1,10 @@
 function configure(module) {
   "use strict";
-  module.description = 'This module implements runtime services.';
+  module.description = 'This module defines standard runtime services.';
   module.requires = {
-    loose: 'Std.Management.Loose'
+    environment: 'Std.Runtime.Environment'
   };
   module.provides = {
-    'Std.Runtime.Image': function(roleClass, required) {
-      return roleClass.spawn(required.loose);
-    }
+    'Std.Runtime.Image': (roleClass, required) => roleClass.spawn(required.environment)
   };
 }

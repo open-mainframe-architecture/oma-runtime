@@ -1,6 +1,7 @@
 //@ An AST that evaluates a record type.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
+  const Descriptor = I._.Descriptor, Type = I._.Type;
   I.am({
     Abstract: false
   });
@@ -16,34 +17,31 @@
       this.fieldDefinitions_ = definitions_;
     },
     popEvaluation: function(evaluation, fieldTypes, preliminary) {
-      var definitions_ = this.fieldDefinitions_;
-      var sorted = Object.getOwnPropertyNames(definitions_).sort();
-      var descriptors_ = I.createTable();
-      var types = sorted.length === 1 ? [fieldTypes] : fieldTypes;
-      sorted.forEach(function(name, i) {
-        var field = definitions_[name], type = types[i];
-        var annotations = I.hasEnumerables(field.annotations_) ?
+      const definitions_ = this.fieldDefinitions_;
+      const sorted = Object.getOwnPropertyNames(definitions_).sort();
+      const descriptors_ = I.createTable();
+      const types = sorted.length === 1 ? [fieldTypes] : fieldTypes;
+      sorted.forEach((name, i) => {
+        const field = definitions_[name], type = types[i];
+        const annotations = I.hasEnumerables(field.annotations_) ?
           evaluation.typepace.unmarshal({ _: field.annotations_ }, '<string>') :
           null;
-        descriptors_[name] = I._.Descriptor.create(field.expression, type, annotations);
+        descriptors_[name] = Descriptor.create(field.expression, type, annotations);
       });
       preliminary.setDescriptors(descriptors_);
     },
     pushEvaluation: function(evaluation) {
-      var definitions_ = this.fieldDefinitions_;
-      var sorted = Object.getOwnPropertyNames(definitions_).sort();
-      evaluation.pushExpressions(sorted.map(function(name) {
-        return definitions_[name].expression;
-      }));
-      return I._.Type._.Record.create(evaluation.typespace, this);
+      const definitions_ = this.fieldDefinitions_;
+      const sorted = Object.getOwnPropertyNames(definitions_).sort();
+      evaluation.pushExpressions(sorted.map(name => definitions_[name].expression));
+      return Type._.Record.create(evaluation.typespace, this);
     },
     substitute: function(variables_) {
-      var fields_ = I.createTable();
-      var distinct = false;
-      for (var key in this.fieldDefinitions_) {
-        var field = this.fieldDefinitions_[key];
-        var expression = field.expression;
-        var sub = expression.substitute(variables_);
+      const fields_ = I.createTable(), definitions_ = this.fieldDefinitions_;
+      let distinct = false;
+      for (let key in definitions_) {
+        const field = definitions_[key], expression = field.expression;
+        const sub = expression.substitute(variables_);
         fields_[key] = sub === expression ? field : I.AST.createField(sub, field.annotations_);
         distinct = distinct || sub !== expression;
       }
@@ -52,7 +50,7 @@
   });
   I.nest({
     //@ An AST that evaluates a record field.
-    Field: 'BaseObject'.subclass(function(I) {
+    Field: 'BaseObject'.subclass(I => {
       I.have({
         //@{Std.Data.Definition.Expression} expression of field type
         expression: null,

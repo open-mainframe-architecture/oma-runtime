@@ -1,5 +1,5 @@
 //@ A string type describes string values.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

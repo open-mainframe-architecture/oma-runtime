@@ -1,5 +1,5 @@
 //@ A doubly-linked ring element is contained in at most one ring.
-'Trait'.subclass(function(I) {
+'Trait'.subclass(I => {
   I.have({
     //@{Std.Ring} ring container
     linkingRing: null,

@@ -1,6 +1,7 @@
 //@ An AST that evaluates a union type.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
+  const Type = I._.Type;
   I.am({
     Abstract: false
   });
@@ -16,14 +17,14 @@
       this.alternativeExpressions = alternatives;
     },
     popEvaluation: function(evaluation, alternativeTypes) {
-      return I._.Type._.Union._.normalize(evaluation.typespace, this, alternativeTypes);
+      return Type._.Union._.normalize(evaluation.typespace, this, alternativeTypes);
     },
     pushEvaluation: function(evaluation) {
       evaluation.pushExpressions(this.alternativeExpressions);
     },
     substitute: function(variables_) {
-      var alternatives = this.alternativeExpressions;
-      var subs = I.substituteExpressions(alternatives, variables_);
+      const alternatives = this.alternativeExpressions;
+      const subs = I.substituteExpressions(alternatives, variables_);
       return subs === alternatives ? this : I.AST.createUnion(subs);
     }
   });

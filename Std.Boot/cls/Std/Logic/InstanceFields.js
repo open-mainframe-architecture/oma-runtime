@@ -1,5 +1,5 @@
 //@ A container with instance fields.
-'FieldContainer'.subclass(function(I) {
+'FieldContainer'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

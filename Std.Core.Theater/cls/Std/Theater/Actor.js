@@ -1,5 +1,7 @@
-'BaseObject+Eventful+RingLink'.subclass(function(I) {
+//@ An actor is a job processor on the theater stage.
+'BaseObject+Eventful+RingLink'.subclass(I => {
   "use strict";
+  const Job = I._.Job;
   I.am({
     Abstract: false,
     Final: true
@@ -36,13 +38,13 @@
       this.sceneMethods = sceneMethods;
       this.actorAgent = sceneMethods.createAgent(this);
       this.actorManager = manager || this.actorAgent;
-      this.managementDepth = this.actorManager.getActor().managementDepth + 1;
     },
     unveil: function() {
       I.$super.unveil.call(this);
-      this.assignedJobs = I._.Job._.Ring.create(this);
-      this.busyJob = I._.Job._.Ring.create(this);
-      this.postponedJobs = I._.Job._.Ring.create(this);
+      this.managementDepth = this.actorManager.getManagementDepth() + 1;
+      this.assignedJobs = Job._.Ring.create(this);
+      this.busyJob = Job._.Ring.create(this);
+      this.postponedJobs = Job._.Ring.create(this);
     },
     testIgnition: function() {
       // fire when this actor is already dead
@@ -52,11 +54,9 @@
     //@return nothing
     //@except when this actor is not in trouble
     bury: function() {
-      if (!this.inTrouble) {
-        this.bad();
-      }
+      this.assert(this.inTrouble);
       if (this.actorRole) {
-        var assigned = this.assignedJobs, postponed = this.postponedJobs;
+        const assigned = this.assignedJobs, postponed = this.postponedJobs;
         // this actor is now officially dead
         this.actorRole = null;
         // quit assigned and postponed jobs
@@ -73,12 +73,12 @@
     },
     //@ Create job for this actor.
     //@param selector {string|Std.Closure} scene name or code
-    //@param parameters {[any]]} scene parameters
+    //@param parameters {[any]} scene parameters
     //@param purpose {string?} descriptive job purpose
-    //@return {Std.Theater.Job} new immobile job
+    //@return {Std.Theater.Job} new inert job
     createJob: function(selector, parameters, purpose) {
       // link new job to ring with assigned jobs, but do not post new job
-      return I._.Job.create(this.assignedJobs, selector, parameters, purpose);
+      return Job.create(this.assignedJobs, selector, parameters, purpose);
     },
     //@ Create event that fires when this actor dies.
     //@return {Std.Event} event fires upon and after death
@@ -129,13 +129,14 @@
     //@param manager {Std.Theater.Agent} managing agent
     //@return {boolean} true if actor is supervised by manager, otherwise false
     isManagedBy: function(manager) {
-      var actor = this, levels = this.managementDepth - manager.getManagementDepth();
-      if (levels <= 0) {
+      let levelsUp = this.managementDepth - manager.getManagementDepth();
+      if (levelsUp <= 0) {
         // this actor is not below the manager in the management hierarchy
         return false;
       }
       // go up in the management hierarchy, one level below where the manager is
-      while (--levels) {
+      let actor = this;
+      while (--levelsUp) {
         actor = actor.actorManager.getActor();
       }
       // is the manager located in next level?
@@ -145,11 +146,11 @@
     //@return {boolean} true if actor agent is a manager, otherwise false
     isManaging: I.shouldNotOccur,
     //@ Manage job for dead actor.
-    //@param job {Std.Theater.Job} job posted to dead actor
+    //@param job {Std.Theater.Job} forked job that was posted to dead actor
     //@return {Std.Theater.Job} job to manage post-mortem job
     managePostMortem: I.shouldNotOccur,
     //@ Manage exception when actor is performing on stage.
-    //@param job {Std.Theater.Job} busy job caused exception
+    //@param job {Std.Theater.Job} forked job that caused exception
     //@param exception {any} stage exception
     //@return {Std.Theater.Job} job to manage exception
     manageStageException: I.shouldNotOccur,
@@ -159,12 +160,12 @@
     post: function(job) {
       if (!this.actorRole) {
         // post-mortem performance by manager
-        job.setPerformance(this.managePostMortem(job));
+        job.setPerformance(this.managePostMortem(job.forkScene()));
       } else if (job.isPostponed()) {
         // add postponed job to agenda and wait for showstopper to fire
         this.postponedJobs.add(job);
       } else {
-        // ready to work on assigned job
+        // ready to work on assigned job if this actor is not in trouble
         this.assignedJobs.add(job);
       }
       this.resched();
@@ -180,9 +181,7 @@
     //@exception when this actor is dead or not in trouble
     resume: function(role) {
       // this actor must be in trouble and still be alive
-      if (!this.inTrouble || !this.actorRole) {
-        this.bad();
-      }
+      this.assert(this.inTrouble, this.actorRole);
       if (role && role !== this.actorRole) {
         this.actorRole = role;
       }
@@ -195,7 +194,7 @@
     //@return nothing
     takeStage: function(nextJob) {
       // work on the given job or on the first assigned job
-      var job = nextJob || this.assignedJobs.firstIndex();
+      const job = nextJob || this.assignedJobs.firstIndex();
       this.busyJob.add(job);
       try {
         // perform on stage and register result of performance
@@ -204,7 +203,7 @@
         // actor is in trouble and suspended from working, when it throws an exception on stage
         this.inTrouble = true;
         // delegate exception handling to actor manager
-        job.setPerformance(this.manageStageException(job, exception));
+        job.setPerformance(this.manageStageException(job.forkScene(), exception));
       }
       // prepare this actor for future performances
       this.busyJob.clear();
@@ -213,30 +212,19 @@
     // Iterate over actors of managers that manage this actor until root actor is reached.
     //@return {Std.Iterator} iterator over actors
     walkManagers: function() {
-      return I.Loop.inject(this.actorManager.getActor(), function(actor) {
-        var managingActor = actor.actorManager.getActor();
+      return I.Loop.inject(this.actorManager.getActor(), actor => {
+        const managingActor = actor.actorManager.getActor();
         if (actor !== managingActor) {
           return managingActor;
         }
       });
     },
-    // Iterate over actors that are managed by this actor, directly or indirectly.
-    //@return {Std.Iterator} iterator over actors
-    walkSubordinates: function() {
-      if (this.isManaging()) {
-        return I.Loop.select(this.$theater.walkActors(), function(actor) {
-          return actor !== this && actor.isManagedBy(this.actorAgent);
-        }.bind(this));
-      }
-      return I.Loop.Empty;
-    },
     //@ Iterate over actors that are directly managed by this actor
     //@return {Std.Iterator} iterator over actors
     walkTeam: function() {
       if (this.isManaging()) {
-        return I.Loop.select(this.$theater.walkActors(), function(actor) {
-          return actor !== this && actor.actorManager === this.actorAgent;
-        }.bind(this));
+        const agent = this.actorAgent, actors = this.$theater.walkActors();
+        return I.Loop.select(actors, actor => actor !== this && actor.actorManager === agent);
       }
       return I.Loop.Empty;
     }

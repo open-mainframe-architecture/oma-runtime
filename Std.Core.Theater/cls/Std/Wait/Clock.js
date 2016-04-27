@@ -1,5 +1,5 @@
-//@ A clock ticks independently from real-time.
-'BaseObject+Indirect+Eventful'.subclass(function(I) {
+//@ A clock counts a number of seconds since a past moment.
+'BaseObject+Indirect+Eventful'.subclass(I => {
   "use strict";
   I.am({
     Service: true
@@ -11,11 +11,11 @@
       return this.$rt.getUptime();
     },
     sortCharge: function(delays, delay) {
-      var deadline = delay.deadline;
-      var i = 0, j = delays.length;
+      const deadline = delay.deadline;
+      let i = 0, j = delays.length;
       // binary search in sorted array of delays
       while (i < j) {
-        var probe = Math.floor((i + j) / 2);
+        const probe = Math.floor((i + j) / 2);
         if (delays[probe].deadline <= deadline) {
           i = probe + 1;
         } else {
@@ -33,14 +33,14 @@
         // fire immediately when delay is zero or negative
         return true;
       }
-      var deadline = moment.deadline, uptime = this.get();
-      if (deadline && deadline <= uptime) {
-        // fire immediately when deadline has already been reached
-        return true;
-      } else if (!deadline) {
+      const deadline = moment.deadline, uptime = this.get();
+      if (!deadline) {
         // set deadline based on delay and current time
         moment.deadline = uptime + moment.seconds;
-      } // else keep existing deadline
+      } else if (deadline <= uptime) {
+        // fire immediately when deadline has already been reached
+        return true;
+      }
       // sort charged event based on deadline
       return false;
     },
@@ -49,33 +49,33 @@
     //@return {Std.FullEvent} clock event from this origin
     delay: function(seconds) {
       // set deadline when clock event is charged
-      return I.Moment.create(this, null, seconds);
+      return I.Moment.create(this, seconds);
     },
     //@ Create event that fires when this clock reaches some moment.
     //@param until {number} clock time when this event should fire
     //@return {Std.FullEvent} clock event from this origin
-    pause: function(until) {
+    wait: function(until) {
       // create clock event whose deadline is already set
-      return I.Moment.create(this, until);
+      return I.Moment.create(this, Infinity, until || -1);
     }
   });
   I.nest({
     //@ A moment is an event that stems from a clock.
-    Moment: 'FullEvent'.subclass(function(I) {
+    Moment: 'FullEvent'.subclass(I => {
       I.have({
-        //@{number} this moment fires when deadline passes
-        deadline: null,
         //@{number} this moment fires after waiting for a number of seconds
-        seconds: null
+        seconds: null,
+        //@{number} this moment fires when deadline passes
+        deadline: null
       });
       I.know({
         //@param clock {Std.Theater.Service._.Clock} theater clock
+        //@param seconds {number} seconds to wait or nothing
         //@param deadline {number?} deadline when this moment fires or nothing
-        //@param seconds {number?} seconds to wait or nothing
-        build: function(clock, deadline, seconds) {
+        build: function(clock, seconds, deadline) {
           I.$super.build.call(this, clock);
+          this.seconds = seconds;
           this.deadline = deadline;
-          this.seconds = typeof seconds === 'number' ? seconds : Infinity;
         }
       });
     })

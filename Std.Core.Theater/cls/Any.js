@@ -9,7 +9,7 @@ function refine(I) {
     //@param onRejection {Std.Closure} called with intermediate error/failure
     //@return {any} promised result
     promised: function(intermediate, onFulfillment, onRejection) {
-      var handler = I.isError(intermediate) ? onRejection : onFulfillment;
+      const handler = I.isErroneous(intermediate) ? onRejection : onFulfillment;
       return handler ? handler(intermediate) : intermediate;
     }
   });

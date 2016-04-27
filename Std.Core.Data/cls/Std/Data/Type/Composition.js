@@ -1,5 +1,5 @@
 //@ A type composition describes composed values, i.e. dictionaries, lists and records.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Closure} constructor for new values of this type
@@ -14,7 +14,7 @@
     //@param values {Std.Table|[any]} table or array with children of new value
     //@return {Std.Data.AbstractValue} new value
     createValue: function(expression, values) {
-      var Constructor = this.valueConstructor;
+      let Constructor = this.valueConstructor;
       if (!Constructor) {
         this.valueConstructor = Constructor = function Value(typeExpression, childValues) {
           I.defineConstant(this, '$expr', typeExpression);

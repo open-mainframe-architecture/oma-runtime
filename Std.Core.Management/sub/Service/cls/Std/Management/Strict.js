@@ -1,5 +1,5 @@
 //@ Strict supervision kills actors after they cause an error.
-'BaseObject+Manager'.subclass(function(I) {
+'BaseObject+Manager'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false,

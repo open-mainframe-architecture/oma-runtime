@@ -1,6 +1,7 @@
 //@ A class loader defines or redefines a class.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
+  const Alias = I._.Logic._.Alias, Class = I._.Logic._.Class, Failure = I._.Failure;
   I.have({
     //@{Std.Runtime.Image.ModuleLoader} module loader that created this class loader
     moduleLoader: null,
@@ -42,7 +43,7 @@
     //@param subject {Std.Logic.Class} class subject of new loader
     //@return nothing
     addClassLoader: function(subject) {
-      var module = this.classModule;
+      const module = this.classModule;
       this.moduleLoader.addClassLoader(module, this.classNamespace, this.classSpec, subject);
     },
     //@ Attempt to create class subject of this loader.
@@ -50,47 +51,34 @@
     //@except when this loader already has a subject
     //@except when the super expression in the class specification is invalid
     finishCreation: function() {
-      if (this.classSubject) {
-        this.bad();
-      }
-      var moduleLoader = this.moduleLoader;
-      var module = this.classModule;
-      var namespace = this.classNamespace;
-      var context = this.classContext;
-      var key = this.classKey;
-      var spec = this.classSpec;
-      if (!this.superParts) {
-        if (typeof spec.super !== 'string') {
-          this.bad();
-        }
-        this.superParts = spec.super.split('+');
-      }
-      var i, superParts = this.superParts, n = superParts.length;
-      for (i = 0; i < n; ++i) {
+      this.assert(!this.classSubject);
+      const moduleLoader = this.moduleLoader, module = this.classModule, spec = this.classSpec;
+      const namespace = this.classNamespace, context = this.classContext, key = this.classKey;
+      const superParts = this.superParts || (this.superParts = spec.super.split('+'));
+      const n = superParts.length;
+      for (let i = 0; i < n; ++i) {
         if (typeof superParts[i] === 'string') {
-          var part = namespace.resolve(superParts[i]);
+          const part = namespace.resolve(superParts[i]);
           if (!part) {
             // the name could not be resolved, but perhaps it's possible later 
             return false;
           }
           // first part is class and any other part is also a mixin
-          if (!I._.Logic._.Class.describes(part) || (i && !part.isMixin())) {
-            this.bad(part.getName());
-          }
+          this.assert(Class.describes(part), !i || part.isMixin());
           superParts[i] = part;
         }
       }
-      var superCls = superParts[0];
-      for (i = 1; i < n; ++i) {
+      let superCls = superParts[0];
+      for (let i = 1; i < n; ++i) {
         // add mixins in appropriate order to create superclass for mixed-in class
         superCls = moduleLoader.addMixin(superCls, superParts[i]);
       }
-      var instCls = moduleLoader.addSubclass(module, superCls, context, key, spec.legacy);
+      const instCls = moduleLoader.addSubclass(module, superCls, context, key, spec.legacy);
       if (namespace === context) {
         namespace.store(instCls, key);
       } else {
         // create package alias for nested class
-        context.getScope().addPackageField(module, I._.Logic._.Alias, key, instCls);
+        context.getScope().addPackageField(module, Alias, key, instCls);
       }
       // successfully created new class
       this.classSubject = instCls;
@@ -119,51 +107,40 @@
     //@ Run class script to define or redefine the class of this loader.
     //@return nothing
     loadClass: function() {
-      var instCls = this.classSubject;
-      var spec = this.classSpec;
-      var script = spec.script || spec;
-      if (instCls.getParentBehavior().isFinal()) {
-        this.bad();
-      }
-      if (typeof script !== 'function') {
-        this.bad();
-      }
+      const instCls = this.classSubject, spec = this.classSpec, script = spec.script || spec;
+      this.assert(!instCls.getParentBehavior().isFinal(), I.isClosure(script));
       if (spec.super && spec.super !== 'super' && instCls.getModule() !== this.classModule) {
         // verify superfluous super expression of class refinement
-        var superCls = this.classNamespace.evaluateClassExpression(spec.super);
-        if (superCls !== instCls.getParentBehavior()) {
-          this.bad();
-        }
+        const superCls = this.classNamespace.evaluateClassExpression(spec.super);
+        this.assert(superCls === instCls.getParentBehavior());
       }
       // create I and We script arguments for instance and class side
-      var scriptInst = Object.create(instCls._);
-      var scriptMeta = I.createTable();
-      // empty keyword links script argument in running script back to this class loader
+      const scriptInst = Object.create(instCls._), scriptMeta = I.createTable();
+      // empty property key links script argument in running script back to this class loader
       scriptInst[''] = scriptMeta[''] = this;
-      // initialize other keywords of script arguments
+      // initialize keywords of script arguments
       this.prepareScript(scriptInst, scriptMeta);
       if (spec.requires) {
-        var satisfactions_ = this.$rt.satisfy(spec.requires);
-        for (var serviceKey in satisfactions_) {
+        const satisfactions_ = this.$rt.satisfy(spec.requires);
+        for (let serviceKey in satisfactions_) {
           if (!I.isPropertyOwner(scriptInst, serviceKey)) {
             // install required service provider if key not already defined in I argument
             I.defineConstant(scriptInst, serviceKey, satisfactions_[serviceKey]);
           }
         }
       }
-      var immutableScriptInst = Object.freeze(Object.create(scriptInst));
-      var immutableScriptMeta = Object.freeze(Object.create(scriptMeta));
+      const immutableScriptInst = Object.freeze(Object.create(scriptInst));
+      const immutableScriptMeta = Object.freeze(Object.create(scriptMeta));
       try {
         script(immutableScriptInst, immutableScriptMeta);
       } catch (exception) {
-        throw I._.Failure.create(this, exception);
+        throw Failure.create(this, exception);
       }
       // break references to keywords that only made sense during script execution
-      var keyword;
-      for (keyword in scriptInst) {
+      for (let keyword in scriptInst) {
         delete scriptInst[keyword];
       }
-      for (keyword in scriptMeta) {
+      for (let keyword in scriptMeta) {
         delete scriptMeta[keyword];
       }
     },
@@ -177,7 +154,7 @@
     //@param scriptMeta {Std.Table} class side of class script, usually called We
     //@return nothing
     prepareScript: function(scriptInst, scriptMeta) {
-      var instCls = this.classSubject;
+      const instCls = this.classSubject;
       // I.$ for class and We.$ for metaclass
       I.defineConstant(scriptInst, '$', instCls);
       I.defineConstant(scriptMeta, '$', instCls.$);
@@ -243,20 +220,19 @@
     this.$.addPackageFields(this[''].classModule, fields_);
   }
   function scriptNest(nestedSpecs_) { //jshint validthis:true
-    var loader = this[''];
-    var module = loader.classModule;
+    const loader = this[''], module = loader.classModule;
     loader.moduleLoader.addNestedLoaders(module, loader.classNamespace, this.$, nestedSpecs_);
   }
-  function scriptSetup(closure) { //jshint validthis:true
-    var loader = this[''], instCls = this.$;
-    loader.moduleLoader.addSetupRoutine(typeof closure === 'function' ? closure : function() {
+  function scriptSetup(setup) { //jshint validthis:true
+    const loader = this[''];
+    loader.moduleLoader.addSetupRoutine(I.isClosure(setup) ? setup : () => {
       // add more package constants and subroutines after instance class has been unveiled
-      var fields_ = {};
-      for (var key in closure) {
-        var factory = closure[key];
+      const fields_ = {};
+      for (let key in setup) {
+        const factory = setup[key];
         fields_[key] = factory();
       }
-      instCls.addPackageFields(loader.classModule, fields_);
+      this.$.addPackageFields(loader.classModule, fields_);
     });
   }
 })

@@ -1,5 +1,5 @@
 //@ A collection type describes a dictionary or list value.
-'Composition'.subclass(function(I) {
+'Composition'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Data.Definition.Expression} element type expression
@@ -17,9 +17,7 @@
     //@return nothing
     //@except when this is not a preliminary type
     setElement: function(expression, type) {
-      if (this.elementExpression) {
-        this.bad();
-      }
+      this.assert(!this.elementExpression);
       this.elementExpression = expression;
       this.elementType = type;
     }

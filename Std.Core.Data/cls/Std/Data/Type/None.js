@@ -1,5 +1,5 @@
 //@ A none type describes null values.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

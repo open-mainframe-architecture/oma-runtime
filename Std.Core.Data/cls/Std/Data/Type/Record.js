@@ -1,6 +1,7 @@
 //@ A record type describes record values.
-'Composition'.subclass(function(I) {
+'Composition'.subclass(I => {
   "use strict";
+  const Value = I._.Value;
   I.am({
     Abstract: false
   });
@@ -10,11 +11,10 @@
   });
   I.know({
     describesValue: function(value) {
-      if (I._.Value._.Record.describes(value) && value.$type.typespace === this.typespace) {
-        var descriptors_ = this.fieldDescriptors_;
-        var fields_ = value._;
-        for (var key in descriptors_) {
-          var descriptor = descriptors_[key];
+      if (Value._.Record.describes(value) && value.$type.typespace === this.typespace) {
+        const descriptors_ = this.fieldDescriptors_, fields_ = value._;
+        for (let key in descriptors_) {
+          const descriptor = descriptors_[key];
           if (descriptor.isDataDescriptor() && !descriptor.describesValue(fields_[key])) {
             return false;
           }
@@ -27,24 +27,24 @@
       return !this.fieldDescriptors_;
     },
     marshalValue: function(value, expression) {
-      var descriptors_ = this.fieldDescriptors_;
-      var json = expression === value.$expr ? {} : { $: value.$expr.unparse() };
-      for (var key in descriptors_) {
+      const descriptors_ = this.fieldDescriptors_;
+      const json = expression === value.$expr ? {} : { $: value.$expr.unparse() };
+      for (let key in descriptors_) {
         descriptors_[key].marshalField(json, value, key);
       }
       return json;
     },
     unmarshalJSON: function(json, expression) {
-      var descriptors_ = this.fieldDescriptors_, values_ = I.createTable();
-      for (var key in descriptors_) {
+      const descriptors_ = this.fieldDescriptors_, values_ = I.createTable();
+      for (let key in descriptors_) {
         descriptors_[key].unmarshalField(values_, json, key);
       }
       return this.createValue(expression, values_);
     },
     createPrototype: function() {
-      var descriptors_ = this.fieldDescriptors_;
-      var prototype = Object.create(I._.Value._.Record.getPrototype());
-      for (var key in descriptors_) {
+      const descriptors_ = this.fieldDescriptors_;
+      const prototype = Object.create(Value._.Record.getPrototype());
+      for (let key in descriptors_) {
         descriptors_[key].buildFieldPrototype(prototype, key);
       }
       return prototype;
@@ -60,9 +60,7 @@
     //@return nothing
     //@exception when tis record type is not preliminary
     setDescriptors: function(descriptors_) {
-      if (this.fieldDescriptors_) {
-        this.bad();
-      }
+      this.assert(!this.fieldDescriptors_);
       this.fieldDescriptors_ = descriptors_;
     }
   });
@@ -71,10 +69,10 @@
     //@param cascade {[Std.Data.Type.Record]} added record types
     //@return {Std.Table} descriptors of merged record type
     merge: function(cascade) {
-      var mergure_ = I.createTable();
-      for (var n = cascade.length; n--;) {
-        var descriptors_ = cascade[n].fieldDescriptors_;
-        for (var key in descriptors_) {
+      const mergure_ = I.createTable();
+      for (let n = cascade.length; n--;) {
+        const descriptors_ = cascade[n].fieldDescriptors_;
+        for (let key in descriptors_) {
           if (!mergure_[key]) {
             mergure_[key] = descriptors_[key];
           }

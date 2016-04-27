@@ -7,11 +7,9 @@ function refine(I) {
     //@return {boolean} configured boolean
     //@except when configured value is not a boolean
     getBoolean: function(key, defaultValue) {
-      var value = this.lookupDefault(arguments.length < 2 ? false : defaultValue, key);
-      if (typeof value === 'boolean') {
-        return value;
-      }
-      this.bad(key);
+      const value = this.lookupDefault(key, arguments.length < 2 ? false : defaultValue);
+      this.assert(typeof value === 'boolean');
+      return value;
     },
     //@ Get configured number.
     //@param key {string} configuration key
@@ -19,11 +17,9 @@ function refine(I) {
     //@return {number} configured number
     //@except when configured value is not a number
     getNumber: function(key, defaultValue) {
-      var value = this.lookupDefault(arguments.length < 2 ? 0 : defaultValue, key);
-      if (typeof value === 'number') {
-        return value;
-      }
-      this.bad(key);
+      const value = this.lookupDefault(key, arguments.length < 2 ? 0 : defaultValue);
+      this.assert(typeof value === 'number');
+      return value;
     },
     //@ Get configured string.
     //@param key {string} configuration key
@@ -31,11 +27,9 @@ function refine(I) {
     //@return {string} configured string
     //@except when configured value is not a string
     getString: function(key, string) {
-      var value = this.lookupDefault(arguments.length < 2 ? '' : string, key);
-      if (typeof value === 'string') {
-        return value;
-      }
-      this.bad(key);
+      const value = this.lookupDefault(key, arguments.length < 2 ? '' : string);
+      this.assert(typeof value === 'string');
+      return value;
     }
   });
 }

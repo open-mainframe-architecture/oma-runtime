@@ -15,6 +15,8 @@ function configure(module) {
     // an optional value may be null
     Maybe: '(T=*)T?',
     // any record value
-    Record: '{}'
+    Record: '{}',
+    // unitless 2D area
+    Area: { height: 'number', width: 'number' }
   };
 }

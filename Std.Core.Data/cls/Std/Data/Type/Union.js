@@ -1,6 +1,11 @@
 //@ An union type describes values of alternative types.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
+  const Dictionary = I._.Dictionary, List = I._.List, Record = I._.Record;
+  const None = I._.None, Optional = I._.Optional, Wildcard = I._.Wildcard;
+  const Boolean = I._.Boolean, Number = I._.Number, Integer = I._.Integer;
+  const String = I._.String, Enumeration = I._.Enumeration;
+  
   I.am({
     Abstract: false
   });
@@ -21,14 +26,18 @@
     build: function(typespace, expression, alternatives) {
       I.$super.build.call(this, typespace, expression);
       this.alternativeTypes = alternatives;
-      var dictionary = true, list = true, record = true;
-      for (var i = 0, n = alternatives.length; i < n && (dictionary || list || record); ++i) {
-        var alternative = alternatives[i];
-        if (dictionary && I._.Dictionary.describes(alternative)) {
+    },
+    unveil: function() {
+      I.$super.unveil.call(this);
+      const alternatives = this.alternativeTypes, n = alternatives.length;
+      let dictionary = true, list = true, record = true;
+      for (let i = 0; i < n && (dictionary || list || record); ++i) {
+        const alternative = alternatives[i];
+        if (dictionary && Dictionary.describes(alternative)) {
           dictionary = dictionary === true ? alternative : false;
-        } else if (list && I._.List.describes(alternative)) {
+        } else if (list && List.describes(alternative)) {
           list = list === true ? alternative : false;
-        } else if (record && I._.Record.describes(alternative)) {
+        } else if (record && Record.describes(alternative)) {
           record = record === true ? alternative : false;
         }
       }
@@ -37,21 +46,20 @@
       this.recordAlternative = typeof record === 'boolean' ? null : record;
     },
     describesValue: function(value) {
-      return this.alternativeTypes.some(function(alternative) {
-        return alternative.describesValue(value);
-      });
+      return this.alternativeTypes.some(alternative => alternative.describesValue(value));
     },
     marshalValue: I.shouldNotOccur,
     unmarshalJSON: function(json, expression) {
       if (I.Data.isBasicValue(json)) {
         return json;
       } else {
-        var alternative = json && (
+        const alternative = json && (
           Array.isArray(json._ || json) ? this.listAlternative :
             json._ ? this.dictionaryAlternative :
               this.recordAlternative
         );
-        return alternative ? alternative.unmarshalJSON(json, expression) : this.bad();
+        this.assert(alternative);
+        return alternative.unmarshalJSON(json, expression);
       }
     }
   });
@@ -62,52 +70,60 @@
     //@param alternatives {[Std.Data.AbstractType]} alternatives of type to normalize
     //@return {Std.Data.AbstractType} normalized type, probably a union
     normalize: function(typespace, expression, alternatives) {
-      var flat = [];
-      alternatives.forEach(function(alternative) {
+      // flatten union alternatives
+      const flat = [];
+      for (let alternative of alternatives) {
         if (I.$.describes(alternative)) {
-          flat.push.apply(flat, alternative.alternativeTypes);
+          flat.push(...alternative.alternativeTypes);
         } else {
           flat.push(alternative);
         }
-      });
-      var i, j, n, optional, wildcard, boolean, number, integer, string, enumerations;
-      for (optional = false, i = 0, j = 0, n = flat.length; i < n; ++i) {
-        if (I._.None.describes(flat[i])) {
+      }
+      let i, j, n;
+      // ensure mandatory alternatives
+      let optional = false;
+      for (i = 0, j = 0, n = flat.length; i < n; ++i) {
+        if (None.describes(flat[i])) {
           optional = true;
           continue;
         }
         else {
-          optional = optional || I._.Optional.describes(flat[i]);
+          optional = optional || Optional.describes(flat[i]);
           flat[j++] = flat[i].asMandatory();
         }
       }
-      for (wildcard = false, i = 0; i < j; ++i) {
-        if (I._.Wildcard.describes(flat[i])) {
+      // search for wildcard amongst mandatory alternatives
+      let wildcard = false;
+      for (i = 0; i < j; ++i) {
+        if (Wildcard.describes(flat[i])) {
           wildcard = flat[i];
           break;
         }
       }
       if (!wildcard) {
-        boolean = number = integer = string = false;
+        // search for boolean, number, integer and string alternatives
+        let boolean = false, number = false, integer = false, string = false;
         for (n = j, i = 0, j = 0; i < n; ++i) {
-          if (I._.Boolean.describes(flat[i])) {
+          if (Boolean.describes(flat[i])) {
             boolean = flat[i];
             continue;
-          } else if (I._.Number.describes(flat[i])) {
+          } else if (Number.describes(flat[i])) {
             number = flat[i];
             continue;
-          } else if (I._.Integer.describes(flat[i])) {
+          } else if (Integer.describes(flat[i])) {
             integer = flat[i];
             continue;
-          } else if (I._.String.describes(flat[i])) {
+          } else if (String.describes(flat[i])) {
             string = flat[i];
             continue;
           } else {
             flat[j++] = flat[i];
           }
         }
-        for (enumerations = [], n = j, i = 0, j = 0; i < n; ++i) {
-          if (I._.Enumeration.describes(flat[i])) {
+        // search for enumeration alternatives
+        let enumerations = [];
+        for (n = j, i = 0, j = 0; i < n; ++i) {
+          if (Enumeration.describes(flat[i])) {
             if (!string) {
               enumerations.push(flat[i]);
             }
@@ -116,6 +132,7 @@
             flat[j++] = flat[i];
           }
         }
+        // remove duplicates
         for (n = flat.length = j, i = 0, j = 0; i < n; ++i) {
           if (flat.indexOf(flat[i], i + 1) > 0) {
             continue;
@@ -125,11 +142,13 @@
           }
         }
         flat.length = j;
+        // add string or enumeration alternative
         if (string) {
           flat.unshift(string);
         } else if (enumerations.length) {
-          flat.unshift(I._.Enumeration._.merge(typespace, expression, enumerations));
+          flat.unshift(Enumeration._.merge(typespace, expression, enumerations));
         }
+        // add number or integer alternative
         if (number) {
           flat.unshift(number);
         } else if (integer) {
@@ -139,11 +158,11 @@
           flat.unshift(boolean);
         }
       }
-      var union = wildcard ? wildcard :
+      const union = wildcard ? wildcard :
         !flat.length ? typespace.noneType :
           flat.length === 1 ? flat[0] :
             I.$.create(typespace, expression, flat);
-      return optional ? I._.Optional._.normalize(typespace, expression, union) : union;
+      return optional ? Optional._.normalize(typespace, expression, union) : union;
     }
   });
 })

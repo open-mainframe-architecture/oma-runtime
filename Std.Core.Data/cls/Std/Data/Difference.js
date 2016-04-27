@@ -1,5 +1,5 @@
 //@ Difference between two data values in a compact format.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.have({
     //@{any} undefined, an array, a table or a value
@@ -11,14 +11,14 @@
     build: function(substitution, arrayIndices) {
       I.$super.build.call(this);
       if (I.isTable(substitution)) {
-        var n = 0, s;
+        let n = 0, s;
         for (s in substitution) {
           if (++n > 1) {
             break;
           }
         }
         if (n === 1) {
-          var singleSubstitution = substitution[s], index = arrayIndices ? parseInt(s, 10) : s;
+          const singleSubstitution = substitution[s], index = arrayIndices ? parseInt(s, 10) : s;
           if (Array.isArray(singleSubstitution)) {
             singleSubstitution.unshift(index);
             substitution = singleSubstitution;
@@ -34,7 +34,7 @@
     compact: function() {
       return this.compactSubstitution;
     },
-    //@ Apply this difference to an original value.
+    //@ Apply this difference on an original value.
     //@param value {any} original value
     //@return {any} different value
     exert: function(value) {
@@ -53,7 +53,7 @@
     //@ Is this a zero difference? Equal values have a zero difference.
     //@return {boolean} true if this is a zero difference, otherwise false
     isZero: function() {
-      var substitution = this.compactSubstitution;
+      const substitution = this.compactSubstitution;
       return Array.isArray(substitution) && substitution.length === 0;
     }
   });
@@ -66,18 +66,17 @@
       if (I.Data.isValue(compactSubstitution)) {
         return compactSubstitution;
       }
-      var values_, index;
       if (Array.isArray(compactSubstitution)) {
-        values_ = I.createTable();
-        index = compactSubstitution[i = i || 0];
+        const values_ = I.createTable();
+        const index = compactSubstitution[i = i || 0];
         values_[index] = i < compactSubstitution.length - 2 ?
           I.substitute(compactSubstitution, value.$get(index), i + 1) :
           compactSubstitution[i + 1];
         return value.$update(values_);
       }
       if (I.isTable(compactSubstitution)) {
-        values_ = I.createTable();
-        for (index in compactSubstitution) {
+        const values_ = I.createTable();
+        for (let index in compactSubstitution) {
           values_[index] = I.substitute(compactSubstitution[index], value.$get(index));
         }
         return value.$update(values_);

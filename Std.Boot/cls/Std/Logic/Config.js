@@ -1,14 +1,10 @@
 //@ A module configuration.
-'Config'.subclass(function(I) {
+'Config'.subclass(I => {
   "use strict";
   I.access({
     //@{[string]} get names of modules that must be loaded
     depends: function() {
       return this.getArray('depends');
-    },
-    //@{Std.Closure} get code to initialize module
-    init: function() {
-      return this.getClosure('init');
     },
     //@{Std.Table} get factory code of service providers in module
     provides: function() {

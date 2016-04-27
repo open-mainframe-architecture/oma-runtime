@@ -5,12 +5,9 @@ function configure(module) {
   module.requires = {
     loose: 'Std.Management.Loose'
   };
-  module.test = function() {
-    return typeof MessageChannel !== 'undefined' && typeof XMLHttpRequest !== 'undefined';
-  };
+  module.test = () => typeof MessageChannel !== 'undefined' &&
+    typeof XMLHttpRequest !== 'undefined';
   module.provides = {
-    'Std.HTTP.WebClient': function(roleClass, required) {
-      return roleClass.spawn(required.loose);
-    }
+    'Std.HTTP.WebClient': (roleClass, required) => roleClass.spawn(required.loose)
   };
 }

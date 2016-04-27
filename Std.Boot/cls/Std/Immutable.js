@@ -1,5 +1,5 @@
 //@ An immutable object freezes after construction.
-'Trait'.subclass(function(I) {
+'Trait'.subclass(I => {
   "use strict";
   I.know({
     unveil: function() {

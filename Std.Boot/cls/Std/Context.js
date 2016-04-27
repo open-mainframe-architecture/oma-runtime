@@ -1,5 +1,5 @@
 //@ A context is a contextual object that indexes contextual objects.
-'Contextual+Indexable'.subclass(function(I) {
+'Contextual+Indexable'.subclass(I => {
   "use strict";
   I.have({
     //@{integer} discrete distance of this context to the root context
@@ -24,14 +24,12 @@
     //@param factory {Std.Closure} factory closure creates a new context if necessary
     //@return {Std.Context} existing or new context
     makeContexts: function(keys, factory) {
-      var context = this;
-      for (var i = 0, n = keys.length; i < n; ++i) {
-        var contextual = context.lookup(keys[i]);
+      let context = this;
+      for (let key of keys) {
+        const contextual = context.lookup(key);
         // if necessary, call factory closure to create new context
-        context = contextual ? contextual.resolutionContext() : factory(context, keys[i]);
-        if (!I.$mixin.describes(context)) {
-          this.bad(keys[i]);
-        }
+        context = contextual ? contextual.resolutionContext() : factory(context, key);
+        this.assert(I.$mixin.describes(context));
       }
       return context;
     }

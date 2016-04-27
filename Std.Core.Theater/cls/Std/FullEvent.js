@@ -1,5 +1,5 @@
 //@ An event with an eventful origin.
-'Event'.subclass(function(I) {
+'Event'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Eventful} origin from which this event was created

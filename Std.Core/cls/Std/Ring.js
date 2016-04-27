@@ -1,5 +1,5 @@
 //@ A ring is an exclusive, set-like container whose doubly-linked elements form a circle.
-'SeqContainer+Growable'.subclass(function(I) {
+'SeqContainer+Growable'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -18,14 +18,15 @@
       return !!ix && !!ix.prevInRing && ix.linkingRing === this;
     },
     enumerate: function(visit) {
-      var link = this.firstLink;
+      const first = this.firstLink;
+      let link = first;
       if (link) {
         do {
           if (visit(link, link) === false) {
             return false;
           }
           link = link.nextInRing;
-        } while (link !== this.firstLink);
+        } while (link !== first);
       }
       return true;
     },
@@ -41,14 +42,14 @@
       return this.ringLength;
     },
     clear: function() {
-      var first = this.firstLink;
+      const first = this.firstLink;
       if (first) {
         ++this.modificationCount;
         this.firstLink = null;
         this.ringLength = 0;
-        var link = first;
+        let link = first;
         do {
-          var nextLink = link.nextInRing;
+          const nextLink = link.nextInRing;
           link.prevInRing = link.nextInRing = link.linkingRing = null;
           link = nextLink;
         } while (link !== first);
@@ -57,25 +58,22 @@
     },
     //@except when index is not a link in this ring
     remove: function(ix) {
-      var prevLink = ix && ix.prevInRing;
-      if (!prevLink || ix.linkingRing !== this) {
-        this.bad();
-      }
+      this.assert(ix)
+        .assert(ix.prevInRing, ix.linkingRing === this);
       ++this.modificationCount;
-      var nextLink = prevLink.nextInRing = ix.nextInRing;
-      nextLink.prevInRing = prevLink;
+      const next = ix.prevInRing.nextInRing = ix.nextInRing;
+      ix.nextInRing.prevInRing = ix.prevInRing;
       ix.prevInRing = ix.nextInRing = ix.linkingRing = null;
       --this.ringLength;
       if (this.firstLink === ix) {
-        this.firstLink = this.ringLength ? nextLink : null;
+        this.firstLink = this.ringLength ? next : null;
       }
       return this;
     },
     //@except when index is not a link in this ring
     replace: function(it, ix) {
-      if (!ix || !ix.prevInRing || ix.linkingRing !== this) {
-        this.bad();
-      }
+      this.assert(ix)
+        .assert(ix.prevInRing, ix.linkingRing === this);
       if (it !== ix) {
         ++this.modificationCount;
         it.unlinkFromRing();
@@ -96,9 +94,7 @@
     },
     //@except when index and element are not identical links
     store: function(it, ix) {
-      if (!it || it !== ix) {
-        this.bad();
-      }
+      this.assert(it, it === ix);
       if (!it.prevInRing || it.linkingRing !== this) {
         ++this.modificationCount;
         it.unlinkFromRing();
@@ -117,18 +113,16 @@
     walk: function() {
       return this.walkIndices();
     },
-    firstIndex: function() {
-      return this.firstLink;
+    firstIndex: function(sentinel) {
+      return this.firstLink || sentinel;
     },
-    lastIndex: function() {
-      // make sure first and last index are identical if ring is empty
-      return this.firstLink && this.firstLink.prevInRing;
-    },
-    nextIndex: function(ix) {
-      return ix.nextInRing;
+    nextIndex: function(ix, sentinel) {
+      this.assert(ix.prevInRing, ix.linkingRing === this);
+      return ix.nextInRing === this.firstLink ? sentinel : ix.nextInRing;
     },
     add: function() {
-      for (var i = 0, n = arguments.length; i < n; ++i) {
+      const n = arguments.length;
+      for (let i = 0; i < n; ++i) {
         this.store(arguments[i], arguments[i]);
       }
       return this;
@@ -137,7 +131,7 @@
     //@param steps {integer} number of steps to rotate to the left (negative) or right (positive)
     //@return {Std.Ring} this ring
     rotate: function(steps) {
-      var n = this.ringLength;
+      const n = this.ringLength;
       if (steps && n > 1 && (steps = steps % n)) {
         if (steps > n / 2) {
           steps -= n;
@@ -145,7 +139,7 @@
           steps += n;
         }
         ++this.modificationCount;
-        var link = this.firstLink;
+        let link = this.firstLink;
         if (steps > 0) {
           do {
             link = link.nextInRing;

@@ -1,5 +1,5 @@
 // A class package holds substances of package fields.
-'Dictionary+Logical'.subclass(function(I) {
+'Dictionary+Logical'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

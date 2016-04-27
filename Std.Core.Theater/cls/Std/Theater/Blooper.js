@@ -1,6 +1,7 @@
 //@ A blooper event captures an asynchronous failure.
-'Event'.subclass(function(I) {
+'Event'.subclass(I => {
   "use strict";
+  const Failure = I._.Failure;
   I.have({
     //@{Std.Failure|Std.Runtime.Exception} asynchronous failure or exception
     asynchronousFailure: null
@@ -28,7 +29,7 @@
     //@return nothing
     failAll: function(origin, reasons) {
       if (!this.asynchronousFailure) {
-        this.failWith(I._.Failure.create(origin, reasons));
+        this.failWith(Failure.create(origin, reasons));
       }
     },
     //@ Capture asynchronous failure.

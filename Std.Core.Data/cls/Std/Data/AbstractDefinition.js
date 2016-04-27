@@ -1,5 +1,5 @@
 //@ An AST for a type definition represents a type expression or macro.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.have({
     //@{string} normalized source

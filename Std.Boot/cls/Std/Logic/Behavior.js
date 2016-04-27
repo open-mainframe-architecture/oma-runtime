@@ -1,6 +1,7 @@
 //@ A behavior describes how instances behave.
-'BaseObject+Logical+Context'.subclass(function(I) {
+'BaseObject+Logical+Context'.subclass(I => {
   "use strict";
+  const Field = I._.Field, InstanceFields = I._.InstanceFields;
   I.have({
     //@{Any} prototypical instance of this behavior
     instancePrototype: null,
@@ -36,9 +37,9 @@
     },
     buildLogical: function(context, key, module) {
       I.$super.buildLogical.call(this, context, key, module);
-      var parent = this.parentBehavior;
+      const parent = this.parentBehavior;
       // instance fields and behavior package belong to same module as this behavior 
-      this.instanceFields = I._.InstanceFields.create(parent.instanceFields, this, module);
+      this.instanceFields = InstanceFields.create(parent.instanceFields, this, module);
       this.behaviorPackage = this.$_.BehaviorPackage.create(parent.behaviorPackage, this, module);
       this._ = this.behaviorPackage._;
     },
@@ -63,13 +64,12 @@
     //@param accessors_ {Std.Table} accessor specifications
     //@return nothing
     addInstanceAccessors: function(module, accessors_) {
-      var fields = this.instanceFields;
-      var descriptor = { configurable: true, enumerable: false };
-      for (var key in accessors_) {
-        var it = accessors_[key];
+      const fields = this.instanceFields, descriptor = { configurable: true, enumerable: false };
+      for (let key in accessors_) {
+        const it = accessors_[key];
         // field substance is JavaScript object with get and set closure
-        var substance = { get: typeof it === 'function' ? it : it.get, set: it.set };
-        fields.store(I._.Field.create(fields, key, module, substance), key);
+        const substance = { get: I.isClosure(it) ? it : it.get, set: it.set };
+        fields.store(Field.create(fields, key, module, substance, false), key);
         descriptor.get = substance.get;
         descriptor.set = substance.set;
         Object.defineProperty(this.instancePrototype, key, descriptor);
@@ -81,14 +81,12 @@
     //@return nothing
     //@except when specified value is neither null (constant) nor a closure (method)
     addInstanceKnowledge: function(module, fields_) {
-      var fields = this.instanceFields;
-      var descriptor = { configurable: true, enumerable: false, writable: false };
-      for (var key in fields_) {
-        var substance = fields_[key];
-        if (substance !== null && typeof substance !== 'function') {
-          this.bad(key);
-        }
-        fields.store(I._.Field.create(fields, key, module, substance), key);
+      const fields = this.instanceFields;
+      const descriptor = { configurable: true, enumerable: false, writable: false };
+      for (let key in fields_) {
+        const substance = fields_[key];
+        this.assert(substance === null || I.isClosure(substance));
+        fields.store(Field.create(fields, key, module, substance, false), key);
         descriptor.value = substance;
         Object.defineProperty(this.instancePrototype, key, descriptor);
       }
@@ -99,15 +97,13 @@
     //@return nothing
     //@except when specified initial value is not basic
     addInstanceVariables: function(module, vars_) {
-      var fields = this.instanceFields;
-      var descriptor = { configurable: false, enumerable: true, writable: true };
-      for (var key in vars_) {
-        var substance = vars_[key];
+      const fields = this.instanceFields;
+      const descriptor = { configurable: false, enumerable: true, writable: true };
+      for (let key in vars_) {
+        const substance = vars_[key];
         // demand primitive thing that can be safely shared by all instances
-        if (!I.isPrimitiveThing(substance)) {
-          this.bad(key);
-        }
-        fields.store(I._.Field.create(fields, key, module, substance), key);
+        this.assert(I.isPrimitiveThing(substance));
+        fields.store(Field.create(fields, key, module, substance, true), key);
         descriptor.value = substance;
         Object.defineProperty(this.instancePrototype, key, descriptor);
       }
@@ -117,8 +113,8 @@
     //@param legacy {Std.Closure?} legacy constructor of new child behavior
     //@return {Std.Logic.Behavior} new child behavior
     addNewChildBehavior: function(behaviorClass, legacy) {
-      var childBehavior = Object.create(behaviorClass.instancePrototype);
-      var prototype = legacy ? legacy.prototype : Object.create(this.instancePrototype);
+      const childBehavior = Object.create(behaviorClass.instancePrototype);
+      const prototype = legacy ? legacy.prototype : Object.create(this.instancePrototype);
       childBehavior.instancePrototype = prototype;
       childBehavior.instanceConstructor = legacy;
       childBehavior.inheritanceDepth = this.inheritanceDepth + 1;
@@ -133,10 +129,8 @@
     //@return {Any} new instance of this behavior
     //@except when this behavior is abstract
     create: function() {
-      if (this.behaviorFlags_.Abstract) {
-        this.bad();
-      }
-      var Constructor = this.instanceConstructor;
+      this.assert(!this.behaviorFlags_.Abstract);
+      const Constructor = this.instanceConstructor;
       return new Constructor(arguments);
     },
     //@ Create instance constructor of this concrete behavior.
@@ -154,10 +148,10 @@
     //@param instance {Any} instance of this behavior
     //@return {Std.Logic.Behavior} most specific behavior of instance
     downcast: function(instance) {
-      var children = this.childBehaviors, isPrototypeOf = Object.prototype.isPrototypeOf;
-      for (var i = 0, n = children.length; i < n; ++i) {
-        if (isPrototypeOf.call(children[i].instancePrototype, instance)) {
-          return children[i].downcast(instance);
+      const isPrototypeOf = Object.prototype.isPrototypeOf;
+      for (let child of this.childBehaviors) {
+        if (isPrototypeOf.call(child.instancePrototype, instance)) {
+          return child.downcast(instance);
         }
       }
       return this;
@@ -165,6 +159,7 @@
     //@ Enumerate all service behaviors from this behavior up to the root.
     //@param it {Any} service provider
     //@param visit {Std.Closure} visit returns false to stop enumeration
+    //@return {boolean} true if all service behaviors were visited, otherwise false
     enumerateServices: function(it, visit) {
       if (this.behaviorFlags_.Service && !this.traitBehavior && visit(this) === false) {
         return false;
@@ -180,21 +175,14 @@
     //@param traitBehavior {Std.Logic.Behavior} suggested trait behavior
     //@return {Std.Logic.Behavior} this behavior or an ancestor
     getMixedBase: function(traitBehavior) {
-      if (this.traitBehavior !== (traitBehavior.traitBehavior || traitBehavior)) {
-        return this;
-      }
-      return this.parentBehavior.getMixedBase(traitBehavior.parentBehavior);
+      return this.traitBehavior !== (traitBehavior.traitBehavior || traitBehavior) ? this :
+        this.parentBehavior.getMixedBase(traitBehavior.parentBehavior);
     },
     //@ Find child of this behavior that was created with a trait.
     //@param traitBehavior {Std.Logic.Behavior} trait behavior of found child
     //@return {Std.Logic.Behavior?} found child or nothing
     getMixedChild: function(traitBehavior) {
-      var children = this.childBehaviors;
-      for (var i = 0, n = children.length; i < n; ++i) {
-        if (children[i].traitBehavior === traitBehavior) {
-          return children[i];
-        }
-      }
+      return this.childBehaviors.find(child => child.traitBehavior === traitBehavior);
     },
     //@ Get package this behavior owns.
     //@return {Std.Logic.ClassPackage|Std.Logic.MetaclassPackage} class or metaclass package
@@ -253,11 +241,10 @@
     //@return nothing
     //@except when name is not an instance constant name
     lockInstanceConstants: function(constants_) {
-      for (var key in constants_) {
-        var field = this.instanceFields.find(key);
-        if (!field || field.getSubstance() !== null) {
-          this.bad(key);
-        }
+      for (let key in constants_) {
+        const constant = this.instanceFields.find(key);
+        this.assert(constant)
+          .assert(!constant.isVariable(), !constant.hasSubstance());
         I.defineConstant(this.instancePrototype, key, constants_[key]);
       }
     },
@@ -269,17 +256,12 @@
     //@except when name is not an instance method name
     //@except when refined code is not a closure
     refineInstanceMethods: function(module, methods_, formers_) {
-      var fields = this.instanceFields;
-      var descriptor = { configurable: true, enumerable: false, writable: false };
-      for (var key in methods_) {
-        var substance = methods_[key];
-        var method = fields.lookup(key);
-        if (!method) {
-          this.bad(key);
-        }
-        if (typeof substance !== 'function') {
-          this.bad(key);
-        }
+      const fields = this.instanceFields;
+      const descriptor = { configurable: true, enumerable: false, writable: false };
+      for (let key in methods_) {
+        const substance = methods_[key], method = fields.lookup(key);
+        this.assert(I.isClosure(substance), method)
+          .assert(!method.isVariable(), method.hasSubstance());
         // collect former closure substance (to support invocation from refined methods)
         formers_[key] = method.refineSubstance(substance, module);
         descriptor.value = substance;
@@ -293,19 +275,12 @@
     //@except when flag is already specified
     //@except when flag name is unknown and this is not the root behavior
     setBehaviorFlags: function(flags_) {
-      var behaviorFlags_ = this.behaviorFlags_;
-      for (var key in flags_) {
-        var value = flags_[key];
-        if (typeof value !== 'boolean') {
-          this.bad(key);
-        }
-        if (I.isPropertyOwner(behaviorFlags_, key)) {
-          this.bad(key);
-        }
-        // root behavior can introduce new behavior flags
-        if (typeof behaviorFlags_[key] !== 'boolean' && this.parentBehavior !== this) {
-          this.bad(key);
-        }
+      const behaviorFlags_ = this.behaviorFlags_;
+      for (let key in flags_) {
+        const value = flags_[key];
+        this.assert(typeof value === 'boolean', !I.isPropertyOwner(behaviorFlags_, key))
+          // root behavior can introduce new behavior flags
+          .assert(typeof behaviorFlags_[key] === 'boolean' || this.parentBehavior === this);
         behaviorFlags_[key] = value;
       }
     }

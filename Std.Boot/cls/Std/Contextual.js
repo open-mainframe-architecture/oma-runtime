@@ -1,5 +1,5 @@
 //@ A contextual object is part of a context hierarchy.
-'Trait'.subclass(function(I) {
+'Trait'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Context} context where this contextual is situated
@@ -24,7 +24,7 @@
     //@ Get distance to root context.
     //@return {integer} distance to root context
     getContextualDepth: function() {
-      var home = this.homeContext;
+      const home = this.homeContext;
       return this === home ? 0 : home.getContextualDepth() + 1;
     },
     //@ Get unique key of this contextual in the context.
@@ -47,9 +47,10 @@
     //@param path {[string]} path elements
     //@return {Std.Contextual?} resolved contextual or nothing
     resolve: function(path) {
-      var contextual = this;
-      for (var i = 0, n = path.length; contextual && i < n; ++i) {
-        var context = contextual.resolutionResult().resolutionContext();
+      const n = path.length;
+      let contextual = this;
+      for (let i = 0; contextual && i < n; ++i) {
+        const context = contextual.resolutionResult().resolutionContext();
         // relaxed find for first path element and strict lookup for subsequent path elements
         contextual = context && (i ? context.lookup(path[i]) : context.find(path[i]));
       }

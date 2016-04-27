@@ -1,2 +1,2 @@
-//@ I am the class of JavaScript number.
-'Object'.subclass(Number, function() { })
+//@ I am the class of JavaScript numbers.
+'Object'.subclass(Number, () => { })

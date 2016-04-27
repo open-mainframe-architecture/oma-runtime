@@ -1,5 +1,5 @@
 //@ An alias resolves to another logical.
-'Field'.subclass(function(I) {
+'Field'.subclass(I => {
   "use strict";
   I.know({
     resolutionResult: function() {

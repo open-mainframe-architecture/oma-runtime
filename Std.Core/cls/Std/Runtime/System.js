@@ -8,29 +8,15 @@ function refine(I) {
       // setImmediate would be better, but it is not universally supported
       setTimeout(closure, 0);
     },
-    //@ Enumerate providers of a service.
-    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to enumerate
-    //@param visit {Std.Closure} called with provider and one-based numeric index
-    //@return {boolean} false if some visit returned false, otherwise true
-    enumerateProviders: function(service, visit) {
-      var serviceClass = I.resolveService(service);
-      if (serviceClass) {
-        var providers = this.serviceRegistry.lookup(serviceClass.getName());
-        if (providers) {
-          return providers.enumerate(visit, 1);
-        }
-      }
-      return true;
-    },
     //@ Get provider for service.
     //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to enumerate
     //@return {Any?} service provider or nothing if service is not provided
     provide: function(service) {
-      var serviceClass = I.resolveService(service);
+      const serviceClass = I.resolveService(service);
       if (serviceClass) {
-        var providers = this.serviceRegistry.lookup(serviceClass.getName());
-        if (providers) {
-          return providers[0];
+        const provider = this.serviceRegistry.lookup(serviceClass.getName());
+        if (provider) {
+          return provider;
         }
       }
     }

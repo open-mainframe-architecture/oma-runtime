@@ -1,5 +1,5 @@
 //@ I describe a standard object.
-'Object'.subclass(function(I, We) {
+'Object'.subclass((I, We) => {
   "use strict";
   I.know({
     //@{Std.Logic.Behavior} class of this object or metaclass if this object is a class
@@ -8,12 +8,11 @@
     $_: null,
     //@{Std.Runtime.System} runtime system singleton
     $rt: null,
-    //@ Abort execution with a failure from this object.
-    //@param ... {any} failure reasons are concatenated
-    //@return never
-    bad: function() {
-      throw I._.Failure.create(this, Array.prototype.join.call(arguments, ' '));
-    },
+    //@ Assert conditions.
+    //@param ... {any} truthy conditions to test
+    //@return this receiver
+    //@except when one of the conditions is falsy
+    assert: I.assert,
     //@ Build this new object from construction arguments.
     //@param ... {any} construction arguments
     //@return nothing
@@ -44,7 +43,7 @@
     ///@ An abstract method burdens a subclass with the implementation.
     //@return never
     burdenSubclass: function() {
-      this.bad();
+      this.assert(false);
     },
     //@ Invoke build and unveil methods to initialize new object.
     //@param object {Std.BaseObject} new object
@@ -58,7 +57,7 @@
     //@param object {Std.BaseObject} new object
     //@return nothing
     prepareNew: function(object) {
-      for (var key in object) {
+      for (let key in object) {
         // this is either a no-op or it copies default value of instance variable from prototype
         object[key] = object[key];
       }
@@ -68,7 +67,7 @@
     //@ This method should never be invoked.
     //@return never
     shouldNotOccur: function() {
-      this.bad();
+      this.assert(false);
     }
   });
 })

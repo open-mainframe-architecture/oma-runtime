@@ -1,5 +1,5 @@
 //@ A door blocks entrants or it allows entrants to pass.
-'BaseObject+Eventful'.subclass(function(I) {
+'BaseObject+Eventful'.subclass(I => {
   "use strict";
   I.have({
     //@{boolean} true if entrants can pass, otherwise block entrants
@@ -19,7 +19,7 @@
     enter: function() {
       return this.createEvent();
     },
-    //@ Allow any waiting entrants to pass, without opening/shutting this door.
+    //@ Allow any waiting entrants to pass, without opening this door.
     //@return nothing
     inviteEntrants: function() {
       this.fireAll();

@@ -1,5 +1,5 @@
 //@ A number type describes finite numbers, excluding NaN and Infinity.
-'AbstractType'.subclass(function(I) {
+'AbstractType'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false

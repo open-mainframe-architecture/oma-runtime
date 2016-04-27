@@ -1,6 +1,7 @@
 //@ An HTTP client receives responses when it sends out requests.
-'BaseObject+Role'.subclass(['Std.Core.Theater'], function(I) {
+'BaseObject+Role'.subclass(['Std.Core.Theater'], I => {
   "use strict";
+  const Request = I._.Request, URL = I._.URL;
   I.am({
     Service: true
   });
@@ -45,21 +46,19 @@
     //@param expectBinary {boolean?} true if binary response is expected
     //@promise {Std.HTTP.Response} HTTP response with textual or binary body
     send: function(method, location, headers, body, expectBinary) {
-      var url = typeof location === 'string' ? I._.URL._.decode(location) : location;
-      var request = I._.Request.create(method, url, headers, body);
+      const url = typeof location === 'string' ? URL._.decode(location) : location;
+      const request = Request.create(method, url, headers, body);
       // create arrival event for binary or textual response
-      return this.createArrival(request, expectBinary).triggers(function(arrival) {
+      return this.createArrival(request, expectBinary)
         // receive chunks when first chunk of response arrives
-        return this.createReceipt(arrival).triggers(function(receipt) {
+        .triggers(arrival => this.createReceipt(arrival)
           // return response with all chunks
-          return receipt.response;
-        });
-      });
+          .triggers(receipt => receipt.response));
     }
   });
   I.nest({
     //@ Arrival event fires when first chunk of HTTP response arrives.
-    Arrival: 'Event'.subclass(function(I) {
+    Arrival: 'Event'.subclass(I => {
       I.have({
         //@{Std.HTTP.Request} HTTP request object that was sent
         request: null,
@@ -77,7 +76,7 @@
       });
     }),
     //@ Receipt event fires when all chunks of an HTTP response have been received.
-    Receipt: 'Event'.subclass(function(I) {
+    Receipt: 'Event'.subclass(I => {
       I.have({
         //@{Std.HTTP.Client._.Arrival} arrival event that triggered this receipt
         arrival: null,

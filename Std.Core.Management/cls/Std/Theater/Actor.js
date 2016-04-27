@@ -1,25 +1,23 @@
 function refine(I) {
   "use strict";
+  const Manager = I._.Manager;
   I.refine({
     isManaging: function() {
-      return this.getRoleClass().isMixedBy(I._.Manager);
+      return this.getRoleClass().isMixedBy(Manager);
     },
     managePostMortem: function(job) {
       // manage performance for this dead actor
-      return this.actorManager.managePostMortem(job.forkScene());
+      return this.actorManager.managePostMortem(job);
     },
     manageStageException: function(job, exception) {
-      if (exception === I.PoisonPill) {
-        // manage poison pill as suicide attempt on stage
-        return this.actorManager.manageSuicide(job.forkScene());
-      } else {
+      // manage poison pill as suicide attempt on stage
+      return exception === I.PoisonPill ? this.actorManager.manageSuicide(job) :
         // delegate exception handling to manager
-        return this.actorManager.manageException(job.forkScene(), exception);
-      }
+        this.actorManager.manageException(job, exception);
     }
   });
   I.share({
-    //@{Object} actor throws poison pill on stage to commit suicide
-    PoisonPill: Object.freeze({})
+    //@{Symbol} actor throws unique poison pill on stage to commit suicide
+    PoisonPill: Symbol()
   });
 }

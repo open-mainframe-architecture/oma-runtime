@@ -21,12 +21,14 @@ function refine(I) {
     //@return {Std.Iterator} iterator over behaviors
     walkOffspring: function(bottomUp, skipRoot) {
       // by default, walk over this behavior as the tree root, otherwise walk over child forest
-      var roots = skipRoot ? this.childBehaviors : [this];
-      var direction = bottomUp ? function up(behavior) {
+      const roots = skipRoot ? this.childBehaviors : [this];
+      // walk up (visit children before parent) or walk down (visit parent before children)
+      const direction = bottomUp ? function up(behavior) {
         return [I.Loop.collect(behavior.walkChildren(), up), behavior].walk();
       } : function down(behavior) {
         return [behavior, I.Loop.collect(behavior.walkChildren(), down)].walk();
       };
+      // start walking over roots
       return I.Loop.flatten(I.Loop.collect(roots.walk(), direction));
     }
   });

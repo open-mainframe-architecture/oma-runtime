@@ -1,5 +1,5 @@
 //@ Worker-specific runtime constants.
-'Constants'.subclass(function(I) {
+'Constants'.subclass(I=> {
   "use strict";
   /*global self,location*/
   I.am({

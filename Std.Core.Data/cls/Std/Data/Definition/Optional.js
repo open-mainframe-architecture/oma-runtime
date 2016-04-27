@@ -1,6 +1,7 @@
 //@ An AST for an optional type.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
+  const Type = I._.Type;
   I.am({
     Abstract: false
   });
@@ -20,14 +21,13 @@
       return this.mandatoryExpression;
     },
     popEvaluation: function(evaluation, type) {
-      return I._.Type._.Optional._.normalize(evaluation.typespace, this, type);
+      return Type._.Optional._.normalize(evaluation.typespace, this, type);
     },
     pushEvaluation: function(evaluation) {
       evaluation.pushExpressions(this.mandatoryExpression);
     },
     substitute: function(variables_) {
-      var expression = this.mandatoryExpression;
-      var sub = expression.substitute(variables_);
+      const expression = this.mandatoryExpression, sub = expression.substitute(variables_);
       return expression === sub ? this : I.AST.createOptional(sub);
     }
   });

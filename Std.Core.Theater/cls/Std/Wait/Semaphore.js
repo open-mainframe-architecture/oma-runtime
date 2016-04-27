@@ -1,5 +1,5 @@
-//@ A Dijkstra semaphore that counts.
-'BaseObject+Eventful'.subclass(function(I) {
+//@ A Dijkstra semaphore.
+'BaseObject+Eventful'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -30,7 +30,7 @@
     //@ Fire oldest decrement event or just increment semaphore count.
     //@return nothing
     increment: function() {
-      var event = this.getFirstCharge();
+      const event = this.getFirstCharge();
       if (event) {
         event.fire();
       } else {

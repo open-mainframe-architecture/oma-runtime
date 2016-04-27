@@ -1,5 +1,5 @@
 //@ A descriptor of a record field.
-'BaseObject'.subclass(function(I) {
+'BaseObject'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Data.Definition.Expression} expression of field type
@@ -29,7 +29,7 @@
           return this._[key];
         });
       }
-      var metaKey = '@' + key, defaultMetaKey = 'default' + metaKey;
+      const metaKey = `@${key}`, defaultMetaKey = `default${metaKey}`;
       I.defineGetter(prototype, metaKey, function() {
         return this._[metaKey] || this[defaultMetaKey] || null;
       });
@@ -57,9 +57,9 @@
     //@param key {string} field name
     //@return nothing
     marshalField: function(json, record, key) {
-      var metaKey = '@' + key, typespace = this.fieldType.typespace;
+      const metaKey = `@${key}`, typespace = this.fieldType.typespace;
       if (this.isDataDescriptor()) {
-        var field = record._[key];
+        const field = record._[key];
         if (field !== null) {
           json[key] = typespace.marshal(field, this.fieldExpression);
         }
@@ -74,9 +74,9 @@
     //@param key {string} field name
     //@return nothing
     unmarshalField: function(values_, json, key) {
-      var metaKey = '@' + key, typespace = this.fieldType.typespace;
+      const metaKey = `@${key}`, typespace = this.fieldType.typespace;
       if (this.isDataDescriptor()) {
-        var field = json[key];
+        const field = json[key];
         values_[key] = typespace.unmarshal(field === void 0 ? null : field, this.fieldExpression);
       }
       if (json[metaKey]) {

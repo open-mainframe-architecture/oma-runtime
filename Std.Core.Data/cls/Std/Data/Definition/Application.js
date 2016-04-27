@@ -1,5 +1,5 @@
 //@ An AST for the application of a type macro.
-'Expression'.subclass(function(I) {
+'Expression'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -21,13 +21,13 @@
     },
     popEvaluation: I.returnArgument2,
     pushEvaluation: function(evaluation) {
-      var name = this.macroName;
-      var definition = evaluation.typespace.getDefinition(name) || this.bad(name);
+      const name = this.macroName;
+      const definition = evaluation.typespace.getDefinition(name);
       evaluation.pushExpressions(definition.express(this.macroParameters));
     },
     substitute: function(variables_) {
-      var parameters = this.macroParameters;
-      var subs = I.substituteExpressions(parameters, variables_);
+      const parameters = this.macroParameters;
+      const subs = I.substituteExpressions(parameters, variables_);
       return subs === parameters ? this : I.AST.createApplication(this.macroName, subs);
     }
   });

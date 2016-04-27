@@ -1,7 +1,7 @@
 //@ Common runtime environment of web browsers and workers.
 'Service'.subclass(['Std.Core.Runtime'], {
   constants$: 'Std.Runtime.Constants'
-}, function(I) {
+}, I => {
   "use strict";
   /*global Worker*/
   I.know({
@@ -16,19 +16,19 @@
   });
   I.nest({
     //@ Streams that cross between web browser/worker and worker/worker environments.
-    Crossover: 'Environment.Service._.Crossover'.subclass(function(I) {
+    Crossover: 'Environment.Service._.Crossover'.subclass(I => {
       I.am({
         Abstract: false
       });
       I.know({
-        install: function(receiver) {
-          this.emitter.addEventListener('message', receiver);
+        install: function(emitter, receiver) {
+          emitter.addEventListener('message', receiver);
         },
         receive: function(webEvent) {
           return webEvent.data;
         },
-        send: function(it) {
-          this.emitter.postMessage(it);
+        send: function(emitter, it) {
+          emitter.postMessage(it);
         }
       });
     })

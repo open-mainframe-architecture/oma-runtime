@@ -1,26 +1,22 @@
 //@ The indices of a sequenceable container form a linear sequence.
-'Container'.subclass(function(I) {
+'Container'.subclass(I => {
   "use strict";
+  const SENTINEL = Symbol();
   I.know({
     walkUnsafe: function() {
-      return this.isEmpty() ? I.Loop.Empty :
-        // walk over index sequence while sentinel index is not encountered
-        I.Loop.whilst(this.firstIndex(), isNotSentinel, function(ix) {
-          return ix !== this.lastIndex() ? this.nextIndex(ix) : SentinelIndex;
-        }.bind(this));
+      // walk over index sequence until sentinel index is encountered
+      return I.Loop.whilst(this.firstIndex(SENTINEL), isIndex, ix => this.nextIndex(ix, SENTINEL));
     },
-    //@ Get index of first element or an invalid index if this container is empty.
-    //@return {any} first or invalid index
+    //@ Get index of first element.
+    //@param sentinel {any} sentinel result if sequence is empty
+    //@return {any} first index or sentinel result
     firstIndex: I.burdenSubclass,
-    //@ Get index of last element or an invalid index if this container is empty.
-    //@return {any} last or invalid index
-    lastIndex: I.burdenSubclass,
     //@ Compute next index in the sequence of indices.
     //@param ix {any} index in sequence
-    //@return {any} next index in sequence
+    //@param sentinel {any} sentinel result if index is last in sequence
+    //@return {any} next index in sequence or sentinel result
     nextIndex: I.burdenSubclass
   });
   // use sentinel 'index' to stop walking over indices
-  var SentinelIndex = {};
-  function isNotSentinel(ix) { return ix !== SentinelIndex; }
+  function isIndex(ix) { return ix !== SENTINEL; }
 })

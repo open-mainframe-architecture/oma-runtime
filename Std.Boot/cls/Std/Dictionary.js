@@ -1,5 +1,5 @@
 //@ A dictionary maps string indices to contained elements.
-'Container'.subclass(function(I) {
+'Container'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -24,25 +24,16 @@
       }
     },
     contains: function(it) {
-      var this_ = this._;
-      return Object.getOwnPropertyNames(this_).some(function(ix) {
-        return this_[ix] === it;
-      });
+      return Object.getOwnPropertyNames(this._).some(ix => this._[ix] === it);
     },
     containsIndex: function(ix) {
       return I.isPropertyOwner(this._, ix);
     },
     enumerate: function(visit) {
-      var this_ = this._;
-      return Object.getOwnPropertyNames(this_).every(function(ix) {
-        return visit(this_[ix], ix) !== false;
-      });
+      return Object.getOwnPropertyNames(this._).every(ix => visit(this._[ix], ix) !== false);
     },
     indexOf: function(it) {
-      var this_ = this._;
-      return Object.getOwnPropertyNames(this_).find(function(ix) {
-        return this_[ix] === it;
-      });
+      return Object.getOwnPropertyNames(this._).find(ix => this._[ix] === it);
     },
     find: function(ix) {
       // find indexed element in this dictionary or in some base dictionary
@@ -58,12 +49,12 @@
       return Object.getOwnPropertyNames(this._).length;
     },
     clear: function() {
-      var this_ = this._, indices = Object.getOwnPropertyNames(this_);
+      const indices = Object.getOwnPropertyNames(this._);
       if (indices.length) {
         ++this.modificationCount;
-        indices.forEach(function(ix) {
-          delete this_[ix];
-        });
+        for (let ix of indices) {
+          delete this._[ix];
+        }
       }
       return this;
     },
@@ -86,9 +77,10 @@
     //@param ix {string} index of constant
     //@return {Std.Dictionary} this dictionary, because it's destructive
     storeConstant: function(it, ix) {
-      var descriptor = { value: it, configurable: false, enumerable: true, writable: false };
       ++this.modificationCount;
-      Object.defineProperty(this._, ix, descriptor);
+      Object.defineProperty(this._, ix, {
+        value: it, configurable: false, enumerable: true, writable: false
+      });
       return this;
     }
   });
