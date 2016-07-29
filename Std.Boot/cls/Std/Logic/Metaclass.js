@@ -4,8 +4,7 @@
   I.am({
     Final: true
   });
-  I.share({
-    //@{Std.Logic.MetaclassPackage.$} metaclass package with package fields
-    BehaviorPackage: I._.MetaclassPackage
+  I.know({
+    getPackageClass: I.returnWith(I._.MetaclassPackage)
   });
 })

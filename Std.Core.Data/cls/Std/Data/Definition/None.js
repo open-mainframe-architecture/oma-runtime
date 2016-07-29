@@ -1,4 +1,4 @@
-//@ An AST that evaluates the none type.
+//@ A none type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.am({

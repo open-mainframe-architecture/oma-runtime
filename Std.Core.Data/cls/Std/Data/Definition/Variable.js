@@ -1,4 +1,4 @@
-//@ An AST for a type variable.
+//@ A type variable.
 'Expression'.subclass(I => {
   "use strict";
   I.am({
@@ -7,8 +7,8 @@
   I.know({
     //@ This should not occur, because variables are substituted before evaluation.
     pushEvaluation: I.shouldNotOccur,
-    substitute: function(variables_) {
-      return variables_[this.sourceText] || this.assert(false);
+    substitute: function(variables) {
+      return variables[this.sourceText] || I.fail('free variable');
     }
   });
 })

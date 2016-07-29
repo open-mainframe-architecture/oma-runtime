@@ -1,28 +1,26 @@
 //@ An enumeration type describes string choices.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
-    //@{Std.Table} map choice to true
-    enumeratedChoices_: null
+    //@{Set[string]} set with choices
+    enumeratedChoices: null
   });
   I.know({
     //@param typespace {Std.Data.Typespace} typespace of this enumeration type
     //@param expression {Std.Data.Definition.Expression} type expression
-    //@param choices {[string]} string choices
+    //@param choices {Set[string]} string choices
     build: function(typespace, expression, choices) {
       I.$super.build.call(this, typespace, expression);
-      const choices_ = this.enumeratedChoices_ = I.createTable();
-      for (let choice of choices) {
-        choices_[choice] = true;
-      }
+      this.enumeratedChoices = choices;
     },
-    describesValue: function(value) {
-      return typeof value === 'string' && !!this.enumeratedChoices_[value];
-    },
+    isEnumeration: I.returnTrue,
     marshalValue: I.shouldNotOccur,
+    testMembership: function(value) {
+      return this.enumeratedChoices.has(value);
+    },
     unmarshalJSON: I.returnArgument
   });
   I.share({
@@ -31,15 +29,15 @@
     //@param expression {Std.Data.Definition.Expression} type expression
     //@param enumerations {[Std.Data.Type.Enumeration]} enumeration types
     //@return {Std.Data.Type.Enumeration} merged enumeration type
-    merge: function(typespace, expression, enumerations) {
+    merge: (typespace, expression, enumerations) => {
       if (enumerations.length === 1) {
         return enumerations[0];
       }
-      const choices_ = I.createTable();
-      for (let enumeration of enumerations) {
-        Object.assign(choices_, enumeration.enumeratedChoices_);
-      }
-      return I.$.create(typespace, expression, Object.getOwnPropertyNames(choices_));
+      const choices = new Set(), add = choices.add;
+      enumerations.forEach(enumeration => {
+        enumeration.enumeratedChoices.forEach(add, choices);
+      });
+      return I.$.create(typespace, expression, choices);
     }
   });
 })

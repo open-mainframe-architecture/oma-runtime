@@ -1,4 +1,4 @@
-//@ An AST for the application of a type macro.
+//@ Application of a type macro.
 'Expression'.subclass(I => {
   "use strict";
   I.am({
@@ -22,13 +22,14 @@
     popEvaluation: I.returnArgument2,
     pushEvaluation: function(evaluation) {
       const name = this.macroName;
-      const definition = evaluation.typespace.getDefinition(name);
+      const definition = evaluation.typespace.selectDefinition(name);
       evaluation.pushExpressions(definition.express(this.macroParameters));
     },
-    substitute: function(variables_) {
+    substitute: function(variables) {
       const parameters = this.macroParameters;
-      const subs = I.substituteExpressions(parameters, variables_);
-      return subs === parameters ? this : I.AST.createApplication(this.macroName, subs);
+      const subs = I.substituteExpressions(parameters, variables);
+      return subs === parameters ? this :
+        I.Data.TypeDefinitionLanguage.createApplication(this.macroName, subs);
     }
   });
 })

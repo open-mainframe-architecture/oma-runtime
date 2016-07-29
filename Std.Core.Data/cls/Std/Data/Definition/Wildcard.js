@@ -1,4 +1,4 @@
-//@ An AST that evaluates the wildcard type.
+//@ A wildcard type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.am({

@@ -1,4 +1,4 @@
-//@ An AST that evaluates the number type.
+//@ A number type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.am({

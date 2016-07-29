@@ -4,7 +4,7 @@
   I.have({
     //@{Std.Data.Definition.Expression} element type expression
     elementExpression: null,
-    //@{Std.Data.AbstractType} element type
+    //@{Std.Data.Type.Object} element type
     elementType: null
   });
   I.know({
@@ -13,11 +13,9 @@
     },
     //@ Assign element type and expression of this preliminary type.
     //@param expression {Std.Data.Definition.Expression} element type expression
-    //@param type {Std.Data.AbstractType} element type
+    //@param type {Std.Data.Type.Object} element type
     //@return nothing
-    //@except when this is not a preliminary type
     setElement: function(expression, type) {
-      this.assert(!this.elementExpression);
       this.elementExpression = expression;
       this.elementType = type;
     }

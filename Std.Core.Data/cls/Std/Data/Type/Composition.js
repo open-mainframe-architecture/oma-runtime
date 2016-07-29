@@ -1,29 +1,29 @@
 //@ A type composition describes composed values, i.e. dictionaries, lists and records.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.have({
-    //@{Std.Closure} constructor for new values of this type
+    //@{function} constructor for new values of this type
     valueConstructor: null
   });
   I.know({
     //@ Create prototypical value of this type.
-    //@return {Std.Data.AbstractValue} prototypical value
+    //@return {Std.Data.Value.Object} prototypical value
     createPrototype: I.burdenSubclass,
-    //@ Create value of this type.
+    //@ Create composed value of this type.
     //@param expression {Std.Data.Definition.Expression} type expression
-    //@param values {Std.Table|[any]} table or array with children of new value
-    //@return {Std.Data.AbstractValue} new value
+    //@param values {Std.Table|[*]} table or array with children of new value
+    //@return {Std.Data.Value.Object} new value
     createValue: function(expression, values) {
-      let Constructor = this.valueConstructor;
-      if (!Constructor) {
-        this.valueConstructor = Constructor = function Value(typeExpression, childValues) {
-          I.defineConstant(this, '$expr', typeExpression);
-          I.defineConstant(this, '_', Object.freeze(childValues));
+      if (!this.valueConstructor) {
+        this.valueConstructor = function Value(typeExpression, childValues) {
+          I.lockProperty(this, '$expr', typeExpression);
+          I.lockProperty(this, '_', Object.freeze(childValues));
           Object.freeze(this);
         };
-        I.defineConstant(Constructor.prototype = this.createPrototype(), '$type', this);
+        this.valueConstructor.prototype = this.createPrototype();
+        I.lockProperty(this.valueConstructor.prototype, '$type', this);
       }
-      return new Constructor(expression, values);
+      return Reflect.construct(this.valueConstructor, [expression, values]);
     }
   });
 })

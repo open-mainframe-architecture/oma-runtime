@@ -1,16 +1,11 @@
 //@ An union type describes values of alternative types.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
-  const Dictionary = I._.Dictionary, List = I._.List, Record = I._.Record;
-  const None = I._.None, Optional = I._.Optional, Wildcard = I._.Wildcard;
-  const Boolean = I._.Boolean, Number = I._.Number, Integer = I._.Integer;
-  const String = I._.String, Enumeration = I._.Enumeration;
-  
   I.am({
     Abstract: false
   });
   I.have({
-    //@{[Std.Data.AbstractType]} alternative types of this union
+    //@{[Std.Data.Type.Object]} alternative types of this union
     alternativeTypes: null,
     //@{[Std.Data.Type.Dictionary?]} only dictionary alternative or nothing
     dictionaryAlternative: null,
@@ -22,7 +17,7 @@
   I.know({
     //@param typespace {Std.Data.Typespace} typespace of this union type
     //@param expression {Std.Data.Definition.Expression} type expression
-    //@param alternatives {[Std.Data.AbstractType]} alternative types of this union type
+    //@param alternatives {[Std.Data.Type.Object]} alternative types of this union type
     build: function(typespace, expression, alternatives) {
       I.$super.build.call(this, typespace, expression);
       this.alternativeTypes = alternatives;
@@ -33,11 +28,11 @@
       let dictionary = true, list = true, record = true;
       for (let i = 0; i < n && (dictionary || list || record); ++i) {
         const alternative = alternatives[i];
-        if (dictionary && Dictionary.describes(alternative)) {
+        if (dictionary && alternative.isDictionary()) {
           dictionary = dictionary === true ? alternative : false;
-        } else if (list && List.describes(alternative)) {
+        } else if (list && alternative.isList()) {
           list = list === true ? alternative : false;
-        } else if (record && Record.describes(alternative)) {
+        } else if (record && alternative.isRecord()) {
           record = record === true ? alternative : false;
         }
       }
@@ -45,35 +40,34 @@
       this.listAlternative = typeof list === 'boolean' ? null : list;
       this.recordAlternative = typeof record === 'boolean' ? null : record;
     },
-    describesValue: function(value) {
-      return this.alternativeTypes.some(alternative => alternative.describesValue(value));
-    },
+    isUnion: I.returnTrue,
     marshalValue: I.shouldNotOccur,
+    testMembership: function(value) {
+      return this.alternativeTypes.some(alternative => alternative.testMembership(value));
+    },
     unmarshalJSON: function(json, expression) {
-      if (I.Data.isBasicValue(json)) {
+      if (I.Data.isBasic(json)) {
         return json;
       } else {
-        const alternative = json && (
-          Array.isArray(json._ || json) ? this.listAlternative :
-            json._ ? this.dictionaryAlternative :
-              this.recordAlternative
-        );
-        this.assert(alternative);
+        const alternative = Array.isArray(json._ || json) ? this.listAlternative :
+          json._ ? this.dictionaryAlternative :
+            this.recordAlternative;
         return alternative.unmarshalJSON(json, expression);
       }
     }
   });
+  const Enumeration = I._.Enumeration, Optional = I._.Optional;
   I.share({
     //@ Normalize type alternatives.
     //@param typespace {Std.Data.Typespace} typespace of new type
     //@param expression {Std.Data.Definition.Expression} type expression
-    //@param alternatives {[Std.Data.AbstractType]} alternatives of type to normalize
-    //@return {Std.Data.AbstractType} normalized type, probably a union
-    normalize: function(typespace, expression, alternatives) {
+    //@param alternatives {[Std.Data.Type.Object]} alternatives of type to normalize
+    //@return {Std.Data.Type.Object} normalized type, probably a union
+    normalize: (typespace, expression, alternatives) => {
       // flatten union alternatives
       const flat = [];
       for (let alternative of alternatives) {
-        if (I.$.describes(alternative)) {
+        if (alternative.isUnion()) {
           flat.push(...alternative.alternativeTypes);
         } else {
           flat.push(alternative);
@@ -83,19 +77,19 @@
       // ensure mandatory alternatives
       let optional = false;
       for (i = 0, j = 0, n = flat.length; i < n; ++i) {
-        if (None.describes(flat[i])) {
+        if (flat[i].isNone()) {
           optional = true;
           continue;
         }
         else {
-          optional = optional || Optional.describes(flat[i]);
+          optional = optional || flat[i].isOptional();
           flat[j++] = flat[i].asMandatory();
         }
       }
       // search for wildcard amongst mandatory alternatives
       let wildcard = false;
       for (i = 0; i < j; ++i) {
-        if (Wildcard.describes(flat[i])) {
+        if (flat[i].isWildcard()) {
           wildcard = flat[i];
           break;
         }
@@ -104,16 +98,16 @@
         // search for boolean, number, integer and string alternatives
         let boolean = false, number = false, integer = false, string = false;
         for (n = j, i = 0, j = 0; i < n; ++i) {
-          if (Boolean.describes(flat[i])) {
+          if (flat[i].isBoolean()) {
             boolean = flat[i];
             continue;
-          } else if (Number.describes(flat[i])) {
+          } else if (flat[i].isNumber()) {
             number = flat[i];
             continue;
-          } else if (Integer.describes(flat[i])) {
+          } else if (flat[i].isInteger()) {
             integer = flat[i];
             continue;
-          } else if (String.describes(flat[i])) {
+          } else if (flat[i].isString()) {
             string = flat[i];
             continue;
           } else {
@@ -123,7 +117,7 @@
         // search for enumeration alternatives
         let enumerations = [];
         for (n = j, i = 0, j = 0; i < n; ++i) {
-          if (Enumeration.describes(flat[i])) {
+          if (flat[i].isEnumeration()) {
             if (!string) {
               enumerations.push(flat[i]);
             }

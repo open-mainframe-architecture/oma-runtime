@@ -1,4 +1,4 @@
-//@ An AST for an enumeration type.
+//@ An enumeration type expression.
 'Expression'.subclass(I => {
   "use strict";
   const Type = I._.Type;
@@ -6,18 +6,18 @@
     Abstract: false
   });
   I.have({
-    //@{[string]} string choices (without quotes)
-    enumerationChoices: null
+    //@{Set[string]} string choices (without quotes)
+    enumeratedChoices: null
   });
   I.know({
     //@param source {string} normalized source of enumeration
-    //@param choices {[string]} choices of enumeration
+    //@param choices {Set[string]} choices of enumeration
     build: function(source, choices) {
       I.$super.build.call(this, source);
-      this.enumerationChoices = choices;
+      this.enumeratedChoices = choices;
     },
     pushEvaluation: function(evaluation) {
-      return Type._.Enumeration.create(evaluation.typespace, this, this.enumerationChoices);
+      return Type._.Enumeration.create(evaluation.typespace, this, this.enumeratedChoices);
     }
   });
 })

@@ -1,4 +1,4 @@
-//@ An AST that evaluates the boolean type.
+//@ Boolean type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.am({

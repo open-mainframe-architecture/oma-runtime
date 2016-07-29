@@ -1,4 +1,4 @@
-//@ An AST that evaluates a type name.
+//@ A type name reference.
 'Expression'.subclass(I => {
   "use strict";
   I.am({
@@ -8,7 +8,7 @@
     popEvaluation: I.returnArgument2,
     pushEvaluation: function(evaluation) {
       const name = this.sourceText;
-      const definition = evaluation.typespace.getDefinition(name);
+      const definition = evaluation.typespace.selectDefinition(name);
       evaluation.pushExpressions(definition.express());
     }
   });

@@ -1,4 +1,4 @@
-//@ An AST for a dictionary or list type.
+//@ A dictionary or list type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.have({

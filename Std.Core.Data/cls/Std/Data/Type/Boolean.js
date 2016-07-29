@@ -1,14 +1,13 @@
 //@ A boolean type describes true and false.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
-      return value === false || value === true;
-    },
+    isBoolean: I.returnTrue,
     marshalValue: I.returnArgument,
+    testMembership: I.isBoolean,
     unmarshalJSON: I.returnArgument
   });
 })

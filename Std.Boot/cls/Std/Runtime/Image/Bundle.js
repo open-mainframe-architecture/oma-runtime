@@ -1,43 +1,36 @@
 //@ A bundle distributes one or more modules.
-'BaseObject'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
-  const Dictionary = I._.Dictionary, ModuleLoader = I._.ModuleLoader;
+  I.am({
+    Final: true
+  });
   I.have({
     //@{string} bundle name must be unique within a runtime image
-    bundleName: null,
-    //@{Std.Dictionary} mapping from names to modules that this bundle distributes
-    bundledModules: null
+    bundleName: null
   });
+  const Module = I._.Logic._.Module, ModuleLoader = I._.ModuleLoader;
   I.know({
     //@param name {string} bundle name
     build: function(name) {
       I.$super.build.call(this);
       this.bundleName = name;
     },
-    unveil: function() {
-      I.$super.unveil.call(this);
-      this.bundledModules = Dictionary.create();
-    },
-    //@ Add new module to this bundle.
-    //@param module {Std.Logic.Module} new module that belong to this bundle
-    //@return nothing
-    addBundledModule: function(module) {
-      const modules = this.bundledModules, name = module.getName();
-      // module must be a valid addition to this bundle
-      this.assert(module.getBundle() === this, !modules.containsIndex(name));
-      modules.store(module, name);
-    },
     //@ Create loader for new module.
     //@param name {string} module name
-    //@param spec {Std.Table} module specification with classes and configurations
+    //@param spec {object|Std.Table} module specification with classes and configurations
     //@return {Std.Runtime.Image.ModuleLoader} loader for new module
-    createModuleLoader: function(name, spec_) {
-      return ModuleLoader.create(this, name, spec_);
+    createModuleLoader: function(name, spec) {
+      const configures = spec[''];
+      // create regular module with unique name
+      const module = name ? Module.create(name, null, this, configures) :
+        // create anonymous module (child of boot module) whose name is derived from bundle name
+        Module.create(I.$module, this.bundleName, this, configures);
+      return ModuleLoader.create(module, spec);
     },
     //@ Get configuration of anonymous module.
     //@return {Std.Logic.Config} module configuration
     getConfig: function() {
-      return I.$module.lookup(this.bundleName).getConfig();
+      return I.$module.select(this.bundleName).getConfig();
     },
     //@ Get name of this bundle. The name is unique within runtime image.
     //@return {string} bundle name

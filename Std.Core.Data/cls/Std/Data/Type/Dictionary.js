@@ -1,4 +1,4 @@
-//@ A dictionary type describes dictionary values.
+//@ Members of a dictionary type are dictionary values.
 'Collection'.subclass(I => {
   "use strict";
   const Value = I._.Value;
@@ -6,18 +6,7 @@
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
-      if (Value._.Dictionary.describes(value) && value.$type.typespace === this.typespace) {
-        const table = value._, elementType = this.elementType;
-        for (let key in table) {
-          if (!elementType.describesValue(table[key])) {
-            return false;
-          }
-        }
-        return true;
-      }
-      return false;
-    },
+    isDictionary: I.returnTrue,
     marshalValue: function(value, expression) {
       const typespace = this.typespace, elementExpression = this.elementExpression;
       const nested = {}, values_ = value._;
@@ -26,13 +15,25 @@
       }
       return expression === value.$expr ? { _: nested } : { _: nested, $: value.$expr.unparse() };
     },
+    testMembership: function(value) {
+      if (I.Data.isDictionary(value) && value.$type.typespace === this.typespace) {
+        const table = value._, elementType = this.elementType;
+        for (let key in table) {
+          if (!elementType.testMembership(table[key])) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    },
     unmarshalJSON: function(json, expression) {
       const typespace = this.typespace, elementExpression = this.elementExpression;
-      const values_ = I.createTable(), nested = json._;
+      const values = I.createTable(), nested = json._;
       for (let key in nested) {
-        values_[key] = typespace.unmarshal(nested[key], elementExpression);
+        values[key] = typespace.unmarshal(nested[key], elementExpression);
       }
-      return this.createValue(expression, values_);
+      return this.createValue(expression, values);
     },
     createPrototype: function() {
       return Object.create(Value._.Dictionary.getPrototype());

@@ -1,14 +1,13 @@
 //@ A string type describes string values.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
-      return typeof value === 'string';
-    },
+    isString: I.returnTrue,
     marshalValue: I.returnArgument,
+    testMembership: I.isString,
     unmarshalJSON: I.returnArgument
   });
 })

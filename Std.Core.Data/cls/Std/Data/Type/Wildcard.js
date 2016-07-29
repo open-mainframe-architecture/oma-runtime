@@ -1,20 +1,20 @@
 //@ A wildcard type describes all data values except null.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
-      return I.Data.isBasicValue(value) ||
-        I.Data.isComposedValue(value) && value.$type.typespace === this.typespace;
-    },
+    isWildcard: I.returnTrue,
     marshalValue: I.shouldNotOccur,
+    testMembership: function(value) {
+      return value === null || I.Data.isBasic(value) ||
+        I.Data.isComposed(value) && value.$type.typespace === this.typespace;
+    },
     unmarshalJSON: function(json, expression) {
-      if (I.Data.isBasicValue(json)) {
+      if (json === null || I.Data.isBasic(json)) {
         return json;
       } else {
-        this.assert(json);
         const typespace = this.typespace;
         // list with values
         return Array.isArray(json._ || json) ? typespace.unmarshal(json, '[*?]') :

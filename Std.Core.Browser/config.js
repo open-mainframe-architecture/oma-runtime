@@ -5,6 +5,6 @@ function configure(module) {
   module.depends = ['Std.Core.Web'];
   module.test = () => typeof window !== 'undefined' && typeof console !== 'undefined';
   module.provides = {
-    'Std.Runtime.BrowserConstants': serviceClass => serviceClass.create()
+    'Std.Runtime.Constants with Std.Runtime.BrowserConstants': Provider => Provider.create()
   };
 }

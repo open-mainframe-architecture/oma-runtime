@@ -1,69 +1,71 @@
-//@ An AST that evaluates a record type.
+//@ A record type expression.
 'Expression'.subclass(I => {
   "use strict";
-  const Descriptor = I._.Descriptor, Type = I._.Type;
+  const Type = I._.Type;
   I.am({
     Abstract: false
   });
   I.have({
     //@{Std.Table} map names to field definitions
-    fieldDefinitions_: null
+    fieldDefinitions: null
   });
   I.know({
     //@param source {string} source text
-    //@param definitions_ @{Std.Table} field definitions
-    build: function(source, definitions_) {
+    //@param definitions @{Std.Table} field definitions
+    build: function(source, definitions) {
       I.$super.build.call(this, source);
-      this.fieldDefinitions_ = definitions_;
+      this.fieldDefinitions = definitions;
     },
     popEvaluation: function(evaluation, fieldTypes, preliminary) {
-      const definitions_ = this.fieldDefinitions_;
-      const sorted = Object.getOwnPropertyNames(definitions_).sort();
-      const descriptors_ = I.createTable();
+      const typespace = evaluation.typespace;
+      const definitions = this.fieldDefinitions;
+      const sorted = Object.keys(definitions).sort();
+      const descriptors = I.createTable();
       const types = sorted.length === 1 ? [fieldTypes] : fieldTypes;
       sorted.forEach((name, i) => {
-        const field = definitions_[name], type = types[i];
-        const annotations = I.hasEnumerables(field.annotations_) ?
-          evaluation.typepace.unmarshal({ _: field.annotations_ }, '<string>') :
+        const field = definitions[name], type = types[i];
+        const annotations = I.hasEnumerables(field.annotations) ?
+          typespace.unmarshal({ _: field.annotations }, '<string>') :
           null;
-        descriptors_[name] = Descriptor.create(field.expression, type, annotations);
+        descriptors[name] = typespace.createDescriptor(field.expression, type, annotations);
       });
-      preliminary.setDescriptors(descriptors_);
+      preliminary.setDescriptors(descriptors);
     },
     pushEvaluation: function(evaluation) {
-      const definitions_ = this.fieldDefinitions_;
-      const sorted = Object.getOwnPropertyNames(definitions_).sort();
-      evaluation.pushExpressions(sorted.map(name => definitions_[name].expression));
+      const definitions = this.fieldDefinitions;
+      const sorted = Object.keys(definitions).sort();
+      evaluation.pushExpressions(sorted.map(name => definitions[name].expression));
       return Type._.Record.create(evaluation.typespace, this);
     },
-    substitute: function(variables_) {
-      const fields_ = I.createTable(), definitions_ = this.fieldDefinitions_;
+    substitute: function(variables) {
+      const subs = I.createTable(), definitions = this.fieldDefinitions;
       let distinct = false;
-      for (let key in definitions_) {
-        const field = definitions_[key], expression = field.expression;
-        const sub = expression.substitute(variables_);
-        fields_[key] = sub === expression ? field : I.AST.createField(sub, field.annotations_);
+      for (let key in definitions) {
+        const field = definitions[key], expression = field.expression;
+        const sub = expression.substitute(variables);
+        subs[key] = sub === expression ? field :
+          I.Data.TypeDefinitionLanguage.createField(sub, field.annotations);
         distinct = distinct || sub !== expression;
       }
-      return distinct ? I.AST.createRecord(fields_) : this;
+      return distinct ? I.Data.TypeDefinitionLanguage.createRecord(subs) : this;
     }
   });
   I.nest({
-    //@ An AST that evaluates a record field.
-    Field: 'BaseObject'.subclass(I => {
+    //@ A record field expression.
+    Field: 'Std.Object'.subclass(I => {
       I.have({
         //@{Std.Data.Definition.Expression} expression of field type
         expression: null,
         //@{Std.Table} map annotation names to values
-        annotations_: null
+        annotations: null
       });
       I.know({
         //@param expression {Std.Data.Definition.Expression} field type expression
-        //@param annotations_ {Std.Table} field annotations
-        build: function(expression, annotations_) {
+        //@param annotations {Std.Table} field annotations
+        build: function(expression, annotations) {
           I.$super.build.call(this);
           this.expression = expression;
-          this.annotations_ = I.hasEnumerables(annotations_) ? annotations_ : I.EmptyTable;
+          this.annotations = I.hasEnumerables(annotations) ? annotations : I.EmptyTable;
         }
       });
     })

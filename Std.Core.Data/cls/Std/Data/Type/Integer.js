@@ -1,14 +1,15 @@
 //@ An integer type describes integer numbers.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
+    isInteger: I.returnTrue,
+    marshalValue: I.shouldNotOccur,
+    testMembership: function(value) {
       return typeof value === 'number' && ~~value === value;
     },
-    marshalValue: I.shouldNotOccur,
     unmarshalJSON: I.returnArgument
   });
 })

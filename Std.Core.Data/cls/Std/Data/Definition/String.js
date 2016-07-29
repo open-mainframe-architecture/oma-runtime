@@ -1,4 +1,4 @@
-//@ An AST that evaluates the string type.
+//@ A string type expression.
 'Expression'.subclass(I => {
   "use strict";
   I.am({

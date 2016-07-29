@@ -1,17 +1,17 @@
 //@ A descriptor of a record field.
-'BaseObject'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
   I.have({
     //@{Std.Data.Definition.Expression} expression of field type
     fieldExpression: null,
-    //@{Std.Data.AbstractType} type of field value
+    //@{Std.Data.Type.Object} type of field value
     fieldType: null,
     //@{Std.Data.Value.Dictionary?} field annotations value
     fieldAnnotations: null
   });
   I.know({
     //@param expression {Std.Data.Definition.Expression} field type expression
-    //@param type {Std.Data.Definition.Expression} field type
+    //@param type {Std.Data.Type.Object} field type
     //@param annotations {Std.Data.Value.Dictionary?} annotations dictionary
     build: function(expression, type, annotations) {
       I.$super.build.call(this);
@@ -30,18 +30,12 @@
         });
       }
       const metaKey = `@${key}`, defaultMetaKey = `default${metaKey}`;
+      if (this.fieldAnnotations) {
+        I.lockProperty(prototype, defaultMetaKey, this.fieldAnnotations);
+      }
       I.defineGetter(prototype, metaKey, function() {
         return this._[metaKey] || this[defaultMetaKey] || null;
       });
-      if (this.fieldAnnotations) {
-        I.defineConstant(prototype, defaultMetaKey, this.fieldAnnotations);
-      }
-    },
-    //@ Test whether given value is described by the field type.
-    //@param value {any} JavaScript object or value
-    //@return {boolean} true if value is described by field type, otherwise false
-    describesValue: function(value) {
-      return this.fieldType.describesValue(value);
     },
     //@ Get default value of meta field with annotations.
     //@return {Std.Data.Value.Dictionary?} optional dictionary value
@@ -52,7 +46,7 @@
     //@return {boolean} true if this is a data field, otherwise false
     isDataDescriptor: I.returnTrue,
     //@ Marshal field value and put result in JSON object.
-    //@param json {Object} JSON object
+    //@param json {object} JSON object
     //@param record {Std.Data.Value.Record} record value
     //@param key {string} field name
     //@return nothing
@@ -68,19 +62,25 @@
         json[metaKey] = typespace.marshal(record._[metaKey], '<string>');
       }
     },
+    //@ Test whether given value is described by the field type.
+    //@param value {*} JavaScript object or value
+    //@return {boolean} true if value is described by field type, otherwise false
+    testMembership: function(value) {
+      return this.fieldType.testMembership(value);
+    },
     //@ Unmarshal field from JSON representation and put field value in table with values.
-    //@param values_ {Std.Table} table with field values
-    //@param json {Object} JSON object
+    //@param values {Std.Table} table with field values
+    //@param json {object} JSON object
     //@param key {string} field name
     //@return nothing
-    unmarshalField: function(values_, json, key) {
+    unmarshalField: function(values, json, key) {
       const metaKey = `@${key}`, typespace = this.fieldType.typespace;
       if (this.isDataDescriptor()) {
         const field = json[key];
-        values_[key] = typespace.unmarshal(field === void 0 ? null : field, this.fieldExpression);
+        values[key] = typespace.unmarshal(field === void 0 ? null : field, this.fieldExpression);
       }
       if (json[metaKey]) {
-        values_[metaKey] = typespace.unmarshal(json[metaKey], '<string>');
+        values[metaKey] = typespace.unmarshal(json[metaKey], '<string>');
       }
     }
   });

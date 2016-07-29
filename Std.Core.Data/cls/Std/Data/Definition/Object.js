@@ -1,8 +1,11 @@
-//@ An AST for a type definition represents a type expression or macro.
-'BaseObject'.subclass(I => {
+//@ A type definition object is a type expression or macro.
+'Std.Object'.subclass(I => {
   "use strict";
+  I.am({
+    Abstract: true
+  });
   I.have({
-    //@{string} normalized source
+    //@{string} normalized source of this definition
     sourceText: null
   });
   I.know({
@@ -12,19 +15,13 @@
       this.sourceText = source;
     },
     //@ Express this definition without variables, which ensures it can be evaluated.
-    //@param parameters {[Std.Data.Definition.Expression]} expression parameters
+    //@param parameters {[Std.Data.Definition.Expression]?} expression parameters
     //@return {Std.Data.Definition.Expression} an expression
     express: I.burdenSubclass,
     //@ Get normalized source of this type definition.
     //@return {string} source text
     unparse: function() {
       return this.sourceText;
-    }
-  });
-  I.setup({
-    //@{Std.Data.Language} one parser caches all ASTs of type definitions
-    AST: function() {
-      return I._.Language.create();
     }
   });
 })

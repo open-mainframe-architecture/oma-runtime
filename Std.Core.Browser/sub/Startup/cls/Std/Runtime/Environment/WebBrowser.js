@@ -1,12 +1,12 @@
 'super'.subclass({
-  data$: 'Std.Data',
-  image$: 'Std.Runtime.Image'
+  image$: 'Std.Runtime.Image',
+  typespace$: 'Std.Data.Typespace'
 }, I => {
   "use strict";
   /*global document*/
   I.setup(() => {
     const scripts = document.getElementsByTagName('script');
     const json = JSON.parse(scripts[scripts.length - 1].textContent);
-    I.image$.assignSpecification(I.data$.unmarshal(json, 'Runtime.Image')).run();
+    I.image$.assignSpecification(I.typespace$.unmarshal(json, 'Runtime.Image')).run();
   });
 })

@@ -1,4 +1,4 @@
-//@ An AST for an optional type.
+//@ An optional type expression.
 'Expression'.subclass(I => {
   "use strict";
   const Type = I._.Type;
@@ -6,7 +6,7 @@
     Abstract: false
   });
   I.have({
-    //@{Std.Data.Definition.Expression} expression for mandatory type
+    //@{Std.Data.Definition.Expression} expression of mandatory type
     mandatoryExpression: null
   });
   I.know({
@@ -28,7 +28,7 @@
     },
     substitute: function(variables_) {
       const expression = this.mandatoryExpression, sub = expression.substitute(variables_);
-      return expression === sub ? this : I.AST.createOptional(sub);
+      return expression === sub ? this : I.Data.TypeDefinitionLanguage.createOptional(sub);
     }
   });
 })

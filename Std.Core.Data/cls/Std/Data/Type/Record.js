@@ -7,15 +7,29 @@
   });
   I.have({
     //@{Std.Table} map field name to descriptor
-    fieldDescriptors_: null
+    fieldDescriptors: null,
+    //@[string] field names in convenient array
+    fieldKeys: null
   });
   I.know({
-    describesValue: function(value) {
-      if (Value._.Record.describes(value) && value.$type.typespace === this.typespace) {
-        const descriptors_ = this.fieldDescriptors_, fields_ = value._;
-        for (let key in descriptors_) {
-          const descriptor = descriptors_[key];
-          if (descriptor.isDataDescriptor() && !descriptor.describesValue(fields_[key])) {
+    isPreliminary: function() {
+      return !this.fieldDescriptors;
+    },
+    isRecord: I.returnTrue,
+    marshalValue: function(value, expression) {
+      const descriptors = this.fieldDescriptors;
+      const json = expression === value.$expr ? {} : { $: value.$expr.unparse() };
+      for (let key in descriptors) {
+        descriptors[key].marshalField(json, value, key);
+      }
+      return json;
+    },
+    testMembership: function(value) {
+      if (I.Data.isRecord(value) && value.$type.typespace === this.typespace) {
+        const descriptors = this.fieldDescriptors, fields = value._;
+        for (let key in descriptors) {
+          const descriptor = descriptors[key];
+          if (descriptor.isDataDescriptor() && !descriptor.testMembership(fields[key])) {
             return false;
           }
         }
@@ -23,62 +37,56 @@
       }
       return false;
     },
-    isPreliminary: function() {
-      return !this.fieldDescriptors_;
-    },
-    marshalValue: function(value, expression) {
-      const descriptors_ = this.fieldDescriptors_;
-      const json = expression === value.$expr ? {} : { $: value.$expr.unparse() };
-      for (let key in descriptors_) {
-        descriptors_[key].marshalField(json, value, key);
-      }
-      return json;
-    },
     unmarshalJSON: function(json, expression) {
-      const descriptors_ = this.fieldDescriptors_, values_ = I.createTable();
-      for (let key in descriptors_) {
-        descriptors_[key].unmarshalField(values_, json, key);
+      const descriptors = this.fieldDescriptors, values = I.createTable();
+      for (let key in descriptors) {
+        descriptors[key].unmarshalField(values, json, key);
       }
-      return this.createValue(expression, values_);
+      return this.createValue(expression, values);
     },
     createPrototype: function() {
-      const descriptors_ = this.fieldDescriptors_;
+      const descriptors = this.fieldDescriptors;
       const prototype = Object.create(Value._.Record.getPrototype());
-      for (let key in descriptors_) {
-        descriptors_[key].buildFieldPrototype(prototype, key);
+      for (let key in descriptors) {
+        descriptors[key].buildFieldPrototype(prototype, key);
       }
       return prototype;
     },
-    //@ Enumerate field descriptors of this record type.
-    //@param visit {Std.Closure} called with field descriptor and name
-    //@return {boolean} false if a visit returned false, otherwise true
-    enumerateDescriptors: function(visit) {
-      return I.enumerate(this.fieldDescriptors_, visit);
+    //@ Get iterable descriptor keys.
+    //@return {iterable} iterable string keys
+    iterateDescriptorKeys: function() {
+      return this.fieldKeys[Symbol.iterator]();
+    },
+    //@ Obtain descriptor of a record field.
+    //@param key {string} unique field name
+    //@return {Std.Data.Descriptor?} field descriptor or nothing
+    selectDescriptor: function(key) {
+      return this.fieldDescriptors[key];
     },
     //@ Set field descriptors of this preliminary record type.
-    //@param descriptors_ {Std.Table} descriptors of this record type
+    //@param descriptors {Std.Table} descriptors of this record type
     //@return nothing
     //@exception when tis record type is not preliminary
-    setDescriptors: function(descriptors_) {
-      this.assert(!this.fieldDescriptors_);
-      this.fieldDescriptors_ = descriptors_;
+    setDescriptors: function(descriptors) {
+      this.fieldDescriptors = descriptors;
+      this.fieldKeys = Object.keys(descriptors);
     }
   });
   I.share({
     //@ Merge fields of record type addition.
     //@param cascade {[Std.Data.Type.Record]} added record types
     //@return {Std.Table} descriptors of merged record type
-    merge: function(cascade) {
-      const mergure_ = I.createTable();
+    merge: cascade => {
+      const mergure = I.createTable();
       for (let n = cascade.length; n--;) {
-        const descriptors_ = cascade[n].fieldDescriptors_;
-        for (let key in descriptors_) {
-          if (!mergure_[key]) {
-            mergure_[key] = descriptors_[key];
+        const descriptors = cascade[n].fieldDescriptors;
+        for (let key in descriptors) {
+          if (!mergure[key]) {
+            mergure[key] = descriptors[key];
           }
         }
       }
-      return mergure_;
+      return mergure;
     }
   });
 })

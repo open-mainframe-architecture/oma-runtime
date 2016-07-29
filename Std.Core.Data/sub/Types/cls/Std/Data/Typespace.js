@@ -1,37 +1,39 @@
 function refine(I) {
   "use strict";
-  const NAME = /^[A-Z][0-9A-Za-z]+(?:\.[A-Z][0-9A-Za-z]+)*$/;
+  const NamePattern = /^[A-Z][0-9A-Za-z]+(?:\.[A-Z][0-9A-Za-z]+)*$/;
   I.know({
     //@ Add type definitions from module configuration.
-    //@param definitions_ {Std.Table} map type names to type definitions
+    //@param definitions {object|Std.Table} map type names to type definitions
     //@return nothing
-    defineTypes: function(definitions_) {
-      for (let name in definitions_) {
-        this.assert(NAME.test(name));
-        const source = definitions_[name];
-        this.defineType(name, typeof source === 'string' ? source : record(source));
+    defineTypes: function(definitions) {
+      for (let name in definitions) {
+        if (!NamePattern.test(name)) {
+          I.fail(`bad type name ${name}`);
+        }
+        const source = definitions[name];
+        this.defineType(name, I.isString(source) ? source : record(source));
       }
     }
   });
   // compute source of record type from module configuration
-  function record(fields_) {
+  function record(fields) {
     const accu = [];
-    if (fields_.$macro) {
+    if (fields.$macro) {
       accu.push('(');
-      fields_.$macro.forEach((formal, i) => {
+      fields.$macro.forEach((formal, i) => {
         accu.push(i ? ',' : '', formal);
       });
       accu.push(')');
     }
-    if (fields_.$super) {
-      accu.push(fields_.$super, '+');
+    if (fields.$super) {
+      accu.push(fields.$super, '+');
     }
     accu.push('{');
     let comma = '';
-    for (let key in fields_) {
+    for (let key in fields) {
       if (key.charAt(0) !== '$') {
-        const source = fields_[key];
-        accu.push(comma, key, ':', typeof source === 'string' ? source : record(source));
+        const source = fields[key];
+        accu.push(comma, key, ':', I.isString(source) ? source : record(source));
         comma = ',';
       }
     }

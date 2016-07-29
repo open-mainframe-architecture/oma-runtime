@@ -1,6 +1,6 @@
 'super'.subclass({
   // configured type definitions are added to the default typespace of the runtime system
-  data$: 'Std.Data'
+  typespace$: 'Std.Data.Typespace'
 }, I => {
   "use strict";
   I.access({
@@ -12,7 +12,7 @@
   I.refine({
     installModule: function(module) {
       I.$former.installModule.call(this, module);
-      I.data$.defineTypes(this.datatypes);
+      I.typespace$.defineTypes(this.datatypes);
     }
   });
 })

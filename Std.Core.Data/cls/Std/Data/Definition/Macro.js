@@ -1,5 +1,5 @@
-//@ An AST for a macro definition.
-'AbstractDefinition'.subclass(I => {
+//@ A macro definition specifies formal arguments and an expression body.
+'Definition.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -20,12 +20,12 @@
       this.macroExpression = expression;
     },
     express: function(parameters) {
-      const variables_ = I.createTable(), formals = this.macroArguments, n = formals.length;
+      const variables = I.createTable(), formals = this.macroArguments, n = formals.length;
       for (let i = 0, j = 0; i < n; i += 2, ++j) {
-        variables_[formals[i]] = parameters && parameters[j] || formals[i + 1];
+        variables[formals[i]] = parameters && parameters[j] || formals[i + 1];
       }
       // express this macro as body expression with substituted variables
-      return this.macroExpression.substitute(variables_);
+      return this.macroExpression.substitute(variables);
     }
   });
 })

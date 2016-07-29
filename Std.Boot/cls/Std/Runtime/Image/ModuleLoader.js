@@ -1,197 +1,141 @@
 //@ A module loader runs all scripts of a new module.
-'BaseObject'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
-  const ClassLoader = I._.ClassLoader, Root = I._.Root, System = I._.System;
-  const Module = I._.Logic._.Module, Namespace = I._.Logic._.Namespace;
+  I.am({
+    Final: true
+  });
   I.have({
-    //@{Std.Logic.Module} module that this loader has created
+    //@{Std.Logic.Module} module of this loader
     subjectModule: null,
-    //@{Std.Table} mapping from class names to class specifications
-    moduleSpec_: null,
+    //@{object|Std.Table} mapping from class names to class specifications
+    moduleSpec: null,
     //@{boolean} true if precondition has been verified, otherwise false
     conditionVerified: false,
-    //@{[string]} module names on which subject module depends
+    //@{[string]} module names on which class scripts of subject module depend
     dependencyNames: null,
     //@{[Std.Logic.Module]} modules that must be loaded when scripts of this loader run
     moduleDependencies: null,
-    //@{[string]} names of required services
+    //@{[string]} names of required services to run class scripts
     moduleRequirements: null,
     //@{[Std.Runtime.Image.ClassLoader]} class loaders whose scripts run in the same round
     loadingClasses: null,
-    //@{[Std.Logic.Class]} new classes that have been created by this loader
-    newClasses: null,
-    //@{[Std.Closure]} setup routines
+    //@{[Std.Runtime.Image.ClassLoader]} loaders of classes that have been created
+    newLoaders: null,
+    //@{[function]} setup routines
     moduleSetup: null
   });
+  const ClassLoader = I._.ClassLoader, Root = I._.Root, Namespace = I._.Logic._.Namespace;
   I.know({
-    //@param bundle {Std.Runtime.Image.Bundle} bundle that distributes new module
-    //@param name {string?} module name or empty for anonymous module
-    //@param spec_ {Std.Table} class specifications
-    build: function(bundle, name, spec_) {
+    //@param module {Std.Logic.Module} subject module
+    //@param spec {Std.Table} class specifications
+    build: function(module, spec) {
       I.$super.build.call(this);
-      if (name) {
-        // create module with given name
-        this.subjectModule = Module.create(name, null, bundle, spec_['']);
-      } else {
-        // create anonymous module with bundle specification below boot module
-        this.subjectModule = Module.create(I.$module, bundle.getName(), bundle, spec_['']);
-      }
-      this.moduleSpec_ = spec_;
+      this.subjectModule = module;
+      this.moduleSpec = spec;
     },
     unveil: function() {
       I.$super.unveil.call(this);
-      this.newClasses = [];
+      this.newLoaders = [];
       this.moduleSetup = [];
     },
-    //@ Add new class loader in current round of this module loader.
-    //@param module {Std.Logic.Module} module of class definition/refinement
-    //@param namespace {Std.Logic.Namespace} namespace where class lives
-    //@param spec {Object} class specification
-    //@param instCls {Std.Logic.Class} class subject of new loader
-    //@return {Std.Runtime.Image.ClassLoader} new class loader
-    addClassLoader: function(module, namespace, spec, instCls) {
-      const home = instCls.getContext(), key = instCls.getKey();
-      const loader = ClassLoader.create(this, module, namespace, home, key, spec, instCls);
-      this.loadingClasses.push(loader);
-      return loader;
+    //@ Add loaders for nested classes in current round of this module loader.
+    //@param instCls {Std.Logic.Class} outer class
+    //@param nestedSpecs {object|Std.Table} nested class specifications
+    //@return nothing
+    addNestedLoaders: function(instCls, nestedSpecs) {
+      const loadingClasses = this.loadingClasses;
+      const namespace = instCls.getNamespace(), home = instCls.$.getPackage();
+      for (let key in nestedSpecs) {
+        loadingClasses.push(ClassLoader.create(this, namespace, home, key, nestedSpecs[key]));
+      }
     },
-    //@ If required, add new loader for mixed-in class in current round of this module loader.
-    //@param superCls {Std.Logic.Class} superclass of mixed-in class
-    //@param mixin {Std.Logic.Class} class mixin to add to super
-    //@return {Std.Logic.Class} existing or new mixed-in class
-    addMixin: function(superCls, mixin) {
-      const instCls = mixin.getMixedClass(superCls);
-      if (instCls) {
-        // mixed-in class already exists
-        return instCls;
-      }
-      const parentMixin = mixin.getParentBehavior();
-      superCls = this.addMixin(superCls, parentMixin);
-      if (mixin.getTraitBehavior()) {
-        return this.addMixin(superCls, mixin.getTraitBehavior());
-      }
-      const home = superCls.getContext();
-      const key = `${superCls.getMixedBase(parentMixin).getKey()}+${mixin.getName()}`;
-      const newCls = this.addSubclass(mixin.getModule(), superCls, home, key);
-      mixin.addMixedClass(newCls);
-      const namespace = mixin.getNamespace(), loadingClasses = this.loadingClasses;
-      // run defining and refining scripts of mixin against the mixed-in class
-      mixin.enumerateSpecs((spec, module) => {
-        loadingClasses.push(ClassLoader.create(this, module, namespace, home, key, spec, newCls));
-      });
+    //@ Add a new class to this module loader.
+    //@param loader {Std.Runtime.Image.ClassLoader} class loader of new class
+    //@param superCls {Std.Logic.Class} superclass of new class
+    //@param container {Std.Logic.Namespace|Std.Logic.MetaclassPackage} container of new class
+    //@param key {string} unique key of subclass
+    //@param constructor {function?} existing constructor or nothing
+    //@return {Std.Logic.Class} new class
+    addNewClass: function(loader, superCls, container, key, constructor) {
+      const newCls = superCls.subclass(container, key, this.subjectModule, constructor);
+      this.newLoaders.push(loader);
       return newCls;
     },
-    //@ Add loaders for nested classes in current round of this module loader.
-    //@param module {Std.Logic.Module} module with definition/refinment of outer class
-    //@param namespace {Std.Logic.Namespace} namespace of nested classes
-    //@param instCls {Std.Logic.Namespace} outer class
-    //@param nestedSpecs_ {Std.Table} map keys of nested classes to class specifications
-    //@return nothing
-    addNestedLoaders: function(module, namespace, instCls, nestedSpecs_) {
-      const home = instCls.$.getPackage(), loadingClasses = this.loadingClasses;
-      for (let key in nestedSpecs_) {
-        // look up existing nested class (metaclass package contains package alias, not the class)
-        const nestCls = instCls.getPackage().lookup(key), spec = nestedSpecs_[key];
-        loadingClasses.push(ClassLoader.create(this, module, namespace, home, key, spec, nestCls));
-      }
-    },
     //@ Schedule code to run when this module loader has unveiled new classes.
-    //@param closure {Std.Closure} setup routine
+    //@param closure {function} setup routine
     //@return nothing
     addSetupRoutine: function(closure) {
       this.moduleSetup.push(closure);
     },
-    //@ Add new subclass to this module loader.
-    //@param module {Std.Logic.Module} module of new class
-    //@param superCls {Std.Logic.Class} superclass of new class
-    //@param context {Std.Logic.Namespace|Std.Logic.MetaclassPackage} context of new class
-    //@param key {string} unique key of subclass
-    //@param legacyConstructor {Std.Closure?} existing constructor or nothing
-    //@return {Std.Logic.Class} new class
-    addSubclass: function(module, superCls, context, key, legacyConstructor) {
-      const newCls = superCls.subclass(context, key, module, legacyConstructor);
-      this.newClasses.push(newCls);
-      return newCls;
-    },
     //@ Create initial class loaders for first round of this module loader.
     //@return {[Std.Runtime.Image.ClassLoader]} class loaders
-    createLoaders: function() {
-      const loaders = [], module = this.subjectModule, spec_ = this.moduleSpec_;
-      // if necessary, create namespace for new class
+    createFirstLoaders: function() {
+      const loaders = [], module = this.subjectModule, spec = this.moduleSpec;
+      // if necessary, create ancestor namespace for new class
       const createAncestor = (home, key) => Namespace.create(home, key, module);
-      for (let name in spec_) {
+      for (let name in spec) {
         if (name) {
           const keys = name.split('.'), key = keys.pop();
-          const namespace = Root.makeContexts(keys, createAncestor);
-          this.assert(Namespace.describes(namespace));
-          loaders.push(ClassLoader.create(this, module, namespace, namespace, key, spec_[name]));
+          const namespace = Root.makeContainers(keys, createAncestor);
+          loaders.push(ClassLoader.create(this, namespace, namespace, key, spec[name]));
         }
       }
       return loaders;
     },
     //@ Get module dependencies or nothing if dependencies cannot yet be resolved.
-    //@return {[Std.Logic.Module]?} modules on which the module subject depends or nothing
-    //@except when specified dependency names are not module names
-    getDependencies: function() {
+    //@return {[Std.Logic.Module]?} modules on which the class scripts depend or nothing
+    getClassDependencies: function() {
       if (this.moduleDependencies) {
         return this.moduleDependencies;
       }
-      const modules = this.getDependencyNames().map(I.resolveLogical);
+      const modules = this.getClassDependencyNames().map(I.resolveLogicName);
       if (modules.every(I.isDefined)) {
-        // if all names resolves to logicals, the logicals must be modules
-        this.assert(modules.every(isModule));
-        // add implicit dependencies on ancestor modules
-        let ancestor = this.subjectModule;
-        while (isModule(ancestor = ancestor.getContext())) {
+        // add implicit dependency on first ancestor module
+        let ancestor = this.subjectModule.getContext();
+        if (ancestor.isModule()) {
           modules.push(ancestor);
         }
         this.moduleDependencies = modules;
         return modules;
       }
     },
-    //@ Get names of modules on which the class scripts of subject module depends.
+    //@ Get names of modules on which the class scripts of subject module depend.
     //@return {[string]} module names
-    getDependencyNames: function() {
+    getClassDependencyNames: function() {
       if (this.dependencyNames) {
         return this.dependencyNames;
       }
-      const accu_ = {}, spec_ = this.moduleSpec_;
-      for (let name in spec_) {
+      const names = new Set(), addName = names.add, spec = this.moduleSpec;
+      for (let name in spec) {
+        if (name && spec[name].depends) {
+          spec[name].depends.forEach(addName, names);
+        }
+      }
+      this.dependencyNames = [...names];
+      return this.dependencyNames;
+    },
+    //@ Get names of services which the class scripts of subject module require.
+    //@return {[string]} service names
+    getClassRequirements: function() {
+      if (this.moduleRequirements) {
+        return this.moduleRequirements;
+      }
+      const requirements = new Set(), spec = this.moduleSpec;
+      for (let name in spec) {
         if (name) {
-          const depends = spec_[name].depends;
-          if (depends) {
-            for (let dependency of depends) {
-              accu_[dependency] = true;
-            }
+          const requires = spec[name].requires;
+          for (let id in requires) {
+            requirements.add(requires[id]);
           }
         }
       }
-      this.dependencyNames = Object.keys(accu_);
-      return this.dependencyNames;
+      this.moduleRequirements = [...requirements];
+      return this.moduleRequirements;
     },
     //@ Get module subject.
     //@return {Std.Logic.Module} module
     getModule: function() {
       return this.subjectModule;
-    },
-    //@ Get names of services which the class scripts of subject module require.
-    //@return {[string]} service names
-    getRequirements: function() {
-      const requirements = this.moduleRequirements;
-      if (requirements) {
-        return requirements;
-      }
-      const accu_ = {}, spec_ = this.moduleSpec_;
-      for (let name in spec_) {
-        if (name) {
-          const requires_ = spec_[name].requires;
-          for (let id in requires_) {
-            accu_[requires_[id]] = true;
-          }
-        }
-      }
-      this.moduleRequirements = Object.keys(accu_);
-      return this.moduleRequirements;
     },
     //@ Test whether this loader is ready to load the subject.
     //@return {boolean} true when module is ready to be loaded, otherwise false
@@ -217,13 +161,13 @@
         this.conditionVerified = true;
       }
       // process dependencies and requirements from class scripts after precondition test
-      const dependencies = this.getDependencies();
+      const dependencies = this.getClassDependencies();
       if (!dependencies) {
         // wait for creation of more modules
         return false;
       }
-      if (!dependencies.every(isLoaded)) {
-        if (dependencies.some(isUnloadable)) {
+      if (!dependencies.every(module => module.isLoaded())) {
+        if (dependencies.some(module => module.isUnloadable())) {
           // module is unloadable when some dependency is unloadable
           subject.beLoaded(false);
           return true;
@@ -233,67 +177,64 @@
           return false;
         }
       }
-      const runtime = this.$rt;
       // ready when all requirements are satisfied, otherwise wait for future satisfaction
-      return this.getRequirements().every(service => runtime.provides(service));
+      return this.getClassRequirements().every(service => this.$rt.provides(service));
     },
     //@ Run class scripts in one or more rounds to load class definitions/refinements.
     //@return nothing
-    //@except when this loader is already loading classes
-    //@except when the class of a class loader cannot be created
     loadClasses: function() {
-      this.assert(!this.loadingClasses);
       // start with class loaders for the first round
-      this.loadingClasses = this.createLoaders();
+      this.loadingClasses = this.createFirstLoaders();
+      // hoist closures out of loop
+      const cannotCreate = loader => loader.hasClass() || !loader.hasFinishedCreation();
+      const hasClass = loader => loader.hasClass();
+      const compareDepth = (left, right) => left.getClassDepth() - right.getClassDepth();
+      const loadClass = loader => loader.loadClass();
       while (this.loadingClasses.length) {
         const round = this.loadingClasses;
         // create classes for loaders of this round until creation is no longer possible
         while (!round.every(cannotCreate)) { }
-        // fail if a loader cannot create its class
-        this.assert(round.every(hasClass));
-        // prepare class script execution (new class loaders will run in this round)
-        for (let loader of round.sort(compareDepth)) {
-          loader.prepareLoad();
-        }
+        // fail if one of the loaders could not create its class
+        I.failUnless('unloadable module', round.every(hasClass));
         // advance to next round by resetting class loaders of current round
         this.loadingClasses = [];
-        // execute scripts to define/refine classes (new class loaders will run in next round)
-        for (let loader of round) {
-          loader.loadClass();
-        }
+        // execute scripts to define/refine classes (loaders of nested classes run in next round)
+        round.sort(compareDepth).forEach(loadClass);
       }
       // unveil new classes (parent behavior must be unveiled before children are unveiled)
-      for (let instCls of this.newClasses.sort(compareDepth)) {
+      this.newLoaders.sort(compareDepth).forEach(loader => {
+        const instCls = loader.getClass();
         instCls.unveil();
         instCls.$.unveil();
-      }
+      });
       // run setup routines of class scripts
-      for (let closure of this.moduleSetup) {
-        closure();
-      }
-      this.loadingClasses = this.newClasses = this.moduleSetup = null;
+      this.moduleSetup.forEach(closure => closure());
+      this.loadingClasses = this.newLoaders = this.moduleSetup = null;
     },
     //@ Load module when this loader is ready.
     //@return nothing
-    //@except when module subject is not loading classes anymore
     loadModule: function() {
       const subject = this.subjectModule;
       if (subject.isLoading()) {
         this.loadClasses();
         // register configured service providers after all classes have been loaded
         const config = subject.getConfig(), providers = config.provides;
-        if (I.hasEnumerables(providers)) {
-          const runtime = this.$rt, resolveService = System._.resolveService;
-          const satisfactions = runtime.satisfy(config.requires);
-          for (let serviceName in providers) {
-            const serviceClass = resolveService(serviceName);
-            this.assert(serviceClass);
-            const factory = providers[serviceName];
-            const provider = factory(serviceClass, satisfactions);
-            // skip registration if factory returns nothing
-            if (provider) {
-              runtime.register(provider);
-            }
+        const satisfactions = this.$rt.satisfy(config.requires);
+        for (let serviceProvider in providers) {
+          const factory = providers[serviceProvider], namePair = serviceProvider.split(' with ');
+          const serviceName = namePair[0], providerName = namePair[1] || serviceName;
+          const providerClass = this.$rt.resolveService(providerName);
+          if (!providerClass) {
+            I.fail(`bad provider ${providerName}`);
+          }
+          const serviceClass = this.$rt.resolveService(serviceName);
+          if (!serviceClass) {
+            I.fail(`bad service ${serviceName}`);
+        }
+          const provider = factory(providerClass, satisfactions);
+          // skip registration if factory returns nothing
+          if (provider) {
+            this.$rt.register(serviceClass, provider);
           }
         }
         // last step installs subject module
@@ -304,48 +245,40 @@
     //@ Test configured precondition before class scripts are processed.
     //@return {boolean?} true if module passed test, false if it failed, nothing if indecisive
     testCondition: function() {
-      const subject = this.subjectModule;
-      for (let ancestor = subject; isModule(ancestor = ancestor.getContext());) {
+      const subject = this.subjectModule, ancestor = subject.getContext();
+      if (ancestor.isModule()) {
         if (ancestor.isUnloadable()) {
-          // module is unloadable if some ancestor is unloadable
+          // module is unloadable if ancestor is unloadable
           return false;
         }
         if (ancestor.isLoading()) {
           // wait for ancestor to load
           return null;
         }
+        // else ancestor has been loaded
       }
-      const config = subject.getConfig(), modules = config.depends.map(I.resolveLogical);
+      const config = subject.getConfig(), modules = config.depends.map(I.resolveLogicName);
       if (!modules.every(I.isDefined)) {
         // wait for modules to be created
         return null;
       }
-      this.assert(modules.every(isModule));
-      if (modules.some(isUnloadable)) {
+      if (modules.some(module => module.isUnloadable())) {
         // module is unloadable if some explicit dependency is unloadable
         return false;
       }
-      if (modules.some(isLoading)) {
+      if (modules.some(module => module.isLoading())) {
         // wait for dependency to load
         return null;
       }
       // are required services provided?
-      const runtime = this.$rt, requires_ = config.requires;
-      if (Object.keys(requires_).every(id => runtime.provides(requires_[id]))) {
+      const requires = config.requires;
+      if (Object.keys(requires).every(id => this.$rt.provides(requires[id]))) {
         const precondition = config.test;
         // module is unloadable if precondition test fails, otherwise configuration passed test
-        return precondition(runtime.satisfy(requires_)) !== false;
+        return precondition(this.$rt.satisfy(requires)) !== false;
       }
       // wait for required services to be provided
       return null;
     }
   });
-  // hoist closures
-  function isModule(it) { return Module.describes(it); }
-  function isUnloadable(module) { return module.isUnloadable(); }
-  function isLoaded(module) { return module.isLoaded(); }
-  function isLoading(module) { return module.isLoading(); }
-  function cannotCreate(loader) { return loader.hasClass() || !loader.finishCreation(); }
-  function hasClass(loader) { return loader.hasClass(); }
-  function compareDepth(l, r) { return l.getInheritanceDepth() - r.getInheritanceDepth(); }
 })

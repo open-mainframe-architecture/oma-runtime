@@ -1,13 +1,13 @@
 //@ Difference between two data values in a compact format.
-'BaseObject'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
   I.have({
-    //@{any} undefined, an array, a table or a value
+    //@{*} undefined, an array, a table or a value
     compactSubstitution: null
   });
   I.know({
-    //@param substitution {any|Std.Table} updated value or table with updated child values
-    //@param arrayIndices {boolean?} true for array indices of updated children, otherwise false
+    //@param substitution {*|Std.Table} updated value or table with updated child values
+    //@param arrayIndices {boolean?} true for array indices of updated children
     build: function(substitution, arrayIndices) {
       I.$super.build.call(this);
       if (I.isTable(substitution)) {
@@ -30,13 +30,13 @@
       this.compactSubstitution = substitution;
     },
     //@ Get compact format of this difference.
-    //@return {any} undefined, array or value
+    //@return {*} undefined, array, table or value
     compact: function() {
       return this.compactSubstitution;
     },
     //@ Apply this difference on an original value.
-    //@param value {any} original value
-    //@return {any} different value
+    //@param value {*} original value
+    //@return {*} different value
     exert: function(value) {
       return this.isZero() ? value : I.substitute(this.compactSubstitution, value);
     },
@@ -59,38 +59,35 @@
   });
   I.share({
     //@ Substitute values in original value.
-    //@param compactSubstitition {any} compact difference
-    //@param value {any} original value
-    //@return {any?} updated value or nothing
-    substitute: function(compactSubstitution, value, i) {
+    //@param compactSubstitition {*} compact difference
+    //@param value {*} original value
+    //@param i {integer?} array index of recursive call if compact difference is an array
+    //@return {*} updated value or nothing
+    substitute: (compactSubstitution, value, i) => {
       if (I.Data.isValue(compactSubstitution)) {
         return compactSubstitution;
       }
       if (Array.isArray(compactSubstitution)) {
-        const values_ = I.createTable();
+        const values = I.createTable();
         const index = compactSubstitution[i = i || 0];
-        values_[index] = i < compactSubstitution.length - 2 ?
-          I.substitute(compactSubstitution, value.$get(index), i + 1) :
+        values[index] = i < compactSubstitution.length - 2 ?
+          I.substitute(compactSubstitution, value.$select(index), i + 1) :
           compactSubstitution[i + 1];
-        return value.$update(values_);
+        return value.$update(values);
       }
       if (I.isTable(compactSubstitution)) {
-        const values_ = I.createTable();
+        const values = I.createTable();
         for (let index in compactSubstitution) {
-          values_[index] = I.substitute(compactSubstitution[index], value.$get(index));
+          values[index] = I.substitute(compactSubstitution[index], value.$select(index));
         }
-        return value.$update(values_);
+        return value.$update(values);
       }
     }
   });
   I.setup({
     //@{Std.Data.Difference} bottom difference for value absence
-    Bottom: function() {
-      return I.$.create();
-    },
+    Bottom: () => I.$.create(),
     //@{Std.Data.Difference} zero difference for equal values
-    Zero: function() {
-      return I.$.create(Object.freeze([]));
-    }
+    Zero: () => I.$.create([])
   });
 })

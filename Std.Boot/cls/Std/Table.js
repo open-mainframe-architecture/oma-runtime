@@ -1,5 +1,5 @@
-//@ A table is a methodless container. Table names have trailing underscores, e.g. storage_ or _.
-'Any'.subclass((I, We) => {
+//@ A table is a methodless container.
+'Void'.subclass((I, We) => {
   "use strict";
   I.am({
     Abstract: false,

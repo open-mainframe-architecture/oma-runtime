@@ -1,44 +1,43 @@
 //@ An HTTP message is a request or a response.
-'BaseObject'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
   I.am({
-    Abstract: false
+    Abstract: true
   });
   I.have({
     //@{Std.Table} table with header names (lower-case) and values
-    messageHeaders_: null,
+    messageHeaders: null,
     //@{string|binary} message body with textual or binary data
     messageBody: null
   });
   I.know({
-    //@param headers_ {Object|Std.Table} headers with raw names
+    //@param headers {object|Std.Table} headers with raw names
     //@param body {string|binary} textual or binary body
-    build: function(headers_, body) {
+    build: function(headers, body) {
       I.$super.build.call(this);
       const table = I.createTable();
-      for (let headerName in headers_) {
+      for (let headerName in headers) {
         // header names are case-insensitive
-        table[headerName.toLowerCase()] = headers_[headerName];
+        table[headerName.toLowerCase()] = headers[headerName];
       }
-      this.messageHeaders_ = table;
+      this.messageHeaders = table;
       this.messageBody = body;
-    },
-    //@ Enumerate message headers.
-    //@param visit {Std.Closure} called with header value and name
-    //@return {boolean} false if a visit returned false, otherwise true
-    enumerateHeaders: function(visit) {
-      return I.enumerate(this.messageHeaders_, visit);
     },
     //@ Get textual or binary body.
     //@return {string|binary} message body
     getBody: function() {
       return this.messageBody;
     },
+    //@ Get iterable header names.
+    //@return {iterable} iterable header names
+    iterateHeaderNames: function() {
+      return Object.keys(this.messageHeaders)[Symbol.iterator]();
+    },
     //@ Get header value.
     //@param name {string} case-insensitive header name
     //@return {string?} header value or nothing
-    getHeader: function(name) {
-      return this.messageHeaders_[name.toLowerCase()];
+    selectHeader: function(name) {
+      return this.messageHeaders[name.toLowerCase()];
     }
   });
 })

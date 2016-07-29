@@ -1,20 +1,28 @@
-// A class package holds substances of package fields.
-'Dictionary+Logical'.subclass(I => {
+//@ A class package holds package field constants.
+'Logic.Object'.subclass(I => {
   "use strict";
   I.am({
-    Abstract: false
+    Abstract: false,
+    Final: true
+  });
+  I.have({
+    //@{Std.Table} table with package field constants
+    _: null
   });
   I.know({
-    //@param basePackage {Std.Logic.Dictionary} base dictionary
-    //@param homeContext {Std.Logic.Class} class is context of package
-    //@param module {Std.Logic.Module} defining module
-    build: function(basePackage, homeContext, module) {
-      I.$super.build.call(this, basePackage);
-      this.buildLogical(homeContext, basePackage.getKey(), module);
+    //@ This must match construction arguments of MetaclassPackage.
+    //@param instCls {Std.Logic.Class} class that owns this package
+    //@param key {string} unique key of this package
+    build: function(instCls, key) {
+      I.$super.build.call(this, instCls, key);
+      this._ = I.createTable(instCls.getParentBehavior()._);
     },
-    resolutionContext: function() {
-      // a class package can be used to resolve package fields from the metaclass package 
-      return this.getContext().$.getPackage();
+    //@ Update package with new package field constant.
+    //@param key {string} package field key
+    //@param constant {*} field constant
+    //@return nothing
+    update: function(key, constant) {
+      I.lockProperty(this._, key, constant);
     }
   });
 })

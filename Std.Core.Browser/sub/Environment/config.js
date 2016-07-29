@@ -5,6 +5,7 @@ function configure(module) {
     loose: 'Std.Management.Loose'
   };
   module.provides = {
-    'Std.Runtime.Environment.WebBrowser': (roleClass, required) => roleClass.spawn(required.loose)
+    'Std.Runtime.Environment with Std.Runtime.Environment.WebBrowser': (Provider, required) =>
+      Provider.spawn(required.loose)
   };
 }

@@ -1,5 +1,5 @@
 //@ An HTTP request from a client.
-'AbstractMessage'.subclass(I => {
+'Message'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
@@ -7,28 +7,28 @@
   I.have({
     //@{string} HTTP method of this request
     requestMethod: null,
-    //@{Std.HTTP.URL} URL of this request
-    requestURL: null
+    //@{Std.HTTP.URI} request URI
+    requestURI: null
   });
   I.know({
     //@param method {string} HTTP method from constants
-    //@param url {Std.HTTP.URL} URL of this request
-    //@param headers_ {Object|Std.Table} message header names and values
+    //@param uri {Std.HTTP.URI} request URI
+    //@param headers {object|Std.Table} message header names and values
     //@param body {string|binary} message body
-    build: function(method, url, headers_, body) {
-      I.$super.build.call(this, headers_, body);
+    build: function(method, uri, headers, body) {
+      I.$super.build.call(this, headers, body);
       this.requestMethod = method;
-      this.requestURL = url;
+      this.requestURI = uri;
     },
     //@ Get HTTP method.
     //@return {string} method name, e.g. GET or POST
     getMethod: function() {
       return this.requestMethod;
     },
-    //@ Get URL.
-    //@return {Std.HTTP.URL} request URL
-    getURL: function() {
-      return this.requestURL;
+    //@ Get request URI.
+    //@return {Std.HTTP.URI} request URI
+    getURI: function() {
+      return this.requestURI;
     }
   });
 })

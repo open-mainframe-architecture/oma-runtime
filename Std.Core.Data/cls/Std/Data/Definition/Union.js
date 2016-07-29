@@ -1,4 +1,4 @@
-//@ An AST that evaluates a union type.
+//@ A union type expression.
 'Expression'.subclass(I => {
   "use strict";
   const Type = I._.Type;
@@ -22,10 +22,10 @@
     pushEvaluation: function(evaluation) {
       evaluation.pushExpressions(this.alternativeExpressions);
     },
-    substitute: function(variables_) {
+    substitute: function(variables) {
       const alternatives = this.alternativeExpressions;
-      const subs = I.substituteExpressions(alternatives, variables_);
-      return subs === alternatives ? this : I.AST.createUnion(subs);
+      const subs = I.substituteExpressions(alternatives, variables);
+      return subs === alternatives ? this : I.Data.TypeDefinitionLanguage.createUnion(subs);
     }
   });
 })

@@ -1,14 +1,16 @@
 //@ A none type describes null values.
-'AbstractType'.subclass(I => {
+'Type.Object'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.know({
-    describesValue: function(value) {
+    asMandatory: I.shouldNotOccur,
+    isNone: I.returnTrue,
+    marshalValue: I.returnArgument,
+    testMembership: function(value) {
       return value === null;
     },
-    marshalValue: I.returnArgument,
     unmarshalJSON: I.returnArgument
   });
 })
