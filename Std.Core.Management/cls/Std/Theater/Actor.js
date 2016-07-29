@@ -1,19 +1,16 @@
 function refine(I) {
   "use strict";
-  const Manager = I._.Manager;
   I.refine({
-    isManaging: function() {
-      return this.getRoleClass().isMixedBy(Manager);
-    },
     managePostMortem: function(job) {
       // manage performance for this dead actor
-      return this.actorManager.managePostMortem(job);
+      return this.$supervisor.$agent.managePostMortem(job);
     },
     manageStageException: function(job, exception) {
+      const manager = this.$supervisor.$agent;
       // manage poison pill as suicide attempt on stage
-      return exception === I.PoisonPill ? this.actorManager.manageSuicide(job) :
+      return exception === I.PoisonPill ? manager.manageSuicide(job) :
         // delegate exception handling to manager
-        this.actorManager.manageException(job, exception);
+        manager.manageException(job, I.throw(exception));
     }
   });
   I.share({

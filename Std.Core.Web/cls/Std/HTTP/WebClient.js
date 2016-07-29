@@ -2,15 +2,22 @@
 'Client'.subclass(['Std.Core.HTTP'], I => {
   "use strict";
   /*global XMLHttpRequest*/
-  const Response = I._.Response;
   I.am({
     Abstract: false
   });
+  I.know({
+    createArrival: function(request, expectBinary) {
+      return I.Arrival.create(request, expectBinary);
+    },
+    createReceipt: function(arrival) {
+      return I.Receipt.create(arrival);
+    }
+  });
   I.nest({
     //@ Arrival event in web browser or worker environments.
-    Arrival: 'Client._.Arrival'.subclass(I => {
+    Arrival: 'Client.$._.Arrival'.subclass(I => {
       I.have({
-        //@{Any} XMLHttpRequest object
+        //@{object} XMLHttpRequest object
         xhr: null
       });
       I.know({
@@ -18,51 +25,52 @@
           I.$super.charge.call(this, parent, blooper);
           const request = this.request, xhr = this.xhr = new XMLHttpRequest();
           // open web request before anything else is possible
-          const method = request.getMethod(), url = request.getURL().withoutFragment();
-          const user = url.getUser(), password = url.getPassword();
-          xhr.open(method, url.withoutCredentials().encode(), true, user, password);
+          const method = request.getMethod(), uri = request.getURI().withoutFragment();
+          const user = uri.getUser(), password = uri.getPassword();
+          xhr.open(method, uri.withoutCredentials().encode(), true, user, password);
           // binary or textual response data
           xhr.responseType = this.expectBinary ? 'arraybuffer' : 'text';
           // copy headers
-          request.enumerateHeaders((value, name) => { xhr.setRequestHeader(name, value); });
+          for (let name of request.iterateHeaderNames()) {
+            xhr.setRequestHeader(name, request.selectHeader(name));
+          }
           // fire this event when response has been loaded
           xhr.addEventListener('load', this.fire.bind(this));
           // fail with blooper if error occurs after charging
-          xhr.addEventListener('error', this.fail.bind(this, blooper));
+          xhr.addEventListener('error', this.error.bind(this, blooper));
           // transmit request with optional body
-          xhr.send(I.opaqueBytes(request.getBody()));
+          xhr.send(request.getBody());
         },
         discharge: function() {
           I.$super.discharge.call(this);
           this.xhr.abort();
         },
-        //@return true
         isFallible: I.returnTrue,
-        //@ Fail with blooper event.
-        //@param blooper {Std.Theater.Blooper} blooper event
+        //@ Blooper mistake.
+        //@param blooper {Std.Theater.Blooper} blooper cue
         //@return nothing
-        fail: function(blooper) {
+        error: function(blooper) {
           // status text might shed some light on the problem
-          blooper.fail(this.xhr, this.xhr.statusText);
+          blooper.mistake(this.xhr.statusText);
         }
       });
     }),
     //@ Receipt event in web browser or worker environments.
-    Receipt: 'Client._.Receipt'.subclass(I => {
+    Receipt: 'Client.$._.Receipt'.subclass(I => {
+      const Response = I._.Response;
       I.know({
-        //@return this
         charge: function(parent) {
           I.$super.charge.call(this, parent);
-          const xhr = this.arrival.xhr, code = xhr.status, status = xhr.statusText;
-          const headers = {};
+          const xhr = this.arrival.xhr, headers = {};
           for (let header of xhr.getAllResponseHeaders().split('\r\n')) {
             const colonIndex = header.indexOf(':');
             if (colonIndex > 0) {
               // if duplicate headers are present, only one header value survives in the table
-              headers[header.substring(0, colonIndex)] = header.substring(colonIndex + 1);
+              const name = header.substring(0, colonIndex).trim();
+              headers[name] = header.substring(colonIndex + 1).trim();
             }
           }
-          this.response = Response.create(code, status, headers, xhr.response);
+          this.response = Response.create(xhr.statusText, xhr.status, headers, xhr.response);
           // fire this event immediately, because there is only one response chunk
           return this;
         }

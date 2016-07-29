@@ -2,16 +2,18 @@
 function refine(I) {
   "use strict";
   /*global MessageChannel*/
-  const SIGNALS = new MessageChannel(), TASKS = [];
-  // execute macro tasks when they become available
-  SIGNALS.port1.addEventListener('message', () => { TASKS.shift()(); });
-  SIGNALS.port1.start();
+  // 'extra instance state' of runtime system singleton is confined to this script
+  const signals = new MessageChannel(), tasks = [];
   I.refine({
     //@ Replace setTimeout implementation with MessageChannel.
     asap: function(closure) {
-      // post message to signal availability of macro task
-      SIGNALS.port2.postMessage(null);
-      TASKS.push(closure);
+      signals.port2.postMessage(null);
+      tasks.push(closure);
     }
+  });
+  I.setup(() => {
+    // execute macro tasks when they become available
+    signals.port1.addEventListener('message', () => { tasks.shift()(); });
+    signals.port1.start();
   });
 }

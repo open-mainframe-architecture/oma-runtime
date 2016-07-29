@@ -1,22 +1,22 @@
 //@ A synthesizer computes and consumes items with closures.
-'BaseObject+Stream'.subclass(I => {
+'Stream'.subclass(I => {
   "use strict";
   I.am({
     Abstract: false
   });
   I.have({
-    //@{Std.Closure} produce next item of input stream
+    //@{function} produce next item of input stream
     inputComputation: null,
-    //@{Std.Closure} consume next item of output stream
+    //@{function} consume next item of output stream
     outputComputation: null
   });
   I.know({
-    //@param input {Std.Closure} produce input
-    //@param output {Std.Closure} consume output
+    //@param input {*|function} produce input
+    //@param output {function?} consume output
     build: function(input, output) {
       I.$super.build.call(this);
-      this.inputComputation = input;
-      this.outputComputation = output;
+      this.inputComputation = I.isClosure(input) ? input : I.returnWith(input);
+      this.outputComputation = output || I.doNothing;
     }
   });
   I.play({

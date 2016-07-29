@@ -1,22 +1,21 @@
 //@ A rendez-vous stream synchronizes the reader and writer.
-'BaseObject+Stream'.subclass(I => {
+'Stream'.subclass(I => {
   "use strict";
-  const Semaphore = I._.Wait._.Semaphore;
   I.am({
     Abstract: false
   });
   I.have({
-    //@{any} last item written
+    //@{*} last item written
     writtenItem: null,
     //@{Std.Wait.Semaphore} binary semaphore for reader
     readProtection: null,
     //@{Std.Wait.Semaphore} binary semaphore for writer
     writeProtection: null
   });
+  const Semaphore = I._.Wait._.Semaphore;
   I.know({
     unveil: function() {
       I.$super.unveil.call(this);
-      // binary semaphores to synchronize one reader and one writer
       this.readProtection = Semaphore.create(0);
       this.writeProtection = Semaphore.create(0);
     }

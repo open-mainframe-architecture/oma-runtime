@@ -7,7 +7,8 @@ function configure(module) {
   };
   module.test = () => typeof process !== 'undefined';
   module.provides = {
-    'Std.HTTP.NodeClient': (roleClass, required) => roleClass.spawn(required.loose),
-    'Std.Runtime.NodeConstants': serviceClass => serviceClass.create()
+    'Std.HTTP.Client with Std.HTTP.NodeClient': (Provider, required) =>
+      Provider.spawn(required.loose),
+    'Std.Runtime.Constants with Std.Runtime.NodeConstants': Provider => Provider.create()
   };
 }

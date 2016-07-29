@@ -5,6 +5,6 @@ function configure(module) {
   module.depends = ['Std.Core.Web'];
   module.test = () => typeof WorkerGlobalScope !== 'undefined';
   module.provides = {
-    'Std.Runtime.WorkerConstants': serviceClass => serviceClass.create()
+    'Std.Runtime.Constants with Std.Runtime.WorkerConstants': Provider => Provider.create()
   };
 }

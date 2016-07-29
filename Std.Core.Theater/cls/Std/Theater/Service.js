@@ -1,24 +1,30 @@
 //@ A theater schedules actors on stage.
-'BaseObject+Eventful'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
-  const Ring = I._.Ring;
   I.am({
-    Abstract: false,
-    Service: true
+    Final: true
   });
   I.have({
-    //@{Std.Ring} ring with actors that have nothing to do, not even in their agendas
+    //@{Std.Status} status for actors that have nothing to do, not even in their agendas
     idleActors: null,
-    //@{Std.Ring} ring with actors that are ready to work on assigned jobs
+    //@{Std.Status} status for actors that are ready to work on assigned jobs
     workingActors: null,
-    //@{Std.Ring} ring with active actor on theater stage
+    //@{Std.Status} status for active actor on theater stage
     activeActor: null,
-    //@{Std.Ring} ring with unemployed actors, waiting for events in their agendas to fire
+    //@{Std.Status} status for unemployed actors, waiting for events in their agendas to fire
     waitingActors: null,
-    //@{Std.Ring} ring with actors in trouble whose managers decide what to do next
+    //@{Std.Status} status for actors in trouble whose managers decide what to do next
     troubledActors: null,
-    //@{Std.Theater.Service._.Clock} clock keeps track of time
-    theaterClock: null,
+    //@{Std.Wait.Clock} clock keeps track of timed events
+    alarmClock: null,
+    //@{*} false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
+    alarmSleeping: true,
+    //@{function} the alarm bell is executed when a clock event fires while theater is sleeping
+    alarmBell: null,
+    //@{number} deadline for next JavaScript alarm
+    alarmDeadline: null,
+    //@{Std.Event.$._.Strategy} strategy for stage break events
+    breakStrategy: null,
     //@{boolean} if curtain is open, actors can play on stage, otherwise theater is closed
     curtainOpen: false,
     //@{number} curtain remains open for 8ms in a time slice unless there's nothing to do
@@ -37,23 +43,78 @@
   I.know({
     unveil: function() {
       I.$super.unveil.call(this);
-      this.idleActors = Ring.create();
-      this.workingActors = Ring.create();
-      this.activeActor = Ring.create();
-      this.waitingActors = Ring.create();
-      this.troubledActors = Ring.create();
-      this.theaterClock = I.Clock.create(this.wakeUp.bind(this));
+      this.idleActors = I._.Status.create('idle');
+      this.workingActors = I._.Status.create('working');
+      this.activeActor = I._.Status.create('active');
+      this.waitingActors = I._.Status.create('waiting');
+      this.troubledActors = I._.Status.create('troubled');
+      this.alarmClock = I._.Wait._.Clock.create();
+      this.alarmBell = this.wakeUp.bind(this);
+      this.breakStrategy = I.When.CollectStrategy.create();
+    },
+    //@ Sleep until next wake-up call.
+    //@return {number} current uptime
+    awakeLater: function() {
+      const deep = this.workingActors.size === 0, now = this.$rt.uptime();
+      if (deep) {
+        const deadline = this.alarmClock.firstDeadline();
+        if (deadline) {
+          // compute seconds left until first deadline should fire
+          const seconds = deadline - now;
+          if (seconds <= 0) {
+            // wake up to fire first deadline that already passed
+            this.awakeSoon();
+          } else if (deadline !== this.alarmDeadline) {
+            // wake up from deep sleep on time for new deadline
+            this.resetAlarm(setTimeout(this.alarmBell, seconds * 1000));
+            this.alarmDeadline = deadline;
+          }
+          // else keep alarm of first deadline intact
+        } else {
+          // deep sleep without alarm if there is no deadline
+          this.resetAlarm(true);
+        }
+      } else {
+        // wake up from light sleep and continue to work with actors
+        this.awakeSoon();
+      }
+      return now;
+    },
+    //@ Advance clock whilst awake.
+    //@return {number} current uptime
+    awakeNow: function() {
+      this.resetAlarm(false);
+      // fire events whose deadline passed
+      return this.alarmClock.fireNow();
+    },
+    //@ Schedule next wake-up call as soon as possible.
+    //@return nothing
+    awakeSoon: function() {
+      if (this.alarmSleeping !== null) {
+        clearTimeout(this.alarmSleeping);
+        this.alarmSleeping = this.alarmDeadline = null;
+        // continue after control has returned to global event loop
+        this.$rt.asap(this.alarmBell);
+      }
+      // otherwise wake-up call is already scheduled
+    },
+    //@ Create member status link for a new actor.
+    //@param actor {Std.Theater.Actor} new actor
+    //@return {Std.Status.$._.Link} member status link
+    createLink: function(actor) {
+      return this.idleActors.createLink(actor);
     },
     //@ Get clock that ticks for this theater.
     //@return {Std.Wait.Clock} a clock for delays and pauses
     getClock: function() {
-      return this.theaterClock;
+      return this.alarmClock;
     },
     //@ Interrupt stage break for one scene.
     //@param job {Std.Theater.Job} interrupting job
     //@return nothing
     interrupt: function(job) {
-      this.assert(!this.curtainOpen, job.isInert());
+      I.failUnless('interrupt with curtain open', !this.curtainOpen);
+      I.failUnless('expected inertia before interrupt', job.isInert());
       const actor = job.getActor();
       if (actor.isInTrouble()) {
         // run job but do not open curtain to handle interrupt on stage with suspended actor
@@ -62,23 +123,26 @@
         // open curtain for one scene to handle interrupt on stage
         this.curtainOpen = true;
         ++this.interruptCount;
-        const beginning = this.theaterClock.get();
+        const beginning = this.$rt.uptime();
         // actor plays first scene of interrupting job, without waking up from clock
         this.activeActor.add(actor);
         actor.takeStage(job.interrupting());
         this.activeActor.clear();
         // schedule next wake-up call after interrupt has been handled
-        this.interruptTime += this.theaterClock.sleep(this.workingActors.isEmpty()) - beginning;
+        this.interruptTime += this.sleepWithAlarm() - beginning;
         this.curtainOpen = false;
       }
     },
-    //@ Add actor to the appropriate ring in this theater, or remove it from this ring.
+    //@ Put actor in appropriate status.
     //@param actor {Std.Theater.Actor} theater actor whose status may have changed
     //@return nothing
-    reschedActor: function(actor) {
+    rescheduleActor: function(actor) {
       if (actor.isDead()) {
         // remove reference to dead actor, if any
-        actor.unlinkFromRing();
+        const link = actor[I._.Status._.Symbol]();
+        if (link.next) {
+          link.status.delete(actor);
+        }
       } else if (actor.isInTrouble()) {
         // manage problem of troubled actor
         this.troubledActors.add(actor);
@@ -87,7 +151,7 @@
         this.workingActors.add(actor);
         // should theater wake up and open curtain as soon as possible?
         if (!this.curtainOpen) {
-          this.theaterClock.awakeSoon();
+          this.awakeSoon();
         }
       } else if (actor.hasAgenda()) {
         // actor waits for some event in agenda to fire
@@ -97,27 +161,36 @@
         this.idleActors.add(actor);
       }
     },
+    //@ Clear pending alarm/deadline and continue with new sleeping state.
+    //@param sleeping {*} null, boolean or JavaScript alarm
+    //@return nothing
+    resetAlarm: function(sleeping) {
+      if (this.alarmSleeping) {
+        clearTimeout(this.alarmSleeping);
+        this.alarmDeadline = null;
+      }
+      this.alarmSleeping = sleeping;
+    },
     //@ Create event that fires when this theater ends next or current time slice.
-    //@return {Std.FullEvent} event fires when curtains close
+    //@return {Std.Event} event fires when curtains close
     stageBreak: function() {
-      return this.createEvent();
+      return this.breakStrategy.createEvent();
     },
     //@ Wake up to open curtain and to let actors work on theater stage until time's up.
     //@return nothing
     //@except when curtain is already open
     wakeUp: function() {
-      this.assert(!this.curtainOpen);
+      I.failUnless('wake up with curtain open', !this.curtainOpen);
       this.curtainOpen = true;
       ++this.sliceCount;
-      const clock = this.theaterClock, beginning = clock.awake();
       // if necessary, leave curtain open until deadline of time slice passes
-      const deadline = beginning + this.curtainSlice;
+      const beginning = this.awakeNow(), deadline = beginning + this.curtainSlice;
       const working = this.workingActors, active = this.activeActor;
       // while there are actors ready for work and the deadline of time slice hasn't passed yet
-      for (let now = beginning; !working.isEmpty() && now <= deadline; now = clock.awake()) {
+      for (let now = beginning; working.size > 0 && now <= deadline; now = this.awakeNow()) {
         ++this.slicePerformances;
         // first working actor becomes active actor on stage
-        const actor = working.firstIndex();
+        const actor = working.values().next().value;
         active.add(actor);
         // actor performs some work on stage
         actor.takeStage();
@@ -125,100 +198,11 @@
         active.clear();
       }
       // fire events when this theater takes a break
-      this.fireAll();
+      this.breakStrategy.fireAll();
       // start deep sleep when out of work, otherwise wake up for next slice as soon as possible
-      this.sliceTime += clock.sleep(working.isEmpty()) - beginning;
+      this.sliceTime += this.awakeLater() - beginning;
       this.curtainOpen = false;
-    },
-    //@ Walk over all actors that live in this theater.
-    //@return {Std.Iterator} iterator over actors
-    walkActors: function() {
-      return I.Loop.concat(
-        this.activeActor.walk(),
-        this.workingActors.walk(),
-        this.waitingActors.walk(),
-        this.idleActors.walk()
-      );
     }
-  });
-  I.nest({
-    //@ A theater clock wakes up on time for charged events.
-    Clock: 'Wait.Clock'.subclass(I => {
-      I.am({
-        Abstract: false
-      });
-      I.have({
-        //@{Std.Closure} wake-up call
-        wakeUp: null,
-        //@{any} false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
-        sleeping: true,
-        //@{number} deadline for next JavaScript alarm
-        deadline: null
-      });
-      I.know({
-        //@param wakeUp {Std.Closure} code to wake up
-        build: function(wakeUp) {
-          I.$super.build.call(this);
-          this.wakeUp = wakeUp;
-        },
-        //@ Adjust clock whilst awake.
-        //@return {number} current clock time
-        awake: function() {
-          this.resetAlarm(false);
-          const uptime = this.get();
-          // fire delay events whose deadline passed
-          let delay;
-          while ((delay = this.getFirstCharge()) && delay.deadline <= uptime) {
-            delay.fire();
-          }
-          return uptime;
-        },
-        //@ Schedule next wake-up call as soon as possible.
-        //@return nothing
-        awakeSoon: function() {
-          if (this.sleeping !== null) {
-            clearTimeout(this.sleeping);
-            this.sleeping = this.deadline = null;
-            // continue after control has returned to global event loop
-            this.$rt.asap(this.wakeUp);
-          }
-          // otherwise wake-up call is already scheduled
-        },
-        //@ Clear pending alarm/deadline and continue with new sleeping status.
-        //@param sleeping {any} null, boolean or JavaScript alarm
-        //@return nothing
-        resetAlarm: function(sleeping) {
-          if (this.sleeping) {
-            clearTimeout(this.sleeping);
-            this.deadline = null;
-          }
-          this.sleeping = sleeping;
-        },
-        //@ Schedule wake-up call for deep sleep, otherwise wake up as soon as possible.
-        //@param deep {boolean} true for deep sleep, otherwise wake up asap
-        //@return {number} current clock time
-        sleep: function(deep) {
-          const uptime = this.get();
-          // check first delay if going to deep sleep
-          const delay = deep && this.getFirstCharge();
-          // if delayed, compute seconds left until first delay should fire
-          const seconds = delay ? delay.deadline - uptime : Infinity;
-          if (!deep || seconds <= 0) {
-            // awake from light sleep or awake to fire first delay
-            this.awakeSoon();
-          } else if (!delay) {
-            // deep sleep without alarm
-            this.resetAlarm(true);
-          } else if (delay.deadline !== this.deadline) {
-            // wake up from deep sleep on time for new deadline
-            this.resetAlarm(setTimeout(this.wakeUp, seconds * 1000));
-            this.deadline = delay.deadline;
-          }
-          // else keep alarm of first deadline intact
-          return uptime;
-        }
-      });
-    })
   });
   I.setup(function() {
     I._.Actor.lockInstanceConstants({ $theater: I.$.create() });

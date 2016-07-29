@@ -2,65 +2,73 @@
 'Client'.subclass(['Std.Core.HTTP'], I => {
   "use strict";
   /*global require, Buffer*/
-  const Response = I._.Response;
   I.am({
     Abstract: false
   });
+  I.know({
+    createArrival: function(request, expectBinary) {
+      return I.Arrival.create(request, expectBinary);
+    },
+    createReceipt: function(arrival) {
+      return I.Receipt.create(arrival);
+    }
+  });
   I.nest({
     //@ Arrival event in Node.js environment.
-    Arrival: 'Client._.Arrival'.subclass(I => {
+    Arrival: 'Client.$._.Arrival'.subclass(I => {
       I.have({
-        //@{Any} request object in Node.js environment
+        //@{object} request object in Node.js environment
         nodeRequest: null,
-        //@{Any} response object in Node.js environment
+        //@{object} response object in Node.js environment
         nodeResponse: null
       });
       I.know({
         charge: function(parent, blooper) {
           I.$super.charge.call(this, parent, blooper);
           const request = this.request;
-          const url = request.getURL(), user = url.getUser(), scheme = url.getScheme();
-          const pathElements = ['', ...I.Loop.collect(url.walkPath(), encodeURIComponent)];
+          const uri = request.getURI(), user = uri.getUser(), scheme = uri.getScheme();
+          const pathElements = ['', ...I.Loop.collect(uri.iteratePath(), encodeURIComponent)];
           const parameters = [], headers = {};
-          url.enumerateParameters((value, name) => {
-            parameters.push(`${encodeURIComponent(name)}=${encodeURIComponent(value)}`);
-          });
-          request.enumerateHeaders((value, name) => { headers[name] = value; });
+          for (let pair of uri.iterateParameters()) {
+            parameters.push(`${encodeURIComponent(pair[0])}=${encodeURIComponent(pair[1])}`);
+          }
+          for (let name of request.iterateHeaderNames()) {
+            headers[name] = request.selectHeader(name);
+          }
           // convert to options as expected by Node.js API
           const options = {
-            hostname: url.getHost(),
-            port: url.getPort(),
+            hostname: uri.getHost(),
+            port: uri.getPort(),
             method: request.getMethod(),
             path: pathElements.join('/') + (parameters.length ? '?' : '') + parameters.join('&'),
             headers: headers
           };
           if (user) {
-            const password = url.getPassword(), separator = password ? ':' : '';
+            const password = uri.getPassword(), separator = password ? ':' : '';
             options.auth = encodeURIComponent(user) + separator + encodeURIComponent(password);
           }
           const nodeRequest = this.nodeRequest = require(scheme).request(options)
-            .once('response', this.succeed.bind(this))
-            .once('error', this.fail.bind(this, blooper));
+            .once('response', this.success.bind(this))
+            .once('error', this.error.bind(this, blooper));
           // start sending request
-          nodeRequest.end(I.opaqueBytes(request.getBody()));
+          nodeRequest.end(request.getBody());
         },
         discharge: function() {
           I.$super.discharge.call(this);
           this.nodeRequest.abort();
         },
-        //@return true
         isFallible: I.returnTrue,
-        //@ Fail with blooper event.
-        //@param blooper {Std.Theater.Blooper} blooper event
-        //@param error {Any} error information from Node.js environment
+        //@ Blooper mistake.
+        //@param blooper {Std.Theater.Blooper} blooper cue
+        //@param error {object} error information from Node.js environment
         //@return nothing
-        fail: function(blooper, error) {
-          blooper.fail(this.nodeRequest, error.message);
+        error: function(blooper, error) {
+          blooper.mistake(error.message);
         },
         //@ Succeed when response arrives.
-        //@param response {Any} response object in Node.js environment
+        //@param response {object} response object in Node.js environment
         //@return nothing
-        succeed: function(response) {
+        success: function(response) {
           if (!this.nodeResponse) {
             this.nodeResponse = response;
             this.fire();
@@ -69,11 +77,12 @@
       });
     }),
     //@ Receipt event in Node.js runtime environment.
-    Receipt: 'Client._.Receipt'.subclass(I => {
+    Receipt: 'Client.$._.Receipt'.subclass(I => {
       I.have({
         //@{[string|binary]?} textual or binary chunks received so far
         chunks: null
       });
+      const Response = I._.Response;
       I.know({
         charge: function(parent, blooper) {
           I.$super.charge.call(this, parent, blooper);
@@ -83,25 +92,24 @@
           }
           nodeResponse
             .on('data', chunks.push.bind(chunks))
-            .once('end', this.succeed.bind(this))
-            .once('error', this.fail.bind(this, blooper));
+            .once('end', this.success.bind(this))
+            .once('error', this.error.bind(this, blooper));
         },
         discharge: function() {
           I.$super.discharge.call(this);
           this.arrival.nodeRequest.abort();
         },
-        //@return true
         isFallible: I.returnTrue,
-        //@ Fail with blooper event.
-        //@param blooper {Std.Theater.Blooper} blooper event
-        //@param error {Any} error information from Node.js environment
+        //@ Blooper mistake.
+        //@param blooper {Std.Theater.Blooper} blooper cue
+        //@param error {object} error information from Node.js environment
         //@return nothing
-        fail: function(blooper, error) {
-          blooper.fail(this.arrival.nodeResponse, error.message);
+        error: function(blooper, error) {
+          blooper.mistake(error.message);
         },
         //@ Succeed when all chunks have arrived.
         //@return nothing
-        succeed: function() {
+        success: function() {
           if (!this.response) {
             const arrival = this.arrival, chunks = this.chunks;
             const nodeResponse = arrival.nodeResponse;

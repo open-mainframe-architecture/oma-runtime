@@ -8,6 +8,7 @@ function configure(module) {
   module.test = () => typeof MessageChannel !== 'undefined' &&
     typeof XMLHttpRequest !== 'undefined';
   module.provides = {
-    'Std.HTTP.WebClient': (roleClass, required) => roleClass.spawn(required.loose)
+    'Std.HTTP.Client with Std.HTTP.WebClient': (Provider, required) =>
+      Provider.spawn(required.loose)
   };
 }

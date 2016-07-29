@@ -1,11 +1,11 @@
-//@ Strict supervision kills actors after they cause an error.
-'BaseObject+Manager'.subclass(I => {
+//@ Strict management kills actors after they cause an error.
+'Role'.subclass(I => {
   "use strict";
-  I.am({
-    Abstract: false,
-    Service: true
-  });
   I.know({
-    assessDamage: I._.Damage._.returnLethal
+    isManaging: I.returnTrue,
+    repairDamage: function(job, exception) {
+      job.getActor().bury();
+      return exception;
+    }
   });
 })

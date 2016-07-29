@@ -5,7 +5,7 @@ function configure(module) {
     director: 'Std.Theater.Director'
   };
   module.provides = {
-    'Std.Management.Loose': (roleClass, required)  => roleClass.spawn(required.director),
-    'Std.Management.Strict': (roleClass, required) => roleClass.spawn(required.director)
+    'Std.Management.Loose': (Provider, required) => Provider.spawn(required.director),
+    'Std.Management.Strict': (Provider, required) => Provider.spawn(required.director)
   };
 }

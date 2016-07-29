@@ -1,5 +1,7 @@
 //@ A Node.js runtime environment.
-'Service'.subclass(['Std.Core.Runtime'], I => {
+'Service'.subclass(['Std.Core.Runtime'], {
+  constants$: 'Std.Runtime.Constants'
+}, I => {
   "use strict";
   /*global require*/
   I.am({
@@ -7,7 +9,7 @@
   });
   I.know({
     createSubsidiaryEmitter: function() {
-      return require('child_process').fork(require.main.filename);
+      return require('child_process').fork(I.constants$.bundleLocation);
     },
     destroySubsidiaryEmitter: function(emitter) {
       emitter.kill();
@@ -15,7 +17,7 @@
   });
   I.nest({
     //@ Streams that cross between Node.js environments.
-    Crossover: 'Environment.Service._.Crossover'.subclass(I => {
+    Crossover: 'Service.$._.Crossover'.subclass(I => {
       I.am({
         Abstract: false
       });

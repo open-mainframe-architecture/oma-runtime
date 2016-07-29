@@ -1,11 +1,11 @@
-//@ Loose supervision allows actor to work after they cause an error.
-'BaseObject+Manager'.subclass(I => {
+//@ Loose management allows actor to work after they cause an error.
+'Role'.subclass(I => {
   "use strict";
-  I.am({
-    Abstract: false,
-    Service: true
-  });
   I.know({
-    assessDamage: I._.Damage._.returnMinimal
+    isManaging: I.returnTrue,
+    repairDamage: function(job, exception) {
+      job.getActor().resume();
+      return exception;
+    }
   });
 })

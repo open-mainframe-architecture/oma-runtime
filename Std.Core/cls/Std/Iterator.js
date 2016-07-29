@@ -1,314 +1,216 @@
-//@ An iterator walks until the last step has been taken.
-'BaseObject+Indirect'.subclass(I => {
+//@ An iterator iterates over values until it's done. Standard iterators are iterable.
+'Object'.subclass(I => {
   "use strict";
-  const Iterator = I.$;
-  I.am({
-    Abstract: false
-  });
   I.know({
-    //@ Get whatever this iterator is currently iterating. Caller ensures it has something.
-    //@return {any} iterated thing
-    get: I.shouldNotOccur,
-    //@ Test whether this iterator has anything behind the indirection.
-    //@return {boolean} true if iterator can get something, otherwise false
-    has: I.returnFalse,
-    //@ Advance this iterator one step further, resetting the indirection.
+    [Symbol.iterator]: I.returnThis,
+    //@ Concatenate this iterator with supplied values and iterators.
+    //@param ... {*|iterator} thing or iterator to concatenate
+    //@return {Std.Iterator} new iterator that iterates over concatenation
+    concat: function() {
+      return I.Flat.create([this, ...arguments][Symbol.iterator](), 1);
+    },
+    //@ Filter values from this iterator.
+    //@param predicate {function} predicate test
+    //@param thisReceiver {*} this receiver in code
+    //@return {Std.Iterator} new iterator that iterates over filtered values
+    filter: function(predicate, thisReceiver) {
+      return I.Filter.create(this, predicate, thisReceiver);
+    },
+    //@ Flatten iterators from this iterator.
+    //@param depth {integer?} maximum depth to expand, negative or missing for limitless expansion
+    flatten: function(depth) {
+      return I.Flat.create(this, arguments.length ? depth : -1);
+    },
+    //@ Perform routine on every enumerated value.
+    //@param routine {function} routine to perform on enumerated value
+    //@param thisReceiver {*} this receiver in code
     //@return nothing
-    step: I.shouldNotOccur
+    forEach: function(routine, thisReceiver) {
+      return I.forEach(this, routine, thisReceiver);
+    },
+    //@ Map values from this iterator.
+    //@param conversion {function} value conversion
+    //@param thisReceiver {*} this receiver in code
+    //@return {Std.Iterator} new iterator that iterates over converted values
+    map: function(conversion, thisReceiver) {
+      return I.Map.create(this, conversion, thisReceiver);
+    },
+    //@ Iterate to next value.
+    //@return {object} object with done and value property
+    next: I.returnWith(Object.freeze({ done: true })),
+    //@ Iterate over values and reduce it to one value.
+    //@param reduction {function} reduce previous and current value to next value
+    //@param initial {*} initial previous value
+    //@param thisReceiver {*} this receiver in code
+    //@return {*} reduced value after all iterated values have been reduced
+    reduce: function(reduction, initial, thisReceiver) {
+      return I.reduce(this, reduction, initial, thisReceiver);
+    }
   });
   I.share({
-    //@ Create iterator that converts things of decoratee.
-    //@param decoratee {Std.Iterator} iterator over original things
-    //@param conversion {Std.Closure} called with original to produce converted thing
-    //@return {Std.Iterator} an iterator over converted things
-    collect: function(decoratee, conversion) {
-      return decoratee === I.Empty ? I.Empty : I.Converter.create(decoratee, conversion);
-    },
-    //@ Create iterator that walks over arguments. Iterator arguments are expanded one level deep.
-    //@param ... {any} iterated thing or iterator to expand
-    //@return {Std.Iterator} an iterator over expanded arguments
+    //@ Create iterator that iterates over arguments.
+    //@param ... {*|iterator} iterated thing or iterator to expand
+    //@return {Std.Iterator} an iterator over expanded values
     concat: function() {
-      return !arguments.length ? I.Empty : I.flatten(I.slice(arguments).walk(), 1);
+      // clone arguments and flatten this clone one level deep
+      return I.Flat.create([...arguments][Symbol.iterator](), 1);
     },
-    //@ Create iterator that counts up or down until the limit has been passed.
-    //@param from {number} initial count
-    //@param to {number} count limit
-    //@param increment {number?} positive increment to count up (default 1), otherwise count down
-    //@return {Std.Iterator} an iterator over counted numbers
-    count: function(from, to, increment) {
-      increment = increment || 1;
-      // different conditions for counting up and down
-      const condition = increment > 0 ? count => count <= to : count => count >= to;
-      return I.whilst(from, condition, count => count + increment);
+    //@ Filter values from iterator.
+    //@param iterator {iterator} JavaScript iterator
+    //@param predicate {function} predicate test
+    //@param thisReceiver {*} this receiver in code
+    //@return {Std.Iterator} new iterator that iterates over filtered values
+    filter: (iterator, predicate, thisReceiver) =>
+      I.Filter.create(iterator, predicate, thisReceiver),
+    //@ Flatten iterator over iterators.
+    //@param iterator {iterator} JavaScript iterator
+    //@param depth {integer?} maximum expansion level of iterated iterator
+    //@return {Std.Iterator} a flat iterator
+    flatten: (iterator, depth) =>
+      I.Flat.create(iterator, I.isDefined(depth) ? depth : -1),
+    //@ Perform routine on enumerated values.
+    //@param iterator {iterator} JavaScript iterator
+    //@param routine {function} routine to perform on enumerated value
+    //@param thisReceiver {*} this receiver in code
+    //@return nothing
+    forEach: (iterator, routine, thisReceiver) => {
+      for (let iteration = iterator.next(); !iteration.done; iteration = iterator.next()) {
+        routine.call(thisReceiver, iteration.value);
+      }
     },
-    //@ Create iterator that flattens iterators in decoratee until depth is reached.
-    //@param decoratee {Std.Iterator} iterator over original things
-    //@param depth {number} maximum expansion depth of flattened iterators
-    //@return {Std.Iterator} an iterator over flattened things
-    flatten: function(decoratee, depth) {
-      return decoratee === I.Empty ? I.Empty : depth === 0 ? decoratee :
-        I.Flattener.create(decoratee, depth);
+    //@ Map values from iterator.
+    //@param iterator {iterator} JavaScript iterator
+    //@param predicate {function} value conversion
+    //@param thisReceiver {*} this receiver in code
+    //@return {Std.Iterator} new iterator that iterates over converted values
+    map: (iterator, conversion, thisReceiver) =>
+      I.Map.create(iterator, conversion, thisReceiver),
+    //@ Create iterator over arguments, without iterator expansion.
+    //@param ... {*} iterated value
+    //@return {Std.Iterator} new iterator over arguments
+    over: function() {
+      return I.Flat.create([...arguments][Symbol.iterator](), 0);
     },
-    //@ Create iterator that generates next iterated thing from previous one.
-    //@param first {any} first iterated thing
-    //@param advance {Std.Closure} called with iterated thing to produce next one
-    //@return {Std.Iterator} an iterator over generated things while generated thing is defined
-    inject: function(first, advance) {
-      return I.whilst(first, I.isDefined, advance);
-    },
-    //@ Create iterator that walks over selected things from decoratee.
-    //@param decoratee {Std.Iterator} iterator over original things
-    //@param selection {Std.Closure} called with original thing
-    //@return {Std.Iterator} an iterator over selected things
-    select: function(decoratee, selection) {
-      return decoratee === I.Empty ? I.Empty : I.Filter.create(decoratee, selection);
-    },
-    //@ Create iterator that generates next iterated thing from previous one.
-    //@param first {any} first iterated thing
-    //@param condition {Std.Closure} called with iterated thing to test condition
-    //@param advance {Std.Closure} called with iterated thing to produce next one
-    //@return {Std.Iterator} an iterator over generated things while condition holds
-    whilst: function(first, condition, advance) {
-      return !condition(first) ? I.Empty : I.Repeater.create(first, advance, condition);
+    //@ Reduce iterated values to one value.
+    //@param iterator {iterator} JavaScript iterator
+    //@param reduction {function} reduce previous and current value to next value
+    //@param initial {*} initial previous value
+    //@param thisReceiver {*} this receiver in code
+    //@return {*} reduced value after all iterated values have been reduced
+    reduce: (iterator, reduction, initial, thisReceiver) => {
+      let accumulator = initial;
+      for (let iteration = iterator.next(); !iteration.done; iteration = iterator.next()) {
+        accumulator = reduction.call(thisReceiver, accumulator, iteration.value);
+      }
+      return accumulator;
     }
   });
   I.nest({
-    //@ A converter converts iterated things of another iterator.
-    Converter: 'Iterator._.Decorator'.subclass(I => {
-      const UNASSIGNED = Symbol();
+    //@ A filter iterates over values that satisfy a predicate.
+    Filter: 'Iterator'.subclass(I => {
       I.have({
-        //@{Std.Closure} conversion closure
-        conversion: null,
-        //@{any} current converted element
-        converted: null
+        //@{iterator} JavaScript iterator
+        iterator: null,
+        //@{function} predicate test
+        predicate: null,
+        //@{*} this receiver in predicate test
+        receiver: null
       });
       I.know({
-        //@param decoratee {Std.Iterator} iterator over original things
-        //@param conversion {Std.Closure} compute converted thing from original one
-        build: function(decoratee, conversion) {
-          I.$super.build.call(this, decoratee);
-          this.conversion = conversion;
-        },
-        unveil: function() {
-          I.$super.unveil.call(this);
-          this.converted = UNASSIGNED;
-        },
-        get: function() {
-          if (this.converted === UNASSIGNED) {
-            const conversion = this.conversion;
-            this.converted = conversion(this.decoratee.get());
-          }
-          return this.converted;
-        },
-        step: function() {
-          this.converted = UNASSIGNED;
-          this.decoratee.step();
-        }
-      });
-    }),
-    //@ A decorator wraps another iterator.
-    Decorator: 'Iterator'.subclass(I => {
-      I.have({
-        //@{Std.Iterator} wrapped iterator
-        decoratee: null
-      });
-      I.know({
-        //@param decoratee {Std.Iterator} iterator over things
-        build: function(decoratee) {
+        //@param iterator {iterator} JavaScript iterator
+        //@param predicate {function} predicate test
+        //@param receiver {*} this receiver in predicate test
+        build: function(iterator, predicate, receiver) {
           I.$super.build.call(this);
-          this.decoratee = decoratee;
+          this.iterator = iterator;
+          this.predicate = predicate;
+          this.receiver = receiver;
         },
-        get: function() {
-          return this.decoratee.get();
-        },
-        has: function() {
-          return this.decoratee.has();
-        },
-        step: function() {
-          this.decoratee.step();
-        }
-      });
-    }),
-    //@ A filter selects iterated things of another iterator.
-    Filter: 'Iterator._.Verifier'.subclass(I => {
-      I.have({
-        //@{Std.Closure} selection closure
-        selection: null,
-        //@{boolean} true if decoratee is positioned at selected element
-        selected: false
-      });
-      I.know({
-        //@param decoratee {Std.Iterator} iterator over original things
-        //@param selection {Std.Closure} test whether original thing is selected
-        build: function(decoratee, selection) {
-          I.$super.build.call(this, decoratee);
-          this.selection = selection;
-        },
-        step: function() {
-          I.$super.step.call(this);
-          // find selected element on next access
-          this.selected = false;
-        },
-        verifyCondition: function() {
-          if (!this.selected) {
-            // advance decoratee until selected element is found or decoratee is exhausted
-            const decoratee = this.decoratee, selection = this.selection;
-            while (decoratee.has() && !selection(decoratee.get())) {
-              decoratee.step();
+        next: function() {
+          const iterator = this.iterator, predicate = this.predicate, receiver = this.receiver;
+          let iteration = iterator.next();
+          while (!iteration.done) {
+            if (predicate.call(receiver, iteration.value)) {
+              return iteration;
+            } else {
+              iteration = iterator.next();
             }
-            this.selected = true;
           }
+          return iteration;
         }
       });
     }),
-    //@ A flattener expands iterators.
-    Flattener: 'Iterator'.subclass(I => {
-      const UNASSIGNED = Symbol();
+    //@ A flat iterator expands nested iterated iterators.
+    Flat: 'Iterator'.subclass(I => {
       I.have({
-        //@{number?} maximum depth to expand flattened iterators or null if there is no limit
+        //@{number?} maximum depth to expand iterators or negative if there is no limit
         depth: null,
-        //@{[Std.Iterator]} stack with expanded iterators
-        stack: null,
-        //@{any} current iterated thing on top
-        top: null
+        //@{[iterator]} stack with expanded iterators
+        stack: null
       });
       I.know({
-        //@param decoratee {Std.Iterator} iterator over original things
-        //@param depth {number?} maximum expansion depth of flattened iterators
-        build: function(decoratee, depth) {
+        //@param iterator {iterator} iterator over original things
+        //@param depth {integer} maximum expansion depth of flattened iterators or negative
+        build: function(iterator, depth) {
           I.$super.build.call(this);
           this.depth = depth;
-          this.stack = [decoratee];
+          this.stack = [iterator];
         },
-        unveil: function() {
-          I.$super.unveil.call(this);
-          this.top = UNASSIGNED;
-        },
-        get: function() {
-          return this.top === UNASSIGNED ? this.reposition() : this.top;
-        },
-        has: function() {
-          if (this.top === UNASSIGNED && this.stack.length) {
-            this.reposition();
-          }
-          return this.top !== UNASSIGNED;
-        },
-        step: function() {
-          if (this.top === UNASSIGNED) {
-            this.reposition();
-          }
-          this.stack[this.stack.length - 1].step();
-          this.top = UNASSIGNED;
-        },
-        //@ Expand iterators on stack until next thing on top is found.
-        //@return {any} thing on top of stack
-        reposition: function() {
-          const stack = this.stack;
-          let n = stack.length;
+        next: function() {
+          const stack = this.stack, depth = this.depth;
           for (; ;) {
-            const topIterator = this.stack[n - 1];
-            if (topIterator.has()) {
-              const topCandidate = topIterator.get();
-              if (Iterator.describes(topCandidate) && (!this.depth || n <= this.depth)) {
-                // push new iterator below maximum depth and continue loop
-                stack[n++] = topCandidate;
+            const topIteration = stack[stack.length - 1].next();
+            if (!topIteration.done) {
+              const topValue = topIteration.value;
+              if ((depth < 0 || stack.length <= depth) && I.isIteratorLike(topValue)) {
+                // push new top iterator and continue loop
+                stack.push(topValue);
               } else {
-                // found new top result
-                this.top = topCandidate;
-                break;
+                return topIteration;
               }
-            }
-            else {
-              if (--n) {
-                // pop iterator, advance iterator below it, and continue loop
-                stack[n - 1].step();
-              } else {
-                // exhausted decoratee
-                this.top = UNASSIGNED;
-                break;
-              }
+            } else if (stack.length > 1) {
+              // pop exhausted top iterator and continue loop with iterator below
+              stack.pop();
+            } else {
+              // leave exhausted iterator on stack, with nothing below
+              return topIteration;
             }
           }
-          stack.length = n;
-          return this.top;
         }
       });
     }),
-    //@ A repeater computes the next iterated thing from the previous one.
-    Repeater: 'Iterator'.subclass(I => {
+    //@ A map iterates over converted values.
+    Map: 'Iterator'.subclass(I => {
       I.have({
-        //@{any} current generation
-        generated: null,
-        //@{Std.Closure} compute next generation from previous generation
-        computation: null,
-        //@{Std.Closure} repeat while test condition holds
-        condition: null,
-        //@{boolean?} null to test current generation, otherwise validity of current generation
-        selected: null
+        //@{iterator} JavaScript iterator
+        iterator: null,
+        //@{function} value conversion
+        conversion: null,
+        //@{*} this receiver in value conversion
+        receiver: null
       });
       I.know({
-        //@param first {any} first generation passes test
-        //@param advance {Std.Closure} compute sequence of generations
-        //@param condition {Std.Closure} test generation validity
-        build: function(first, advance, condition) {
+        //@param iterator {iterator} JavaScript iterator
+        //@param conversion {function} value conversion
+        //@param receiver {*} this receiver in value conversion
+        build: function(iterator, conversion, receiver) {
           I.$super.build.call(this);
-          this.generated = first;
-          this.computation = advance;
-          this.condition = condition;
+          this.iterator = iterator;
+          this.conversion = conversion;
+          this.receiver = receiver;
         },
-        unveil: function() {
-          I.$super.unveil.call(this);
-          this.selected = true;
-        },
-        get: function() {
-          return this.generated;
-        },
-        has: function() {
-          if (this.selected === null) {
-            const condition = this.condition;
-            this.selected = !!condition(this.generated);
+        next: function() {
+          const iteration = this.iterator.next();
+          if (!iteration.done) {
+            return { value: this.conversion.call(this.receiver, iteration.value), done: false };
           }
-          return this.selected;
-        },
-        step: function() {
-          const computation = this.computation;
-          this.generated = computation(this.generated);
-          this.selected = null;
+          return iteration;
         }
-      });
-    }),
-    //@ A verifier checks a condition on every access.
-    Verifier: 'Iterator._.Decorator'.subclass(I => {
-      I.know({
-        get: function() {
-          this.verifyCondition();
-          return I.$super.get.call(this);
-        },
-        has: function() {
-          this.verifyCondition();
-          return I.$super.has.call(this);
-        },
-        step: function() {
-          this.verifyCondition();
-          I.$super.step.call(this);
-        },
-        //@ Verify condition on every iterator access.
-        //@return nothing
-        verifyCondition: I.doNothing
       });
     })
   });
   I.setup({
     //@{Std.Iterator} empty iterator has nothing to iterate
-    Empty: () => Iterator.create()
-  });
-  // iterators can be used in for-of loops (JavaScript iteration protocol)
-  I.setup(() => {
-    const EXHAUSTED = { done: true };
-    I.defineConstant(I.$.getPrototype(), Symbol.iterator, function() {
-      return Object.freeze({
-        next: () => this.has() ? { value: this.get(), done: (this.step(), false) } : EXHAUSTED
-      });
-    });
+    Empty: () => I.$.create()
   });
 })

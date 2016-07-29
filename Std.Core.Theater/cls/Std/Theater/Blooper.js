@@ -1,51 +1,41 @@
-//@ A blooper event captures an asynchronous failure.
-'Event'.subclass(I => {
+//@ A blooper is a cue that signals an asynchronous error. A blooper is a child of a showstopper.
+'Cue'.subclass(I => {
   "use strict";
-  const Failure = I._.Failure;
+  I.am({
+    Final: true
+  });
   I.have({
-    //@{Std.Failure|Std.Runtime.Exception} asynchronous failure or exception
-    asynchronousFailure: null
+    //@{error?} asynchronous error
+    asynchronousError: null
   });
   I.know({
     charge: function(parent) {
       I.$super.charge.call(this, parent);
-      if (this.asynchronousFailure) {
-        // fire immediately if this blooper already failed
+      if (this.asynchronousError) {
+        // fire immediately if this blooper already failed while charging
         return this;
       }
     },
-    //@ Capture failure from origin with unknown reasons.
-    //@param origin {any} JavaScript object or value
-    //@param ... {any} failure reason
-    //@return nothing
-    fail: function(origin) {
-      if (!this.asynchronousFailure) {
-        this.failAll(origin, I.slice(arguments, 1));
-      }
+    isBlooper: I.returnTrue,
+    //@ Get asynchronous error that has been captured by this blooper.
+    //@return {error?} asynchronous error or nothing
+    getError: function() {
+      return this.asynchronousError;
     },
-    //@ Capture failure from origin with specified reasons.
-    //@param origin {any} JavaScript object or value
-    //@param reasons {[any]} failure reasons
-    //@return nothing
-    failAll: function(origin, reasons) {
-      if (!this.asynchronousFailure) {
-        this.failWith(Failure.create(origin, reasons));
-      }
+    //@ Test whether this blooper has captured an asynchronous error.
+    //@return {boolean} true if this blooper has captured an error, otherwise false
+    isMistake: function() {
+      return !!this.asynchronousError;
     },
-    //@ Capture asynchronous failure.
-    //@param failure {Std.Failure|Std.Runtime.Exception} failure/exception to capture
+    //@ Capture asynchronous error.
+    //@param error {error|*} existing exception or error message
     //@return nothing
-    failWith: function(failure) {
-      if (!this.asynchronousFailure) {
-        this.asynchronousFailure = failure;
-        // if this event is not yet charged, firing it is a safe no-op
+    mistake: function(error) {
+      if (!this.asynchronousError) {
+        this.asynchronousError = I.throw(error);
+        // if this cue is not yet charged, firing it is a safe no-op
         this.fire();
       }
-    },
-    //@ Get asynchronous failure that has been captured by this blooper.
-    //@return {Std.Failure|Std.Runtime.Exception?} asynchronous failure/exception or nothing
-    getFailure: function() {
-      return this.asynchronousFailure;
     }
   });
 })

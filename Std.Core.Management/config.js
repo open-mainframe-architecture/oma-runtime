@@ -1,9 +1,9 @@
 function configure(module) {
   "use strict";
   module.description = 'This module defines management roles that handle incidents in a theater.';
-  module.depends = ['Std.Core.Theater', 'Std.Core.Data.Types'];
+  module.depends = ['Std.Core.Data.Types'];
   module.provides = {
-    'Std.Theater.Director': roleClass => roleClass.spawn()
+    'Std.Theater.Director': Provider => Provider.spawn()
   };
   module.datatypes = {
     // an incident describes a managed failure on the theater stage
@@ -18,8 +18,6 @@ function configure(module) {
       job: 'string?',
       // name of offending role class
       role: 'string?',
-      // name of damage class
-      damage: 'string?',
       // locate incident in subsidiary environment
       location: 'Maybe([string])'
     }

@@ -1,74 +1,151 @@
 //@ A role performs asynchronous scenes with actors/agents.
-'Trait'.subclass((I, We) => {
+'Object'.subclass((I, We) => {
   "use strict";
-  const SceneMethods = I._.Theater._.SceneMethods;
   I.have({
     //@{Std.Theater.Job?} theater job when this role is busy performing a scene on stage
     theaterJob: null
   });
   I.access({
+    //@{Std.Theater.Actor} get actor representation of busy role
+    $actor: function() {
+      return this.theaterJob.getActor();
+    },
     //@{Std.Theater.Agent} get agent representation of busy role
     $agent: function() {
-      return this.theaterJob.getAgent();
+      return this.$actor.$agent;
     },
     //@{Std.Theater.Service} get theater where role is busy
     $theater: function() {
-      return this.theaterJob.getActor().$theater;
+      return this.$actor.$theater;
     }
   });
   I.know({
     //@ Improvise unknown scene when selector does not designate a scene method.
     //@param selector {string} scene name
-    //@param parameters {[any]?} scene parameters
-    //@return result of unknown scene
-    improvise: I.shouldNotOccur,
+    //@param parameters {[*]?} scene parameters
+    //@return {*} result of unknown scene
+    improviseScene: I.shouldNotOccur,
     //@ Initialize new agent/actor/role triple.
     //@param agent {Std.Theater.Agent} new agent
     //@return nothing
-    initialize: I.doNothing,
+    initializeWork: I.doNothing,
+    //@ Is this role managing a team? Managers decide over life and death of team members.
+    //@return {boolean} true if this role plays a team manager, otherwise false
+    isManaging: I.returnFalse,
     //@ Play next scene on stage.
     //@param job {Std.Theater.Job} job of scene to play
-    //@param selector {string|Std.Closure} scene name or scene closure
-    //@param parameters {[any]?} scene parameters
-    //@return {any} scene result
+    //@param selector {string|function} scene name or scene closure
+    //@param parameters {[*]?} scene parameters
+    //@return {*} scene result
     playScene: function(job, selector, parameters) {
-      this.assert(!this.theaterJob);
+      I.failUnless('bad role', !this.theaterJob);
       this.theaterJob = job;
-      const closure = I.isClosure(selector) ? selector : this.$.sceneMethods._[selector];
+      const closure = I.isClosure(selector) ? selector : this.$.sceneMethods[selector];
       try {
-        return closure ? closure.apply(this, parameters) : this.improvise(selector, parameters);
+        return closure ? closure.apply(this, parameters) :
+          this.improviseScene(selector, parameters);
       } finally {
         this.theaterJob = null;
       }
     }
   });
   We.have({
-    //@{Std.Theater.SceneMethods} scene methods to play on stage
-    sceneMethods: null
+    //@{Std.Table} scene methods to play on stage
+    sceneMethods: null,
+    //@{function} constructor of new agents
+    agentConstructor: null
   });
+  const Theater = I._.Theater;
   We.know({
+    build: function(container, key, module) {
+      We.$super.build.call(this, container, key, module);
+      // every role class is built with its own scene methods
+      setupSceneMethods(this);
+    },
     prepareScript: function(scriptInst, scriptMeta) {
       We.$super.prepareScript.call(this, scriptInst, scriptMeta);
       // add keywords to define and refine scene methods
-      this.getSceneMethods().prepareScript(scriptInst, scriptMeta);
-    },
-    //@ Get scene methods of this role class.
-    //@return {Std.Theater.SceneMethods} scene methods
-    getSceneMethods: function() {
-      if (this.sceneMethods) {
-        return this.sceneMethods;
+      const parentSceneMethods = this.getParentBehavior().sceneMethods;
+      if (parentSceneMethods) {
+        I.lockProperty(scriptInst, '$superRole', parentSceneMethods);
       }
-      const parentBehavior = this.getParentBehavior();
-      const parentMethods = parentBehavior.getSceneMethods && parentBehavior.getSceneMethods();
-      this.sceneMethods = SceneMethods.create(parentMethods, this);
-      return this.sceneMethods;
+      scriptInst.play = scriptPlay;
+      if (this.getModule() !== scriptInst.$module) {
+        I.lockProperty(scriptInst, '$formerRole', I.createTable());
+        scriptInst.refineRole = scriptRefine;
+      }
     },
-    //@ Create new agent/actor/role triple that is supervised by a manager.
-    //@param manager {Std.Theater.Agent?} supervising manager
-    //@param ... {any} construction arguments for new role
+    //@ Create agent that implements scene methods of this role class.
+    //@param ... {*} construction arguments
+    //@return {Std.Theater.Agent} new agent
+    createAgent: function() {
+      return Reflect.construct(this.agentConstructor, arguments);
+    },
+    //@ Create scene method from scene specification.
+    //@param key {string} scene name
+    //@param closure {function} specified scene closure (this is the default)
+    //@return {closure} scene closure
+    createSceneKnowledge: function(key, closure) {
+      this.sceneMethods[key] = closure;
+      return closure;
+    },
+    //@ Create new agent/actor/role triple with a manager.
+    //@param manager {Std.Theater.Agent?} manager agent
+    //@param ... {*} construction arguments for new role
     //@return {Std.Theater.Agent} agent of new triple
     spawn: function(manager) {
-      return this.getSceneMethods().spawnAgent(manager, this.create(...I.slice(arguments, 1)));
+      return this.spawnAgent(manager, this.create(...I.sliceArray(arguments, 1)));
+    },
+    //@ Create new agent/actor pair for existing role instance.
+    //@param manager {Std.Theater.Agent?} manager agent
+    //@param role {Std.Theater.Role} role instance
+    //@param roleClass {Std.Theater.Role.$?} alternative role class with scene methods
+    //@return {Std.Theater.Agent} agent of new agent/actor/role triple
+    spawnAgent: function(manager, role, roleClass) {
+      const actor = Theater._.Actor.create(roleClass || role.$, role, manager);
+      const agent = actor.$agent;
+      // prepare role for working on agent jobs
+      role.initializeWork(agent);
+      // schedule first performance of actor if it's ready to go on stage
+      actor.reschedule();
+      return agent;
     }
   });
+  function scriptPlay(sceneClosures) { //jshint validthis:true
+    const agentPrototype = this.$.agentConstructor.prototype, closures = I.createTable();
+    for (let key in sceneClosures) {
+      I.lockProperty(agentPrototype, key, Theater._.Agent._.createScenePerformer(key));
+      closures[`scene@${key}`] = this.$.createSceneKnowledge(key, sceneClosures[key]);
+    }
+    // define prefixed instance methods
+    this.$.addInstanceKnowledge(closures);
+  }
+  function scriptRefine(refinedSceneClosures) { //jshint validthis:true
+    const sceneMethods = this.$.sceneMethods, formerRole = this.$formerRole;
+    const closures = I.createTable();
+    for (let key in refinedSceneClosures) {
+      formerRole[key] = sceneMethods[key];
+      sceneMethods[key] = closures[`scene@${key}`] = refinedSceneClosures[key];
+    }
+    // refine prefixed instance methods
+    this.$.refineInstanceMethods(closures, this.$former);
+  }
+  // initialize scene methods of new role class
+  function setupSceneMethods(roleClass) {
+    const parent = roleClass.getParentBehavior();
+    roleClass.sceneMethods = I.createTable(parent.sceneMethods);
+    roleClass.agentConstructor = function Agent() {
+      for (let iv in this) {
+        this[iv] = this[iv];
+      }
+      Object.seal(this);
+      this.build(...arguments);
+      this.unveil();
+    };
+    const parentPrototype =  parent.agentConstructor ?  parent.agentConstructor.prototype :
+      Theater._.Agent.getPrototype();
+    roleClass.agentConstructor.prototype = Object.create(parentPrototype);
+  }
+  // setup scene methods for Std.Role class which has been built before this script executes
+  I.setup(() => setupSceneMethods(I.$));
 })

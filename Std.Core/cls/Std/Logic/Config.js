@@ -30,4 +30,27 @@ function refine(I) {
       return this.getTable('versions');
     }
   });
+  I.know({
+    //@ Get configured boolean.
+    //@param key {string} configuration key
+    //@param boolean {boolean?} default value if specified, otherwise false is default
+    //@return {boolean} configured boolean
+    getBoolean: function(key, boolean) {
+      return this.findDefault(key, I.isDefined(boolean) ? boolean : false);
+    },
+    //@ Get configured number.
+    //@param key {string} configuration key
+    //@param number {number?} default value if specified, otherwise zero is default
+    //@return {number} configured number
+    getNumber: function(key, number) {
+      return this.findDefault(key, I.isDefined(number) ? number : 0);
+    },
+    //@ Get configured string.
+    //@param key {string} configuration key
+    //@param string {string?} default value if specified, otherwise empty string is default
+    //@return {string} configured string
+    getString: function(key, string) {
+      return this.findDefault(key, I.isDefined(string) ? string : '');
+    }
+  });
 }

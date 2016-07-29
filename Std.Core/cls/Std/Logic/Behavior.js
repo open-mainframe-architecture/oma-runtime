@@ -1,35 +1,36 @@
 function refine(I) {
   "use strict";
   I.know({
-    //@ Create iterator that walks over children of this behavior.
-    //@return {Std.Iterator} iterator over behaviors
-    walkChildren: function() {
-      return this.childBehaviors.walk();
+    //@ Iterate over children of this behavior.
+    //@return {iterable} iterable behaviors
+    iterateChildren: function() {
+      return this.childBehaviors[Symbol.iterator]();
     },
-    //@ Create iterator that walks over super behaviors until the root behavior has been reached.
-    //@return {Std.Iterator} iterator over behaviors
-    walkHeritage: function() {
-      return I.Loop.inject(this.parentBehavior, function(behavior) {
-        if (behavior.parentBehavior !== behavior) {
-          return behavior.parentBehavior;
-        }
-      });
+    //@ Iterate over super behaviors until the root behavior has been reached.
+    //@return {iterable} iterable behaviors
+    iterateHeritage: function* () {
+      let behavior = this, parentBehavior;
+      while ((parentBehavior = behavior.parentBehavior) !== behavior) {
+        yield parentBehavior;
+        behavior = parentBehavior;
+      }
+      return;
     },
-    //@ Create iterator that walks over offspring of this behavior, either top-down or bottom-up.
+    //@ Iterate over offspring of this behavior, either top-down or bottom-up.
     //@param bottomUp {boolean?} true to visit children before parent, otherwise after parent
     //@param skipRoot {boolean?} true to skip this behavior in the iterator, otherwise include it
-    //@return {Std.Iterator} iterator over behaviors
-    walkOffspring: function(bottomUp, skipRoot) {
+    //@return {iterable} iterable behaviors
+    iterateOffspring: function(bottomUp, skipRoot) {
       // by default, walk over this behavior as the tree root, otherwise walk over child forest
-      const roots = skipRoot ? this.childBehaviors : [this];
-      // walk up (visit children before parent) or walk down (visit parent before children)
+      const roots = (skipRoot ? this.childBehaviors : [this])[Symbol.iterator]();
+      // iterate children before parent (bottom up) or iterate parent before children (top down)
       const direction = bottomUp ? function up(behavior) {
-        return [I.Loop.collect(behavior.walkChildren(), up), behavior].walk();
+        return [I.Loop.map(behavior.iterateChildren(), up), behavior][Symbol.iterator]();
       } : function down(behavior) {
-        return [behavior, I.Loop.collect(behavior.walkChildren(), down)].walk();
+        return [behavior, I.Loop.map(behavior.iterateChildren(), down)][Symbol.iterator]();
       };
-      // start walking over roots
-      return I.Loop.flatten(I.Loop.collect(roots.walk(), direction));
+      // iterate over roots in appropriate direction and flatten all iterated iterators
+      return I.Loop.flatten(I.Loop.map(roots, direction));
     }
   });
 }

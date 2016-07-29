@@ -1,18 +1,18 @@
 //@ A FIFO buffer is a stream that buffers written items until the capacity is exhausted.
-'BaseObject+Stream'.subclass(I => {
+'Stream'.subclass(I => {
   "use strict";
-  const Semaphore = I._.Wait._.Semaphore;
   I.am({
     Abstract: false
   });
   I.have({
     //@{Std.Wait.Semaphore} synchronize pipe writers on buffer capacity
     writeProtection: null,
-    //@{[any]} buffered items that must still be read
+    //@{[*]} buffered items that must still be read
     bufferedItems: null,
     //@{Std.Wait.Semaphore} synchronize pipe readers on item availability
     readProtection: null
   });
+  const Semaphore = I._.Wait._.Semaphore;
   I.know({
     //@param capacity {integer} maximum number of buffered items
     build: function(capacity) {
@@ -36,7 +36,7 @@
       });
     },
     write: function(it) {
-      // wait for available capacity to write an item in buffer
+      // wait for capacity to write an item in buffer
       return this.writeProtection.decrement().triggers(() => {
         // there's now room to read one more item
         this.readProtection.increment();

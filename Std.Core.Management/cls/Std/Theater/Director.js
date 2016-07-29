@@ -1,11 +1,9 @@
-//@ A director manages itself. It is the root actor in a theater.
-'BaseObject+Manager'.subclass(I=> {
+//@ A director manages itself. It is the root agent in a theater.
+'Role'.subclass(I=> {
   "use strict";
-  I.am({
-    Abstract: false,
-    Service: true
-  });
   I.know({
-    assessDamage: I.shouldNotOccur
+    isManaging: I.returnTrue,
+    //TODO abort with a bang?
+    repairDamage: I.shouldNotOccur
   });
 })

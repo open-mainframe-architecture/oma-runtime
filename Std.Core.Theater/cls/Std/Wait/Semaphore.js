@@ -1,39 +1,38 @@
 //@ A Dijkstra semaphore.
-'BaseObject+Eventful'.subclass(I => {
+'Object'.subclass(I => {
   "use strict";
-  I.am({
-    Abstract: false
-  });
   I.have({
     //@{integer} current count of this Dijkstra semaphore
-    semaphoreCount: null
+    semaphoreCount: null,
+    //@{Std.Event.$._.CommonStrategy} FCFS strategy for charged events
+    semaphoreStrategy: null
   });
   I.know({
-    //@param count {number} initial, nonnegative semaphore count
+    //@param count {integer?} initial, nonnegative semaphore count (default is 0)
     build: function(count) {
       I.$super.build.call(this);
-      this.semaphoreCount = Math.floor(count || 0);
+      this.semaphoreCount = count || 0;
     },
-    testIgnition: function() {
-      if (this.semaphoreCount) {
-        // no need to wait, decrement this semaphore right away
-        --this.semaphoreCount;
-        return true;
-      }
-      return false;
+    unveil: function() {
+      I.$super.unveil.call(this);
+      this.semaphoreStrategy = I.When.CommonStrategy.create(false, () => {
+        if (this.semaphoreCount) {
+          // no need to wait, decrement this semaphore right away
+          --this.semaphoreCount;
+          return true;
+        }
+        return false;
+      });
     },
     //@ Create decrement event that fires upon charging or after semaphore has been incremented.
-    //@return {Std.FullEvent} decrement event
+    //@return {Std.Event} decrement event
     decrement: function() {
-      return this.createEvent();
+      return this.semaphoreStrategy.createEvent();
     },
     //@ Fire oldest decrement event or just increment semaphore count.
     //@return nothing
     increment: function() {
-      const event = this.getFirstCharge();
-      if (event) {
-        event.fire();
-      } else {
+      if (!this.semaphoreStrategy.fireOldest()) {
         ++this.semaphoreCount;
       }
     }

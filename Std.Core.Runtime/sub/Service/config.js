@@ -5,6 +5,6 @@ function configure(module) {
     environment: 'Std.Runtime.Environment'
   };
   module.provides = {
-    'Std.Runtime.Image': (roleClass, required) => roleClass.spawn(required.environment)
+    'Std.Runtime.Image': (Provider, required) => Provider.spawn(required.environment)
   };
 }

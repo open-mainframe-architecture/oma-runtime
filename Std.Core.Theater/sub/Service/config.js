@@ -5,6 +5,6 @@ function configure(module) {
     loose: 'Std.Management.Loose'
   };
   module.provides = {
-    'Std.Theater.Extra': (roleClass, required) => roleClass.spawn(required.loose)
+    'Std.Role': (Provider, required) => Provider.spawn(required.loose)
   };
 }
