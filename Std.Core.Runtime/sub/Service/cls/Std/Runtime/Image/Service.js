@@ -16,7 +16,7 @@
     //@param value {Std.Data.Value.Record} Runtime.Image record value
     //@promise nothing
     //@except when image has already been assigned
-    assignSpecification: I.remotely('Runtime.Image=>', function(value) {
+    assignSpecification: I.remotely('Runtime.Image =>', function(value) {
       I.failUnless('duplicate image', !this.imageValue);
       this.imageValue = value;
     }),

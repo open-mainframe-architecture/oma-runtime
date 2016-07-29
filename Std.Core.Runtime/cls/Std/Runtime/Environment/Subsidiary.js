@@ -59,7 +59,7 @@
     //@ Supply feedback about a management incident in child environment.
     //@param incident {Std.Data.Value.Record} incident record value
     //@promise nothing
-    feedbackIncident: I.remotely('Incident=>', function(incident) {
+    feedbackIncident: I.remotely('Incident =>', function(incident) {
       const locationTail = incident.location ? incident.location._ : [];
       // warn about incident from this subsidiary
       this.warn(incident.$update({
