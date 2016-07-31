@@ -13,6 +13,9 @@
     },
     destroySubsidiaryEmitter: function(emitter) {
       emitter.kill();
+    },
+    spawnCrossover: function(manager, emitter) {
+      return I.Crossover.spawn(manager, emitter);
     }
   });
   I.nest({

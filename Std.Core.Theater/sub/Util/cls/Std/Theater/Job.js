@@ -3,7 +3,7 @@ function refine(I) {
   I.know({
     //@ Turn this job into a JavaScript promise.
     //@return {promise} promise that resolves with result or rejects with error of this job
-    promise: function() {
+    promised: function() {
       return new Promise((resolve, reject) => {
         // complete promise with rejected job error or resolved job result
         const complete = () =>
@@ -22,7 +22,7 @@ function refine(I) {
     //@param onRejection {function} called with intermediate error of this job
     //@return {promise} JavaScript promise
     then: function(onFulfillment, onRejection) {
-      return this.promise().then(onFulfillment, onRejection);
+      return this.promised().then(onFulfillment, onRejection);
     }
   });
 }

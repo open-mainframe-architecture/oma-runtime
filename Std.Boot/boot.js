@@ -381,16 +381,19 @@ function boot(bundleName, bootModuleName) {
       loadModules();
       // promise to load remaining modules, although most or all modules should be loaded by now
       return function() {
-        // stage break gives parent environment opportunity to register service providers
-        return this.$theater.stageBreak().triggers(() => {
-          // load any remaining modules that depend on services from parent environment
+        let retriesLeft = 100;
+        const finishModules = () => {
           loadModules();
-          if (loading) {
-            this.$rt.asap(() => { throw new Error('unbootable runtime'); });
-          } else {
+          if (!loading) {
             return runtimeBundle;
+          } else if (--retriesLeft) {
+            // 100 stage breaks give parent environment opportunity to register service providers
+            return this.$theater.stageBreak().triggers(finishModules);
+          } else {
+            this.$rt.asap(() => { throw new Error('unbootable runtime'); });
           }
-        });
+        };
+        return finishModules();
       }.play();
     }
   };

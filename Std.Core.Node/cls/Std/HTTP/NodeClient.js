@@ -27,7 +27,7 @@
           I.$super.charge.call(this, parent, blooper);
           const request = this.request;
           const uri = request.getURI(), user = uri.getUser(), scheme = uri.getScheme();
-          const pathElements = ['', ...I.Loop.collect(uri.iteratePath(), encodeURIComponent)];
+          const pathElements = ['', ...I.Loop.map(uri.iteratePath(), encodeURIComponent)];
           const parameters = [], headers = {};
           for (let pair of uri.iterateParameters()) {
             parameters.push(`${encodeURIComponent(pair[0])}=${encodeURIComponent(pair[1])}`);
@@ -58,7 +58,7 @@
           this.nodeRequest.abort();
         },
         isFallible: I.returnTrue,
-        //@ Blooper mistake.
+        //@ Blooper mistake on error.
         //@param blooper {Std.Theater.Blooper} blooper cue
         //@param error {object} error information from Node.js environment
         //@return nothing
@@ -100,7 +100,7 @@
           this.arrival.nodeRequest.abort();
         },
         isFallible: I.returnTrue,
-        //@ Blooper mistake.
+        //@ Blooper mistake on error.
         //@param blooper {Std.Theater.Blooper} blooper cue
         //@param error {object} error information from Node.js environment
         //@return nothing

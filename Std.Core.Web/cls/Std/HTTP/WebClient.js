@@ -46,7 +46,7 @@
           this.xhr.abort();
         },
         isFallible: I.returnTrue,
-        //@ Blooper mistake.
+        //@ Blooper mistake on error.
         //@param blooper {Std.Theater.Blooper} blooper cue
         //@return nothing
         error: function(blooper) {

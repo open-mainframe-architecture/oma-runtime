@@ -1,4 +1,6 @@
-'super'.subclass(['Std.Core.Theater'], I => {
+'super'.subclass(['Std.Core.Theater'], {
+  typespace$: 'Std.Data.Typespace'
+}, I => {
   "use strict";
   I.know({
     //@ Try to repair the damage of a stage exception. This only applies to managing roles.
@@ -12,7 +14,8 @@
     //@return nothing
     warn: function(incident) {
       // delegate incident warning to runtime system (which might ignore it)
-      this.$rt.warn(incident);
+      const json = I.typespace$.marshal(incident, 'Incident');
+      this.$rt.warn(json);
     },
     //@ Warn about a stage problem.
     //@param job {Std.Theater.Job} job that failed on stage
