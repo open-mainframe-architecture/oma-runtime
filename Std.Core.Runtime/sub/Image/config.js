@@ -1,6 +1,6 @@
 function configure(module) {
   "use strict";
-  module.description = 'This module defines standard runtime services.';
+  module.description = 'This module implements the runtime image service.';
   module.requires = {
     environment: 'Std.Runtime.Environment'
   };

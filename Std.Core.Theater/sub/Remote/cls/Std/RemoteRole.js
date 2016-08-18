@@ -1,3 +1,4 @@
+//@ A remote role can define scene methods with type signatures.
 'Role'.subclass({
   typespace$: 'Std.Data.Typespace'
 }, (I, We) => {
@@ -10,12 +11,17 @@
   We.know({
     build: function(container, key, module) {
       We.$super.build.call(this, container, key, module);
-      setupRemoteScenes(this);
+      this.buildRemoteScenes();
     },
     prepareScript: function(scriptInst, scriptMeta) {
       We.$super.prepareScript.call(this, scriptInst, scriptMeta);
       // I.remotely specifies scene method with a type signature
       scriptInst.remotely = scriptRemotely;
+    },
+    //@ Initialize remote scenes of new role class.
+    //@return nothing
+    buildRemoteScenes: function() {
+      this.remoteScenes = I.createTable(this.getParentBehavior().remoteScenes);
     },
     //@param spec {object|function} remote scene method specification
     createSceneKnowledge: function(key, spec) {
@@ -72,8 +78,5 @@
     const output = types.pop(), inputs = types[0] && types;
     return inputs || output ? { method: closure, inputs: inputs, output: output } : closure;
   }
-  function setupRemoteScenes(roleClass) {
-    roleClass.remoteScenes = I.createTable(roleClass.getParentBehavior().remoteScenes);
-  }
-  I.setup(() => setupRemoteScenes(I.$));
+  I.setup(() => I.$.buildRemoteScenes());
 })

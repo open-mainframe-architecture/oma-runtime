@@ -20,6 +20,9 @@
     }
   });
   I.know({
+    //@ Iterable status.
+    //@unique Symbol.iterator
+    //@return {iterator} iterator over status members
     [Symbol.iterator]: function* () {
       const first = this.firstLink;
       if (first) {

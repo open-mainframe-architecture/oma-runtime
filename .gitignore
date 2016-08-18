@@ -48,10 +48,3 @@ npm-debug.log
 
 # Node.js
 node_modules
-
-# Eclipse stuff
-.settings
-.project
-
-# GitHub Pages with HTML documentation
-doc

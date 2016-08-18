@@ -2,7 +2,7 @@
 'Logic.Object'.subclass(I => {
   "use strict";
   I.have({
-    //@{Set[Std.Logic.Module]} modules that define this context and all logic objects inside it
+    //@{Set<Std.Logic.Module>} modules that define this context and all logic objects inside it
     logicModules: null
   });
   I.know({

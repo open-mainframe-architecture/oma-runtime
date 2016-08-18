@@ -3,8 +3,8 @@
 }, I => {
   "use strict";
   I.know({
-    //@ Try to repair the damage of a stage exception. This only applies to managing roles.
-    //@param job {Std.Theater.Job} job that caused exception
+    //@ Try to repair the damage of a team member.
+    //@param job {Std.Theater.Job} job that caused member to throw stage exception
     //@param exception {error} stage exception
     //@return {*} result of job
     //@exception when repairing is not possible
@@ -13,7 +13,7 @@
     //@param incident {Std.Data.Value.Record} incident record
     //@return nothing
     warn: function(incident) {
-      // delegate incident warning to runtime system (which might ignore it)
+      // delegate warning to runtime system (which might ignore it)
       const json = I.typespace$.marshal(incident, 'Incident');
       this.$rt.warn(json);
     },
@@ -36,12 +36,12 @@
     //@promise {boolean} true if the actor is dead, otherwise false
     kill: function() {
       const actor = this.$actor;
-      if (actor.hasTeamMembers()) {
+      if (actor.isSupervisor()) {
         return I.When.every([...actor.$team].map(member => member.$agent.kill().done()))
-          // kill this manager again after team members have been killed
+          // kill this agent again after supervised team members have been killed
           .triggers(this.$agent.kill());
       }
-      // swallow poison pill on stage to inform manager about suicide attempt
+      // swallow poison pill on stage to inform manager about suicide attempt of this agent
       throw I._.Theater._.Actor._.PoisonPill;
     },
     //@ Handle exception of actor that was playing on stage.
@@ -67,6 +67,29 @@
       job.getActor().bury();
       // true to confirm the actor has been killed
       return true;
+    }
+  });
+  I.share({
+    //@ Propagate damage repair to manager by rethrowing exception.
+    //@param job {Std.Theater.Job} offending job
+    //@param exception {error} stage exception
+    //@return never because it always throws exception
+    propagateDamage: (job, exception) => { throw exception; },
+    //@ Loose damage repair proceeds actor that caused error.
+    //@param job {Std.Theater.Job} offending job
+    //@param exception {error} stage exception
+    //@return {error} stage exception
+    repairLoose: (job, exception) => {
+      job.getActor().proceed();
+      return exception;
+    },
+    //@ Strict damage repair kills actor that caused error.
+    //@param job {Std.Theater.Job} offending job
+    //@param exception {error} stage exception
+    //@return {error} stage exception
+    repairStrict: (job, exception) => {
+      job.getActor().bury();
+      return exception;
     }
   });
 })

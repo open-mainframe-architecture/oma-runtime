@@ -1,4 +1,4 @@
 function configure(module) {
   "use strict";
-  module.description = 'This module initiates image startup in a web browser.';
+  module.description = 'This module initiates startup in a web browser.';
 }

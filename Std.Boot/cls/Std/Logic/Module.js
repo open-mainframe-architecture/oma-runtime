@@ -6,7 +6,7 @@
     Final: true
   });
   I.have({
-    //@{Std.Runtime.Image.Bundle} bundle that distributes this module
+    //@{Std.Runtime.Bundle} bundle that distributes this module
     assetBundle: null,
     //@{Std.Logic.Config} configuration of this module
     logicConfig: null,
@@ -17,7 +17,7 @@
   I.know({
     //@param home {Std.Logic.Namespace|Std.Logic.Module|string} container or name of this module
     //@param key {string?} unique key of this module in its container or nothing if home is name
-    //@param bundle {Std.Runtime.Image.Bundle} bundle of this module
+    //@param bundle {Std.Runtime.Bundle} bundle of this module
     //@param configures {[function]?} configuration closures
     build: function(home, key, bundle, configures) {
       // is home parameter name of the new module?
@@ -45,7 +45,7 @@
       Object.freeze(this);
     },
     //@ Get bundle that distributes this module.
-    //@return {Std.Runtime.Image.Bundle} a bundle
+    //@return {Std.Runtime.Bundle} a bundle
     getBundle: function() {
       return this.assetBundle;
     },

@@ -6,12 +6,12 @@
     Abstract: false
   });
   I.have({
-    //@{Set[string]} string choices (without quotes)
+    //@{Set<string>} string choices (without quotes)
     enumeratedChoices: null
   });
   I.know({
     //@param source {string} normalized source of enumeration
-    //@param choices {Set[string]} choices of enumeration
+    //@param choices {Set<string>} choices of enumeration
     build: function(source, choices) {
       I.$super.build.call(this, source);
       this.enumeratedChoices = choices;

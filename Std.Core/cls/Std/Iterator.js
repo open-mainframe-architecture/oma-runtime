@@ -1,7 +1,10 @@
-//@ An iterator iterates over values until it's done. Standard iterators are iterable.
+//@ An iterator iterates over values until it's done.
 'Object'.subclass(I => {
   "use strict";
   I.know({
+    //@ Standard iterator is iterable.
+    //@unique Symbol.iterator
+    //@return {iterator} this iterator
     [Symbol.iterator]: I.returnThis,
     //@ Concatenate this iterator with supplied values and iterators.
     //@param ... {*|iterator} thing or iterator to concatenate

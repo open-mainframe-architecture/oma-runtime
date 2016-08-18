@@ -2,7 +2,7 @@
   "name": "oma-runtime",
   "description": "Archive with runtime system for JavaScript environments.",
   "main": "index",
-  "version": "3.0.0",
+  "version": "10.0.1",
   "keywords": [
     "JavaScript",
     "class scripts",

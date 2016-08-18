@@ -4,6 +4,8 @@ function configure(module) {
   module.datatypes = {
     // any value, including null
     Any: '*?',
+    // a basic boolean, number or string value
+    Basic: 'boolean|number|string',
     // a flag is an efficient boolean type for record fields
     Flag: '"y"?',
     // a line or lines of text

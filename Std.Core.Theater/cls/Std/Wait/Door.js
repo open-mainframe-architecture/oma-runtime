@@ -4,7 +4,7 @@
   I.have({
     //@{boolean} true if entrants can pass, otherwise block entrants
     entranceOpen: null,
-    //@{Std.Event.$._.CommonStrategy} manage charged events
+    //@{Std.Event.$._.CommonAgeStrategy} manage charged events
     doorStrategy: null
   });
   I.know({
@@ -15,7 +15,7 @@
     },
     unveil: function() {
       I.$super.unveil.call(this);
-      this.doorStrategy = I.When.CommonStrategy.create(false, () => this.entranceOpen);
+      this.doorStrategy = I.When.CommonAgeStrategy.create(false, () => this.entranceOpen);
     },
     //@ Create event to pass this door.
     //@return {Std.Event} entrance event
@@ -26,11 +26,6 @@
     //@return nothing
     inviteEntrants: function() {
       this.doorStrategy.fireAll();
-    },
-    //@ Is the door open for entrants?
-    //@return {boolean} true if open, otherwise this door is shut
-    isOpen: function() {
-      return this.entranceOpen;
     },
     //@ Open this door for entrants to pass.
     //@return nothing

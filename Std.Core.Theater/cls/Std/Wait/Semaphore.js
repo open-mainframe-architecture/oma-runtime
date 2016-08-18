@@ -4,7 +4,7 @@
   I.have({
     //@{integer} current count of this Dijkstra semaphore
     semaphoreCount: null,
-    //@{Std.Event.$._.CommonStrategy} FCFS strategy for charged events
+    //@{Std.Event.$._.CommonAgeStrategy} First-Come-First-Serve strategy for charged events
     semaphoreStrategy: null
   });
   I.know({
@@ -15,7 +15,7 @@
     },
     unveil: function() {
       I.$super.unveil.call(this);
-      this.semaphoreStrategy = I.When.CommonStrategy.create(false, () => {
+      this.semaphoreStrategy = I.When.CommonAgeStrategy.create(false, () => {
         if (this.semaphoreCount) {
           // no need to wait, decrement this semaphore right away
           --this.semaphoreCount;

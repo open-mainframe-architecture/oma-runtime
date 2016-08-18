@@ -5,9 +5,15 @@ function refine(I) {
     //@return {promise} promise that resolves with result or rejects with error of this job
     promised: function() {
       return new Promise((resolve, reject) => {
-        // complete promise with rejected job error or resolved job result
-        const complete = () =>
-          I.isError(this.jobResult) ? reject(this.jobResult) : resolve(this.jobResult);
+        const complete = () => {
+          if (I.isError(this.jobResult)) {
+            // reject with erroneous result
+            reject(this.jobResult);
+          } else {
+            // resolve with successful resolt
+            resolve(this.jobResult);
+          }
+        };
         if (this.sceneCount < 0) {
           // no need for scene on stage if job result is already available
           complete();

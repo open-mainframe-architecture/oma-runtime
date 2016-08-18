@@ -4,12 +4,12 @@
 }, I => {
   "use strict";
   /*global process,setImmediate*/
-  // 'extra instance state' of runtime system singleton
+  // hidden instance state of runtime system singleton is confined to this script
   const moment = process.hrtime(), correction = I.system$.uptime();
   I.refine({
     //@ Replace setTimeout implementation with setImmediate.
-    asap: function(closure) {
-      setImmediate(closure);
+    asap: function(callback) {
+      setImmediate(callback);
     },
     //@ Replace Date.now implementation with high-resolution time.
     uptime: function() {

@@ -27,8 +27,10 @@
       return this.sceneCount < 0 ? this.jobResult : this;
     }
   });
-  const Showstopper = I._.Showstopper;
   I.know({
+    //@ Obtain status link.
+    //@unique Std.Status._.Symbol
+    //@return {Std.Status.$._.Link} status link of this actor
     [I._.Status._.Symbol]: function() {
       return this.jobLink;
     },
@@ -165,7 +167,7 @@
       I.failUnless('unexpected inertia or completion', this.sceneCount > 0);
       I.failUnless('cyclic performance', performance !== this);
       I.failUnless('postponed performance', !this.jobShowstopper);
-      if (Showstopper.describes(performance)) {
+      if (I._.Showstopper.describes(performance)) {
         // a showstopper blocks this job
         performance.blockScene(this);
         this.jobShowstopper = performance;
@@ -215,7 +217,7 @@
       });
     }),
     //@ A strategy for job completion events.
-    Strategy: 'Std.Event.$._.CollectStrategy'.subclass(I => {
+    Strategy: 'Std.Event.$._.CollectAgeStrategy'.subclass(I => {
       I.have({
         //@{Std.Theater.Job} job is origin of completion events
         job: null,

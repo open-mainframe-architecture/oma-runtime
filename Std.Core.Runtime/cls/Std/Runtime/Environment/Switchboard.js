@@ -7,12 +7,11 @@
     //@{Std.Dictionary} dictionary with rendezvous streams for input
     pipeInputs: null
   });
-  const IO = I._.IO;
   I.know({
     //@param manager {Std.Theater.Agent} stream manager
     build: function(manager) {
       I.$super.build.call(this);
-      this.pipeOutput = IO._.Rendezvous.spawn(manager);
+      this.pipeOutput = I._.IO._.Rendezvous.spawn(manager);
     },
     unveil: function() {
       I.$super.unveil.call(this);
@@ -39,10 +38,10 @@
       }
       const output = this.pipeOutput, manager = output.$actor.$supervisor.$agent;
       // add new input pipe to synchronize item availability in stream
-      const input = IO._.Rendezvous.spawn(manager);
+      const input = I._.IO._.Rendezvous.spawn(manager);
       inputs[id] = input;
       // synthesize new stream that reads from input pipe and writes to output pipe
-      return IO._.Synthesizer.spawn(manager, () => input.read(), it => output.write([id, it]));
+      return I._.IO._.Synthesizer.spawn(manager, () => input.read(), it => output.write([id, it]));
     }
   });
 })

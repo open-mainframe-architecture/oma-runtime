@@ -15,4 +15,18 @@
       return I.system$.provide(this.valueOf());
     }
   });
+  I.know({
+    //@ Ensure this string ends with a postfix.
+    //@param postfix {string} required postfix
+    //@return {string} this string or this string appended with postfix
+    endingWith: function(postfix) {
+      return this.endsWith(postfix) ? this : this + postfix;
+    },
+    //@ Ensure this string starts with a prefix.
+    //@param prefix {string} required prefix
+    //@return {string} this string or this string prepended with prefix
+    startingWith: function(prefix) {
+      return this.startsWith(prefix) ? this : prefix + this;
+    }
+  });
 })

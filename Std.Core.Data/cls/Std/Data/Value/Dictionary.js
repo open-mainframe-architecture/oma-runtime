@@ -76,4 +76,5 @@
       }
       return this.$type.createValue(this.$expr, elements);
     }
-  });})
+  });
+})

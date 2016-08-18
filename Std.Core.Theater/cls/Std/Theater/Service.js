@@ -15,15 +15,19 @@
     waitingActors: null,
     //@{Std.Status} status for actors in trouble whose managers decide what to do next
     troubledActors: null,
-    //@{Std.Wait.Clock} clock keeps track of timed events
+    //@{Std.Status} status for suspended actors that cannot work on stage until they are resumed
+    suspendedActors: null,
+    //@{Std.Theater.Service.$._.Clock} clock keeps track of timed events
     alarmClock: null,
-    //@{*} false (awake), null (waking up), true (deep sleep) or JavaScript alarm to wake up
-    alarmSleeping: true,
+    //@{*} false (not using alarm), null (waking up asap) or JavaScript alarm for next deadline
+    alarmState: false,
     //@{function} the alarm bell is executed when a clock event fires while theater is sleeping
     alarmBell: null,
-    //@{number} deadline for next JavaScript alarm
+    //@{number} next deadline of JavaScript alarm
     alarmDeadline: null,
-    //@{Std.Event.$._.Strategy} strategy for stage break events
+    //@{promise} microtask is a promise to avoid starvation of pending promise resolutions
+    microtask: null,
+    //@{Std.Event.$._.CollectAgeStrategy} strategy for stage break events
     breakStrategy: null,
     //@{boolean} if curtain is open, actors can play on stage, otherwise theater is closed
     curtainOpen: false,
@@ -48,31 +52,34 @@
       this.activeActor = I._.Status.create('active');
       this.waitingActors = I._.Status.create('waiting');
       this.troubledActors = I._.Status.create('troubled');
-      this.alarmClock = I._.Wait._.Clock.create();
+      this.suspendedActors = I._.Status.create('suspended');
+      this.alarmClock = I.Clock.create();
       this.alarmBell = this.wakeUp.bind(this);
-      this.breakStrategy = I.When.CollectStrategy.create();
+      this.microtask = Promise.resolve();
+      this.breakStrategy = I.When.CollectAgeStrategy.create();
     },
-    //@ Sleep until next wake-up call.
+    //@ Schedule next wake-up call.
     //@return {number} current uptime
     awakeLater: function() {
       const deep = this.workingActors.size === 0, now = this.$rt.uptime();
       if (deep) {
-        const deadline = this.alarmClock.firstDeadline();
-        if (deadline) {
+        const firstMoment = this.alarmClock.strategy.moments[0];
+        const firstDeadline = firstMoment && firstMoment.deadline;
+        if (firstDeadline) {
           // compute seconds left until first deadline should fire
-          const seconds = deadline - now;
+          const seconds = firstDeadline - now;
           if (seconds <= 0) {
             // wake up to fire first deadline that already passed
             this.awakeSoon();
-          } else if (deadline !== this.alarmDeadline) {
+          } else if (firstDeadline !== this.alarmDeadline) {
             // wake up from deep sleep on time for new deadline
             this.resetAlarm(setTimeout(this.alarmBell, seconds * 1000));
-            this.alarmDeadline = deadline;
+            this.alarmDeadline = firstDeadline;
           }
           // else keep alarm of first deadline intact
         } else {
           // deep sleep without alarm if there is no deadline
-          this.resetAlarm(true);
+          this.resetAlarm();
         }
       } else {
         // wake up from light sleep and continue to work with actors
@@ -80,21 +87,14 @@
       }
       return now;
     },
-    //@ Advance clock whilst awake.
-    //@return {number} current uptime
-    awakeNow: function() {
-      this.resetAlarm(false);
-      // fire events whose deadline passed
-      return this.alarmClock.fireNow();
-    },
     //@ Schedule next wake-up call as soon as possible.
     //@return nothing
     awakeSoon: function() {
-      if (this.alarmSleeping !== null) {
-        clearTimeout(this.alarmSleeping);
-        this.alarmSleeping = this.alarmDeadline = null;
-        // continue after control has returned to global event loop
-        this.$rt.asap(this.alarmBell);
+      if (this.alarmState !== null) {
+        this.resetAlarm();
+        this.alarmState = null;
+        // pending promise resolutions/rejections could starve on some platforms without microtask
+        this.microtask.then(() => this.$rt.asap(this.alarmBell));
       }
       // otherwise wake-up call is already scheduled
     },
@@ -103,6 +103,16 @@
     //@return {Std.Status.$._.Link} member status link
     createLink: function(actor) {
       return this.idleActors.createLink(actor);
+    },
+    //@ Fire clock events whose deadline passed.
+    //@return {number} current uptime
+    fireNow: function() {
+      const moments = this.alarmClock.strategy.moments, now = this.$rt.uptime();
+      for (let firstMoment; (firstMoment = moments[0]) && firstMoment.deadline <= now;) {
+        // fire first moment, removing it from the sorted array
+        firstMoment.fire();
+      }
+      return now;
     },
     //@ Get clock that ticks for this theater.
     //@return {Std.Wait.Clock} a clock for delays and pauses
@@ -116,7 +126,7 @@
       I.failUnless('interrupt with curtain open', !this.curtainOpen);
       I.failUnless('expected inertia before interrupt', job.isInert());
       const actor = job.getActor();
-      if (actor.isInTrouble()) {
+      if (actor.isTroubled()) {
         // run job but do not open curtain to handle interrupt on stage with suspended actor
         job.run();
       } else {
@@ -129,7 +139,7 @@
         actor.takeStage(job.interrupting());
         this.activeActor.clear();
         // schedule next wake-up call after interrupt has been handled
-        this.interruptTime += this.sleepWithAlarm() - beginning;
+        this.interruptTime += this.awakeLater() - beginning;
         this.curtainOpen = false;
       }
     },
@@ -143,9 +153,12 @@
         if (link.next) {
           link.status.delete(actor);
         }
-      } else if (actor.isInTrouble()) {
+      } else if (actor.isTroubled()) {
         // manage problem of troubled actor
         this.troubledActors.add(actor);
+      } else if (actor.isSuspended()) {
+        // suspended until further notice
+        this.suspendedActors.add(actor);
       } else if (actor.hasWork()) {
         // actor is ready to work on jobs
         this.workingActors.add(actor);
@@ -161,15 +174,15 @@
         this.idleActors.add(actor);
       }
     },
-    //@ Clear pending alarm/deadline and continue with new sleeping state.
-    //@param sleeping {*} null, boolean or JavaScript alarm
+    //@ Clear pending alarm and optionally set a new one.
+    //@param alarm {*} JavaScript alarm
     //@return nothing
-    resetAlarm: function(sleeping) {
-      if (this.alarmSleeping) {
-        clearTimeout(this.alarmSleeping);
+    resetAlarm: function(alarm) {
+      if (this.alarmState) {
+        clearTimeout(this.alarmState);
         this.alarmDeadline = null;
       }
-      this.alarmSleeping = sleeping;
+      this.alarmState = alarm || false;
     },
     //@ Create event that fires when this theater ends next or current time slice.
     //@return {Std.Event} event fires when curtains close
@@ -182,12 +195,12 @@
     wakeUp: function() {
       I.failUnless('wake up with curtain open', !this.curtainOpen);
       this.curtainOpen = true;
+      this.resetAlarm();
       ++this.sliceCount;
-      // if necessary, leave curtain open until deadline of time slice passes
-      const beginning = this.awakeNow(), deadline = beginning + this.curtainSlice;
+      const beginning = this.fireNow(), sliceDeadline = beginning + this.curtainSlice;
       const working = this.workingActors, active = this.activeActor;
       // while there are actors ready for work and the deadline of time slice hasn't passed yet
-      for (let now = beginning; working.size > 0 && now <= deadline; now = this.awakeNow()) {
+      for (let now = beginning; working.size > 0 && now <= sliceDeadline; now = this.fireNow()) {
         ++this.slicePerformances;
         // first working actor becomes active actor on stage
         const actor = working.values().next().value;
@@ -199,10 +212,108 @@
       }
       // fire events when this theater takes a break
       this.breakStrategy.fireAll();
-      // start deep sleep when out of work, otherwise wake up for next slice as soon as possible
+      // sleep when out of work, otherwise wake up for next slice as soon as possible
       this.sliceTime += this.awakeLater() - beginning;
       this.curtainOpen = false;
     }
+  });
+  I.nest({
+    //@ A moment is a clock event.
+    Moment: 'Event'.subclass(I => {
+      I.have({
+        //@{number} this moment fires after waiting for a number of seconds
+        seconds: null,
+        //@{number} this moment fires when deadline passes
+        deadline: null
+      });
+      I.know({
+        //@param strategy {Std.Theater.Service.$._.ClockStrategy} clock strategy
+        //@param seconds {number?} seconds to wait or nothing
+        //@param deadline {number?} deadline when this moment fires or nothing
+        build: function(strategy, seconds, deadline) {
+          I.$super.build.call(this, strategy);
+          this.seconds = seconds;
+          this.deadline = deadline;
+        }
+      });
+    }),
+    //@ A theater clock creates moments in time.
+    Clock: 'Wait.Clock'.subclass(I => {
+      I.have({
+        //@{Std.Theater.Service.$._.ClockStrategy} strategy sorts moments on when they should fire
+        strategy: null
+      });
+      I.know({
+        unveil: function() {
+          I.$super.unveil.call(this);
+          this.strategy = I._.Service._.ClockStrategy.create();
+        },
+        //@ Create event that fires after a delay in seconds.
+        //@param delay {number} number of seconds to delay after charging
+        //@return {Std.Event} clock event
+        delay: function(seconds) {
+          // set deadline when clock event is charged
+          return I._.Service._.Moment.create(this.strategy, seconds);
+        },
+        //@ Create event that fires when this clock reaches some moment.
+        //@param until {number} clock time when this event should fire
+        //@return {Std.Event} clock event
+        wait: function(until) {
+          // create clock event whose deadline is already set
+          return I._.Service._.Moment.create(this.strategy, Infinity, until || -1);
+        }
+      });
+    }),
+    //@ A clock strategy sorts events on time.
+    ClockStrategy: 'Event.$._.Strategy'.subclass(I => {
+      I.have({
+        //@{[Std.Theater.Service.$._.Moment]} sorted array with clock events
+        moments: null
+      });
+      I.know({
+        unveil: function() {
+          I.$super.unveil.call(this);
+          this.moments = [];
+        },
+        addCharge: function(moment) {
+          const deadline = moment.deadline, moments = this.moments;
+          let i = 0, j = moments.length;
+          // binary search in sorted array
+          while (i < j) {
+            const probe = Math.floor((i + j) / 2);
+            if (moments[probe].deadline <= deadline) {
+              i = probe + 1;
+            } else {
+              j = probe;
+            }
+          }
+          // insert moment at sorted position
+          moments.splice(i, 0, moment);
+        },
+        deleteCharge: function(moment) {
+          // use linear search to find moment object in array
+          const moments = this.moments, index = moments.indexOf(moment);
+          I.failUnless('discharge moment without charge', index >= 0);
+          moments.splice(index, 1);
+        },
+        testIgnition: function(moment) {
+          if (moment.seconds <= 0) {
+            // fire immediately when delay is zero or negative
+            return true;
+          }
+          const deadline = moment.deadline, now = this.$rt.uptime();
+          if (!deadline) {
+            // set deadline based on delay and current time
+            moment.deadline = now + moment.seconds;
+          } else if (deadline <= now) {
+            // fire immediately when deadline has already been reached
+            return true;
+          }
+          // sort charged event based on deadline
+          return false;
+        }
+      });
+    })
   });
   I.setup(function() {
     I._.Actor.lockInstanceConstants({ $theater: I.$.create() });

@@ -25,6 +25,26 @@
       this.childCue = cue;
       this.ignitionEffect = effect;
     },
+    charge: function() {
+      I.$super.charge.call(this, this);
+      const child = this.childCue;
+      if (child.isFallible()) {
+        const blooper = this.blooperCue = Blooper.create();
+        // charge with blooper for asynchronous errors
+        return child.charge(this, blooper) || blooper.charge(this);
+      } else {
+        // charge without blooper
+        return child.charge(this);
+      }
+    },
+    discharge: function() {
+      I.$super.discharge.call(this);
+      const child = this.childCue, blooper = this.blooperCue;
+      child.discharge();
+      if (blooper) {
+        blooper.discharge();
+      }
+    },
     fire: function(ignition, fromChild) {
       I.failUnless('second ignition', !this.ignitionCue);
       const child = this.childCue, blooper = this.blooperCue;
@@ -33,7 +53,7 @@
           blooper.discharge();
         }
       } else {
-        I.failUnless('bad ignition', fromChild === blooper);
+        I.failUnless('bad ignition', fromChild === blooper && ignition === blooper);
         child.discharge();
       }
       // repost job to produce effect of ignition on stage
@@ -47,26 +67,14 @@
     blockScene: function(job) {
       I.failUnless('block job twice', !this.blockedJob);
       this.blockedJob = job;
-      const child = this.childCue;
-      if (child.isFallible()) {
-        const blooper = this.blooperCue = Blooper.create();
-        // charge with blooper for asynchronous errors
-        this.ignitionCue = child.charge(this, blooper) || blooper.charge(this);
-      } else {
-        // charge without blooper
-        this.ignitionCue = child.charge(this);
-      }
+      this.ignitionCue = this.charge();
     },
     //@ Discharge child cue if this showstopper was still waiting for the child to fire.
     //@return nothing
     cancel: function() {
       if (!this.ignitionCue && this.childCue) {
-        const child = this.childCue, blooper = this.blooperCue;
+        this.discharge();
         this.childCue = this.blooperCue = this.ignitionEffect = this.blockedJob = null;
-        child.discharge();
-        if (blooper) {
-          blooper.discharge();
-        }
       }
     },
     //@ Did some cue fire to unblock this showstopper?

@@ -10,7 +10,7 @@
     controlRemote: function(stream, alternativeTypespace) {
       const agent = this, roleClass = this.agentActor.getRoleClass();
       const typespace = alternativeTypespace || I.typespace$;
-      return agent.createScene(function readMessages() {
+      return agent.runScene(function readMessages() {
         return stream.read().propels(message => {
           // run job of received message
           agent.runScene(() => {
@@ -35,17 +35,9 @@
               return stream.write(reply);
             });
           });
-          // continue reading messages
-          return agent.createScene(readMessages);
-        });
+          // continue reading messages when job of received message is running
+        }).propels(readMessages);
       });
-    },
-    //@ Control this agent remotely over a stream.
-    //@param stream {Std.Agent} stream for message transport
-    //@param alternativeTypespace {Std.Data.Typespace?} nonstandard typespace or nothing
-    //@return {Std.Theater.Job} running job to control this agent
-    runRemote: function(stream, alternativeTypespace) {
-      return this.controlRemote(stream, alternativeTypespace).running();
     }
   });
   I.nest({
@@ -111,9 +103,7 @@
                 // success propels progress that unmarshals output result
                 assign(reply.result);
               }
-              // continue reading replies
-              return agent.createScene(processReplies);
-            });
+            }).propels(processReplies);
           });
         },
       });

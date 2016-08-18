@@ -4,7 +4,7 @@ function refine(I) {
   const Compilation = Function;
   I.share({
     //@{Std.Table} an immutable, empty table
-    EmptyTable: Object.freeze(I._.Std._.Table.create()),
+    EmptyTable: Object.freeze(I.createTable()),
     //@{Std.Table} convenient access to subroutines from Std.Iterator package
     Loop: I._.Std._.Iterator._,
     //@ Compile the source of a strict JavaScript closure body.
@@ -49,6 +49,10 @@ function refine(I) {
     //@param it {*} JavaScript object or value
     //@return {boolean} true if it is a table, otherwise false
     isTable: Object.prototype.isPrototypeOf.bind(I._.Std._.Table.getPrototype()),
+    //@ Naive test for promise or promise-like object.
+    //@param it {*} JavaScript object or value
+    //@return {boolean} true if it is a so-called thenable, otherwise false
+    isThenable: it => !!it && I.isClosure(it.then),
     //@ Always return first argument.
     //@param argument {*} JavaScript object or value
     //@return {*} first argument

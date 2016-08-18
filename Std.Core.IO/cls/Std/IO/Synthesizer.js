@@ -1,4 +1,4 @@
-//@ A synthesizer computes and consumes items with closures.
+//@ A synthesizer produces and consumes items with closures.
 'Stream'.subclass(I => {
   "use strict";
   I.am({
@@ -6,26 +6,26 @@
   });
   I.have({
     //@{function} produce next item of input stream
-    inputComputation: null,
+    inputProduction: null,
     //@{function} consume next item of output stream
-    outputComputation: null
+    outputConsumption: null
   });
   I.know({
     //@param input {*|function} produce input
     //@param output {function?} consume output
     build: function(input, output) {
       I.$super.build.call(this);
-      this.inputComputation = I.isClosure(input) ? input : I.returnWith(input);
-      this.outputComputation = output || I.doNothing;
+      this.inputProduction = I.isClosure(input) ? input : I.returnWith(input);
+      this.outputConsumption = output || I.doNothing;
     }
   });
   I.play({
     read: function() {
-      const computation = this.inputComputation;
+      const computation = this.inputProduction;
       return computation();
     },
     write: function(it) {
-      const computation = this.outputComputation;
+      const computation = this.outputConsumption;
       return computation(it);
     }
   });

@@ -5,13 +5,13 @@
     Abstract: false
   });
   I.have({
-    //@{Set[string]} set with choices
+    //@{Set<string>} set with choices
     enumeratedChoices: null
   });
   I.know({
     //@param typespace {Std.Data.Typespace} typespace of this enumeration type
     //@param expression {Std.Data.Definition.Expression} type expression
-    //@param choices {Set[string]} string choices
+    //@param choices {Set<string>} string choices
     build: function(typespace, expression, choices) {
       I.$super.build.call(this, typespace, expression);
       this.enumeratedChoices = choices;

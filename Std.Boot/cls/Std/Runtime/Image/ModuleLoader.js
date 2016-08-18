@@ -178,7 +178,7 @@
         }
       }
       // ready when all requirements are satisfied, otherwise wait for future satisfaction
-      return this.getClassRequirements().every(service => this.$rt.provides(service));
+      return this.getClassRequirements().every(service => !!this.$rt.provide(service));
     },
     //@ Run class scripts in one or more rounds to load class definitions/refinements.
     //@return nothing
@@ -230,7 +230,7 @@
           const serviceClass = this.$rt.resolveService(serviceName);
           if (!serviceClass) {
             I.fail(`bad service ${serviceName}`);
-        }
+          }
           const provider = factory(providerClass, satisfactions);
           // skip registration if factory returns nothing
           if (provider) {
@@ -272,7 +272,7 @@
       }
       // are required services provided?
       const requires = config.requires;
-      if (Object.keys(requires).every(id => this.$rt.provides(requires[id]))) {
+      if (Object.keys(requires).every(id => !!this.$rt.provide(requires[id]))) {
         const precondition = config.test;
         // module is unloadable if precondition test fails, otherwise configuration passed test
         return precondition(this.$rt.satisfy(requires)) !== false;

@@ -8,7 +8,7 @@
     //@{string} bundle name must be unique within a runtime image
     bundleName: null
   });
-  const Module = I._.Logic._.Module, ModuleLoader = I._.ModuleLoader;
+  const Module = I._.Logic._.Module, ModuleLoader = I._.Image._.ModuleLoader;
   I.know({
     //@param name {string} bundle name
     build: function(name) {

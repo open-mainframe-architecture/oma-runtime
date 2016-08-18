@@ -12,10 +12,18 @@
     Abstract: true
   });
   I.have({
+    //@{Std.Data.Value.Record} record value of Runtime.Environment type
+    bootRecord: null,
+    //@{Std.Wait.Door} open door when boot record is available
+    bootDoor: null,
     //@{Std.Runtime.Environment.Switchboard?} switchboard connects streams to parent environment
     parentSwitchboard: null
   });
   I.know({
+    unveil: function() {
+      I.$super.unveil.call(this);
+      this.bootDoor = I._.Wait._.Door.create();
+    },
     initializeWork: function(agent) {
       I.$super.initializeWork.call(this, agent);
       const parentEmitter = I.constants$.parentEmitter;
@@ -24,12 +32,10 @@
         // create switchboard for streams between parent and child environment
         this.parentSwitchboard = I._.Switchboard.create(agent);
         // listen to emitter right away to avoid dropped messages from parent web environment
-        agent.runRemote(this.spawnCrossover(agent, parentEmitter));
+        agent.controlRemote(this.spawnCrossover(agent, parentEmitter));
       }
     },
-    isManaging: I.returnTrue,
-    //TODO
-    repairDamage: I.shouldNotOccur,
+    repairDamage: I.repairLoose,
     //@ Create environment-specific emitter for child environment.
     //@return {object} environment-specific emitter
     createSubsidiaryEmitter: I.burdenSubclass,
@@ -44,6 +50,23 @@
     spawnCrossover: I.burdenSubclass
   });
   I.play({
+    //@ Attain boot record when it's available.
+    //@promise {Std.Data.Value.Record} Runtime.Environment record value
+    attainBootRecord: I.remotely('=> Runtime.Environment', function() {
+      return this.bootRecord || this.bootDoor.enter().triggers(() => this.bootRecord);
+    }),
+    //@ Boot this runtime environment.
+    //@param bootRecord {Std.Data.Value.Record} Runtime.Environment record value
+    //@promise nothing
+    //@except when image has already been booted
+    boot: I.remotely('Runtime.Environment =>', function(bootRecord) {
+      I.failUnless('boot environment twice', !this.bootRecord);
+      this.bootRecord = bootRecord;
+      // door is obsolete after opening
+      this.bootDoor.openEntrance();
+      this.bootDoor = null;
+      // when boot record is available, other services continue their initialization
+    }),
     //@ Load several scripts. Load order is not defined.
     //@param locations {[string|Std.HTTP.URI]} locations of scripts to load
     //@promise nothing
@@ -62,7 +85,7 @@
     //@promise nothing
     provideRemote: function(id, service) {
       const provider = this.$rt.provide(service);
-      provider.runRemote(this.parentSwitchboard.spawnStream(id));
+      provider.controlRemote(this.parentSwitchboard.spawnStream(id));
     },
     //@ Register proxy provider with stream in switchboard.
     //@param id {integer} stream id in switchboard
@@ -88,8 +111,10 @@
     //@ Create and start child environment of this runtime environment.
     //@param manager {Std.Theater.Agent} manager of subsidiary
     //@param purpose {string} descriptive purpose of subsidiary
+    //@param settings {Std.Data.Value.Record?} optional Runtime.Settings value
     //@promise {Std.Theater.Agent} agent of new subsidiary
-    startSubsidiary: function(manager, purpose) {
+    startSubsidiary: function(manager, purpose, settings) {
+      I.failUnless('subsidiary of bootless environment', this.bootRecord);
       // start child environment with environment-specific emitter
       const emitter = this.createSubsidiaryEmitter();
       const stream = this.spawnCrossover(this.$agent, emitter);
@@ -99,7 +124,14 @@
         this.destroySubsidiaryEmitter(emitter);
         return stream.kill();
       }));
-      return subsidiary.assignChild(stream).propels(subsidiary);
+      // boot remote child environment with appropriate boot record
+      return subsidiary.bearChild(stream).propels(subsidiary.provideRemote(I.$))
+        .propels(remoteEnvironment => 
+          remoteEnvironment.boot(this.bootRecord.$update({
+            settings: settings || this.bootRecord.settings
+          }))
+        )
+        .propels(subsidiary);
     }
   });
   I.nest({
@@ -111,7 +143,7 @@
       I.have({
         //@{object} environment-specific emitter of message events
         emitter: null,
-        //@{[object]} received messages that have not yet been read
+        //@{[*]} received messages that have not yet been read
         unread: null,
         //@{Std.Wait.Semaphore} semaphore to synchronize fetching of unread messages
         protect: null
@@ -141,11 +173,11 @@
         install: I.burdenSubclass,
         //@ Handle environment-specific way to extract received message.
         //@param ... {*} environment-specific arguments
-        //@return {object} received message
+        //@return {*} received message
         receive: I.burdenSubclass,
         //@ Send message with emitter.
         //@param emitter {object} environment-specific emitter
-        //@param it {object} message to send
+        //@param it {*} message to send
         //@return nothing
         send: I.burdenSubclass
       });

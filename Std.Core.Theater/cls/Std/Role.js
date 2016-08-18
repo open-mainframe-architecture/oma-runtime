@@ -1,4 +1,4 @@
-//@ A role performs asynchronous scenes with actors/agents.
+//@ A busy role performs asynchronous scenes for an actor and agent.
 'Object'.subclass((I, We) => {
   "use strict";
   I.have({
@@ -25,13 +25,10 @@
     //@param parameters {[*]?} scene parameters
     //@return {*} result of unknown scene
     improviseScene: I.shouldNotOccur,
-    //@ Initialize new agent/actor/role triple.
+    //@ Initialize new agent/actor/role triple that works on stage.
     //@param agent {Std.Theater.Agent} new agent
     //@return nothing
     initializeWork: I.doNothing,
-    //@ Is this role managing a team? Managers decide over life and death of team members.
-    //@return {boolean} true if this role plays a team manager, otherwise false
-    isManaging: I.returnFalse,
     //@ Play next scene on stage.
     //@param job {Std.Theater.Job} job of scene to play
     //@param selector {string|function} scene name or scene closure
@@ -60,7 +57,7 @@
     build: function(container, key, module) {
       We.$super.build.call(this, container, key, module);
       // every role class is built with its own scene methods
-      setupSceneMethods(this);
+      this.buildSceneMethods();
     },
     prepareScript: function(scriptInst, scriptMeta) {
       We.$super.prepareScript.call(this, scriptInst, scriptMeta);
@@ -74,6 +71,23 @@
         I.lockProperty(scriptInst, '$formerRole', I.createTable());
         scriptInst.refineRole = scriptRefine;
       }
+    },
+    //@ Initialize scene methods of new role class.
+    //@return nothing
+    buildSceneMethods: function() {
+      const parent = this.getParentBehavior();
+      this.sceneMethods = I.createTable(parent.sceneMethods);
+      this.agentConstructor = function Agent() {
+        for (let iv in this) {
+          this[iv] = this[iv];
+        }
+        Object.seal(this);
+        this.build(...arguments);
+        this.unveil();
+      };
+      const parentPrototype = parent.agentConstructor ? parent.agentConstructor.prototype :
+        Theater._.Agent.getPrototype();
+      this.agentConstructor.prototype = Object.create(parentPrototype);
     },
     //@ Create agent that implements scene methods of this role class.
     //@param ... {*} construction arguments
@@ -130,22 +144,6 @@
     // refine prefixed instance methods
     this.$.refineInstanceMethods(closures, this.$former);
   }
-  // initialize scene methods of new role class
-  function setupSceneMethods(roleClass) {
-    const parent = roleClass.getParentBehavior();
-    roleClass.sceneMethods = I.createTable(parent.sceneMethods);
-    roleClass.agentConstructor = function Agent() {
-      for (let iv in this) {
-        this[iv] = this[iv];
-      }
-      Object.seal(this);
-      this.build(...arguments);
-      this.unveil();
-    };
-    const parentPrototype =  parent.agentConstructor ?  parent.agentConstructor.prototype :
-      Theater._.Agent.getPrototype();
-    roleClass.agentConstructor.prototype = Object.create(parentPrototype);
-  }
   // setup scene methods for Std.Role class which has been built before this script executes
-  I.setup(() => setupSceneMethods(I.$));
+  I.setup(() => I.$.buildSceneMethods());
 })

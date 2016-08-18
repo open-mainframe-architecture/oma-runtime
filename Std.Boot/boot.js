@@ -354,7 +354,7 @@ function boot(bundleName, bootModuleName) {
       });
       // run setup routines and complete initialization of boot module
       bootSetup.forEach(closure => closure());
-      const runtimeBundle = Boot.assetBundle = Std_.Runtime._.Image._.Bundle.create(bundleName);
+      const runtimeBundle = Boot.assetBundle = Std_.Runtime._.Bundle.create(bundleName);
       Boot.logicConfig = Logic_.Config.create(bootSpec['']);
       unveilContext(Boot);
       Boot.$rt.bootTimestamp = t0;

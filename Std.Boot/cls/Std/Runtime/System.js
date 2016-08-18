@@ -5,9 +5,9 @@
     Final: true
   });
   I.have({
-    //@{Std.Timestamp} moment when this runtime was created
+    //@{date} moment when this runtime was created
     bootTimestamp: null,
-    //@{Map} registry maps service to provider
+    //@{Map<Std.Logic.Class,object>} registry maps service class to provider
     serviceRegistry: null
   });
   I.know({
@@ -16,30 +16,34 @@
       this.serviceRegistry = new Map();
       this.register(I.$, this);
     },
+    //@ Get module that booted runtime system.
+    //@return {Std.Logic.Module} boot module
+    getBootModule: I.returnWith(I.$module),
     //@ Get moment when runtime system was created.
-    //@return {Std.Timestamp} JavaScript date
+    //@return {data} JavaScript date
     getBootTimestamp: function() {
       return this.bootTimestamp;
     },
-    //@ Test whether this runtime system provides a service.
-    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to test
-    //@return {boolean} true if service is provided, otherwise false
-    provides: function(service) {
-      return this.serviceRegistry.has(this.resolveService(service));
+    //@ Get provider for service.
+    //@param service {string|Std.Logic.Namespace|Std.Logic.Class} service to provide
+    //@return {object?} service provider or nothing if service is not provided
+    provide: function(service) {
+      return this.selectProvider(this.resolveService(service));
     },
     //@ Register service provider.
     //@param service {string|Std.Logic.Namespace|Std.Logic.Class} provided service
     //@param provider {object} implementation of service
-    //@return {object?} registered provider or nothing if provider cannot be registered
+    //@return {object?} registered provider or nothing if service is invalid
     register: function(service, provider) {
-      const registry = this.serviceRegistry, serviceClass = this.resolveService(service);
+      const serviceClass = this.resolveService(service);
       if (serviceClass) {
-        if (!registry.has(serviceClass)) {
-          registry.set(serviceClass, provider);
-          return provider;
-        } else {
-          return registry.get(serviceClass);
+        const registry = this.serviceRegistry, registeredProvider = registry.get(serviceClass);
+        if (registeredProvider) {
+          // if service is already provided, return with existing provider
+          return registeredProvider;
         }
+        this.updateProvider(serviceClass, provider);
+        return provider;
       }
     },
     //@ Resolve service description to class.
@@ -57,13 +61,25 @@
     //@return {Std.Table} new table, with same keys, that identifies providers
     //@except when a required service cannot be not provided
     satisfy: function(requirements) {
-      const registry = this.serviceRegistry;
       const satisfactions = I.createTable();
       for (let key in requirements) {
-        const serviceName = requirements[key], serviceClass = this.resolveService(serviceName);
-        satisfactions[key] = registry.get(serviceClass) || I.fail(`bad service ${serviceName}`);
+        const service = requirements[key];
+        satisfactions[key] = this.provide(service) || I.fail(`bad service ${service}`);
       }
       return satisfactions;
+    },
+    //@ Select registered provider of service class.
+    //@param serviceClass {Std.Logic.Class} service class to provide
+    //@return {object?} service provider or nothing if service is not provided
+    selectProvider: function(serviceClass) {
+      return this.serviceRegistry.get(serviceClass);
+    },
+    //@ Register provider of service class.
+    //@param serviceClass {Std.Logic.Class} service class
+    //@param provider {object} service provider to register
+    //@return nothing
+    updateProvider: function(serviceClass, provider) {
+      this.serviceRegistry.set(serviceClass, provider);
     },
     //@ Current uptime in number of seconds.
     //@return {number} number of seconds since this runtime system booted

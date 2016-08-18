@@ -8,19 +8,19 @@
   I.access({
     //@{[string]} get names of modules that must be loaded
     depends: function() {
-      return this.getArray('depends');
+      return this._.depends || [];
     },
     //@{Std.Table} get factory code of service providers in module
     provides: function() {
-      return this.getTable('provides');
+      return this._.provides || I.createTable();
     },
     //@{Std.Table} get names of services that must be provided
     requires: function() {
-      return this.getTable('requires');
+      return this._.requires || I.createTable();
     },
     //@{function} get code to test precondition which returns false to abort load
     test: function() {
-      return this.getClosure('test');
+      return this._.test || I.doNothing;
     }
   });
   I.know({
@@ -37,36 +37,6 @@
       I.$super.unveil.call(this);
       Object.freeze(this._);
       Object.freeze(this);
-    },
-    //@ Find configured thing at key. Otherwise return with default for absent key.
-    //@param key {string} key to find
-    //@param absentDefault {*} default configuration
-    //@return {*} configured thing
-    findDefault: function(key, absentDefault) {
-      const this_ = this._;
-      return I.isPropertyOwner(this_, key) ? this_[key] : absentDefault;
-    },
-    //@ Get configured array. Default is empty array if not specified.
-    //@param key {string} configuration key
-    //@param array {[*]?} configuration default
-    //@return {[*]} configured array
-    getArray: function(key, array) {
-      return this.findDefault(key, I.isDefined(array) ? array : []);
-    },
-    //@ Get configured code. Default is closure with empty body if not specified.
-    //@param key {string} configuration key
-    //@param closure {function?} configuration default
-    //@return {function} configured closure
-    getClosure: function(key, closure) {
-      return this.findDefault(key, I.isDefined(closure) ? closure : I.doNothing);
-    },
-    //@ Get configured table. Default is empty table if not specified.
-    //@param key {string} configuration key
-    //@param object {Object} configuration default
-    //@return {Std.Table} configured table
-    getTable: function(key, object) {
-      const value = this.findDefault(key, I.isDefined(object) ? object : {});
-      return Object.assign(I.createTable(), value);
     },
     //@ Install additional functionality from module configuration.
     //@param module {Std.Logic.Module} configured module

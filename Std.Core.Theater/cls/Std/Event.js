@@ -1,4 +1,4 @@
-//@ An event is a theater cue that delegates to a strategy object.
+//@ An event is a theater cue that delegates responsibilities to a strategy object.
 'Theater.Cue'.subclass(I => {
   "use strict";
   I.have({
@@ -13,13 +13,12 @@
     },
     charge: function(parent, blooper) {
       I.$super.charge.call(this, parent, blooper);
-      const strategy = this.eventStrategy;
-      if (strategy.testIgnition(this, blooper)) {
+      if (this.eventStrategy.testIgnition(this, blooper)) {
         // this event fired upon charging
         return this;
       } else {
         // add charged event
-        strategy.addCharge(this);
+        this.eventStrategy.addCharge(this);
       }
     },
     discharge: function() {
@@ -39,7 +38,6 @@
   I.nest({
     //@ A strategy creates, charges, collects, discharges and tests events.
     Strategy: 'Object'.subclass(I => {
-      const Event = I._.Event;
       I.know({
         //@ Add charged event that didn't fire immediately.
         //@param event {Std.Event} charged event to add
@@ -48,7 +46,7 @@
         //@ Create default event.
         //@return {Std.Event} new event
         createEvent: function() {
-          return Event.create(this);
+          return I._.Event.create(this);
         },
         //@ Delete charged event.
         //@param event {Std.Event} event to delete
@@ -67,9 +65,9 @@
       });
     }),
     //@ A strategy that collects charged events and fires them from oldest to youngest.
-    CollectStrategy: 'Event.$._.Strategy'.subclass(I => {
+    CollectAgeStrategy: 'Event.$._.Strategy'.subclass(I => {
       I.have({
-        //@{Set[Std.Event]|boolean?} set with charged events or false if all events fired
+        //@{Set<Std.Event>|boolean?} set with charged events or false if all events fired
         chargedEvents: null
       });
       I.know({
@@ -85,7 +83,7 @@
             I.failUnless('discharge after all fired', !discharged);
           }
         },
-        //@ Collect all charged events. They never ignite immediately.
+        //@ Collect all charged events. They do not ignite upon charging by default.
         testIgnition: I.returnFalse,
         //@ Fire charged events, from oldest to youngest.
         //@return nothing
@@ -108,8 +106,8 @@
         }
       });
     }),
-    //@ A common strategy collects events and delegates fallibility and ignition test to closures.
-    CommonStrategy: 'Event.$._.CollectStrategy'.subclass(I => {
+    //@ Common strategy collects on age and delegates fallibility and ignition tests to closures.
+    CommonAgeStrategy: 'Event.$._.CollectAgeStrategy'.subclass(I => {
       I.have({
         //@{function} closure that tests fallibility of event
         fallibilityTest: null,

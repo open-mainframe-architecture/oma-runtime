@@ -85,7 +85,7 @@
       return cached || this.cache(Definition._.Dictionary.create(source, expression));
     },
     //@ Create expression for enumeration type.
-    //@param choices {Set[string]} enumerated choices
+    //@param choices {Set<string>} enumerated choices
     //@return {Std.Data.Definition.Enumeration} expression for enumeration type
     createEnumeration: function(choices) {
       const source = I.unparseEnumeration(choices);
@@ -408,7 +408,7 @@
     //@return {string} normalized source of dictionary type
     unparseDictionary: expression => `<${expression.unparse()}>`,
     //@ Unparse enumeration type.
-    //@param choices {Set[string]} enumerated choices
+    //@param choices {Set<string>} enumerated choices
     //@return {string} normalized source of enumeration type
     unparseEnumeration: choices => {
       const accu = [];

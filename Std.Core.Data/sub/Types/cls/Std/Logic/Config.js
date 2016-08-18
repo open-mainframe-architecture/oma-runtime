@@ -6,7 +6,7 @@
   I.access({
     //@{Std.Table} get configured type definitions
     datatypes: function() {
-      return this.getTable('datatypes');
+      return this._.datatypes || I.createTable();
     }
   });
   I.refine({

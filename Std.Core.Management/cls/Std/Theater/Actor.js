@@ -14,7 +14,7 @@ function refine(I) {
     }
   });
   I.share({
-    //@{Symbol} actor throws unique poison pill on stage to commit suicide
-    PoisonPill: Symbol()
+    //@{symbol} actor throws unique poison pill on stage to commit suicide
+    PoisonPill: Symbol('poison pill')
   });
 }

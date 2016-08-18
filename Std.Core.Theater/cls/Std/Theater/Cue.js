@@ -89,7 +89,7 @@
       const Unassigned = Symbol();
       I.access({
         //@return {*|Std.Theater.Showstopper} available result or a showstopper to get it
-        value:function() {
+        value: function() {
           return this.result !== Unassigned ? this.result : this.triggers(() => this.result);
         }
       });
@@ -116,7 +116,7 @@
     //@ A cue with two or more children.
     Composition: 'Cue'.subclass(I => {
       I.have({
-        //@{Set[Std.Theater.Cue]} set with charged children of this composed cue
+        //@{Set<Std.Theater.Cue>} set with children of this composed cue
         children: null,
         //@{boolean} true if this composition has at least one fallible child, otherwise false
         fallible: null
@@ -151,7 +151,7 @@
     //@ A conjunction cue fires when all children have fired.
     Conjunction: 'Cue.$._.Composition'.subclass(I => {
       I.have({
-        //@{Set[Std.Theater.Cue]} set with cues that already fired
+        //@{Set<Std.Theater.Cue>} set with cues that already fired
         ignitions: null
       });
       I.know({

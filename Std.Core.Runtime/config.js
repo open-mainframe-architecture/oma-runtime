@@ -33,14 +33,24 @@ function configure(module) {
       heavy: 'string?'
     },
     'Runtime.Module': {
-      // bundle that distributes module (leave empty for heavy bundle)
+      // bundle that distributes module (empty implies heavy bundle)
       bundle: 'string',
       // oridinal position of module in bundle distribution
       ordinal: 'integer',
       // an optional module includes a test to check whether it should load
       optional: 'Flag',
       // explicit module dependencies
-      depends: 'Maybe([string])'
-    }
+      depends: 'Maybe([string])',
+      // provided services
+      provides: 'Maybe([string])'
+    },
+    'Runtime.Environment': {
+      // image specifies info about bundles, modules, service providers, etc.
+      image: 'Runtime.Image',
+      // runtime settings with root sections
+      settings: 'Runtime.Settings'
+    },
+    // settings can be nested to create sections, subsections, etc.
+    'Runtime.Settings': '<Basic|Runtime.Settings>'
   };
 }

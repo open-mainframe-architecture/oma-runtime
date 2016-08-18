@@ -10,7 +10,7 @@
     childSwitchboard: null,
     //@{Std.Theater.Agent} agent proxy of child environment
     childEnvironment: null,
-    //@{Std.Table} agent proxies to service providers in child environment
+    //@{Map<Std.Role.$,Std.Theater.Agent)} map role classes to agent proxies in child environment
     remoteProviders: null,
     //@{integer} last stream id on switchboard
     switchId: 0
@@ -22,36 +22,36 @@
     },
     unveil: function() {
       I.$super.unveil.call(this);
-      this.remoteProviders = I.createTable();
+      this.remoteProviders = new Map();
     },
     initializeWork: function(agent) {
       I.$super.initializeWork.call(this, agent);
       this.childSwitchboard = I._.Switchboard.create(agent);
     },
-    isManaging: I.returnTrue,
-    //TODO
-    repairDamage: I.shouldNotOccur
+    repairDamage: I.repairLoose
   });
   I.play({
-    //@ Assign child environment of this subsidiary.
+    //@ Assign remote child environment of this subsidiary.
     //@param stream {Std.Theater.Agent} stream to child environment
     //@promise nothing
     //@except when child has already been assigned
-    assignChild: function(stream) {
+    bearChild: function(stream) {
       const agent = this.$agent, switchboard = this.childSwitchboard;
       I.failUnless('duplicate subsidiary', !this.childEnvironment);
       const child = this.childEnvironment = I._.Service.spawnRemote(agent, stream);
+      // register child as remote provider of runtime environment
+      this.remoteProviders.set(I._.Service, child);
       agent.runScene(function remoteRead() {
         // read next pair with stream id and read item from remote switchboard
         return child.remoteRead()
           .propels(pair => switchboard.getInputPipe(pair[0]).write(pair[1]))
-          .propels(agent.createScene(remoteRead));
+          .propels(remoteRead);
       });
       agent.runScene(function remoteWrite() {
         // read next pair with stream id and read item from local switchboard
         return switchboard.getOutputPipe().read()
           .propels(pair => child.remoteWrite(pair[0], pair[1]))
-          .propels(agent.createScene(remoteWrite));
+          .propels(remoteWrite);
       });
       // register this subsidiary as service provider in child environment
       return agent.registerRemote(agent, I.$);
@@ -71,26 +71,25 @@
     //@param alternativeTypespace {Std.Data.Typespace?} nonstandard typespace or nothing
     //@promise {Std.Theater.Agent} agent proxy
     provideRemote: function(service, alternativeTypespace) {
-      const roleClass = this.$rt.resolveService(service), serviceName = roleClass.getName();
-      const existingProxy = this.remoteProviders[serviceName];
+      const roleClass = this.$rt.resolveService(service);
+      const existingProxy = this.remoteProviders.get(roleClass);
       if (existingProxy) {
         // reuse existing proxy, assuming that a typespace, if any, cannot make a difference
         return existingProxy;
       }
       const id = ++this.switchId, stream = this.childSwitchboard.spawnStream(id);
       const newProxy = roleClass.spawnRemote(this.$agent, stream, alternativeTypespace);
-      this.remoteProviders[serviceName] = newProxy;
-      return this.childEnvironment.provideRemote(id, serviceName).propels(newProxy);
+      this.remoteProviders.set(roleClass, newProxy);
+      return this.childEnvironment.provideRemote(id, roleClass.getName()).propels(newProxy);
     },
     //@ Register provider proxy in child environment to implementation in this environment.
     //@param localProvider {Std.Theater.Agent} implementation of service to register
-    //@param service {string|Std.Role.$?} optional service role class to register
+    //@param service {string|Std.Role.$?} service role class to register
     //@param alternativeTypespace {Std.Data.Typespace?} nonstandard typespace or nothing
     //@promise nothing
     registerRemote: function(localProvider, service, alternativeTypespace) {
-      const id = ++this.switchId, localActor = localProvider.$actor;
-      const roleClass = service ? this.$rt.resolveService(service) : localActor.getRoleClass();
-      localProvider.runRemote(this.childSwitchboard.spawnStream(id), alternativeTypespace);
+      const id = ++this.switchId, roleClass = this.$rt.resolveService(service);
+      localProvider.controlRemote(this.childSwitchboard.spawnStream(id), alternativeTypespace);
       return this.childEnvironment.registerRemote(id, roleClass.getName());
     }
   });
