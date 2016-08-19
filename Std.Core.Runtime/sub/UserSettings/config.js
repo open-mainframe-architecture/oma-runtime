@@ -7,9 +7,8 @@ function configure(module) {
     environment: 'Std.Runtime.Environment'
   };
   module.provides = {
-    // promise to create user settings from boot record of runtime environment
-    'Std.Runtime.Settings': (Provider, required) =>
-      required.environment.attainBootRecord()
-        .then(bootRecord => Provider.create(bootRecord.settings, bootRecord.arguments))
+    // promise to create user settings when boot record of runtime environment can be attained
+    'Std.Runtime.Settings': (Provider, required) => required.environment.attainBootRecord()
+      .then(bootRecord => Provider.create(bootRecord.settings))
   };
 }

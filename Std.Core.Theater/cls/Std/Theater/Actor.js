@@ -232,7 +232,7 @@
         job.setPerformance(job.performOnStage(this.actorRole));
       } catch (exception) {
         // actor is in trouble and suspended from working, when it throws an exception on stage
-        this.suspend(I.throw(exception));
+        this.suspend(I.threw(exception));
         // delegate error handling to actor manager
         job.setPerformance(this.manageStageException(job.forkScene(), exception));
       }

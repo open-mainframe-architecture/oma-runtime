@@ -19,7 +19,7 @@
     //@{Std.Table} map module name to directory where module assets are published
     modulePublications: null,
     //@{boolean} true if minified JavaScript is preferred over original source
-    preferCompact: I.constants$.bundleLocation.toLowerCase().endsWith('.min.js'),
+    preferCompact: I.constants$.bundleLocation.endsWith('.min.js'),
   });
   I.know({
     initializeWork: function(agent) {

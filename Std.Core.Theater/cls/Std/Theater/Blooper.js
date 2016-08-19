@@ -32,7 +32,7 @@
     //@return nothing
     mistake: function(error) {
       if (!this.asynchronousError) {
-        this.asynchronousError = I.throw(error);
+        this.asynchronousError = I.threw(error);
         // if this cue is not yet charged, firing it is a safe no-op
         this.fire();
       }

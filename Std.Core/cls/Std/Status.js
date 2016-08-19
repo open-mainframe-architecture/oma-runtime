@@ -38,7 +38,7 @@
     //@param name {string?} descriptive status name
     build: function(name) {
       I.$super.build.call(this);
-      this.statusName = name || '<anonymous>';
+      this.statusName = name || 'anonymous status';
     },
     //@ Put member in this status.
     //@param member {object} status member

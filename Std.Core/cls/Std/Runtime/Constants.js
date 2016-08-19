@@ -5,7 +5,7 @@
     Abstract: true
   });
   I.access({
-    //@{string} get location of runtime bundle loader, e.g. encoded HTTP URI or file path
+    //@{string} get location of runtime bundle loader
     bundleLocation: I.burdenSubclass,
     //@{object} get scope with global variables
     globalScope: I.burdenSubclass,

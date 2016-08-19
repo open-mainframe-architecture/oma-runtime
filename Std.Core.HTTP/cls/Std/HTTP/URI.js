@@ -19,10 +19,11 @@
     //@{string} fragment is only significant for browsers
     uriFragment: null
   });
-  // hoist global function
-  const encodeString = encodeURIComponent;
+  // hoist global functions
+  const encodeString = encodeURIComponent, decodeString = decodeURIComponent;
   // hoist utility function
   const encodeParameter = pair => `${encodeString(pair[0])}=${encodeString(pair[1])}`;
+  const decodeParameter = parameter => parameter.split('=').map(decodeString);
   I.know({
     //@param scheme {string?} URI scheme
     //@param user {string?} user name
@@ -161,8 +162,6 @@
   const TopPattern = /^(?:([^:/?#]+):)?(?:\/\/([^/?#]*))?([^?#]+)?(?:\?([^#]*))?(?:#(.*))?$/;
   // regular expression to match user, password, host and port in nonempty URI authority
   const NestedPattern = /^(?:([^:]+)(?::(.*))@)?([^:]+)(?::([0-9]{1,5}))?$/;
-  // hoist global function
-  const decodeString = decodeURIComponent;
   I.share({
     //@ Try to decode URI.
     //@param input {string} string of encoded URI
@@ -179,7 +178,6 @@
           const host = authority && authority[3] && decodeString(authority[3]);
           const port = authority && authority[4] && decodeString(authority[4]);
           const path = components[3] && components[3].split('/').map(decodeString);
-          const decodeParameter = parameter => parameter.split('=').map(decodeString);
           const query = components[4] && components[4].split('&').map(decodeParameter);
           const fragment = components[5] && decodeString(components[5]);
           return I.$.create(scheme, user, password, host, port, path, query, fragment);

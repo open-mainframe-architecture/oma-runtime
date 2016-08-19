@@ -21,6 +21,7 @@
     },
     //@ Flatten iterators from this iterator.
     //@param depth {integer?} maximum depth to expand, negative or missing for limitless expansion
+    //@return {Std.Iterator} a flat iterator
     flatten: function(depth) {
       return I.Flat.create(this, arguments.length ? depth : -1);
     },
@@ -29,7 +30,7 @@
     //@param thisReceiver {*} this receiver in code
     //@return nothing
     forEach: function(routine, thisReceiver) {
-      return I.forEach(this, routine, thisReceiver);
+      I.forEach(this, routine, thisReceiver);
     },
     //@ Map values from this iterator.
     //@param conversion {function} value conversion
@@ -165,7 +166,7 @@
             const topIteration = stack[stack.length - 1].next();
             if (!topIteration.done) {
               const topValue = topIteration.value;
-              if ((depth < 0 || stack.length <= depth) && I.isIteratorLike(topValue)) {
+              if ((depth < 0 || stack.length <= depth) && topValue && I.isClosure(topValue.next)) {
                 // push new top iterator and continue loop
                 stack.push(topValue);
               } else {

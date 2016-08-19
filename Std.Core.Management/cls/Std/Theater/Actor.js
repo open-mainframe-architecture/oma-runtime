@@ -10,7 +10,7 @@ function refine(I) {
       // manage poison pill as suicide attempt on stage
       return exception === I.PoisonPill ? manager.manageSuicide(job) :
         // delegate exception handling to manager
-        manager.manageException(job, I.throw(exception));
+        manager.manageException(job, I.threw(exception));
     }
   });
   I.share({

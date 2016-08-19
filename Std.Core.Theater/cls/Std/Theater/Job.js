@@ -44,7 +44,7 @@
       this.sceneSelector = selector;
       this.sceneParameters = parameters;
       this.jobPurpose = purpose ? purpose :
-        I.isString(selector) ? selector : selector.name || '<anonymous>';
+        I.isString(selector) ? selector : selector.name || 'anonymous job';
     },
     //@ Create completion event that fires when this job is done.
     //@param faulty {boolean?} true for all completions, including erroneous, otherwise false
@@ -129,7 +129,7 @@
         const showstopper = this.jobShowstopper;
         this.jobShowstopper = null;
         // complete job with a termination error
-        this.setPerformance(I.throw('termination'));
+        this.setPerformance(new Error('termination'));
         if (showstopper) {
           showstopper.cancel();
         }

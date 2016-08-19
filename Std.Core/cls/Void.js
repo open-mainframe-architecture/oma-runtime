@@ -41,10 +41,6 @@ function refine(I) {
     //@param it {*} JavaScript object or value
     //@return {boolean} true if it is a finite number, otherwise false
     isFiniteNumber: it => typeof it === 'number' && isFinite(it),
-    //@ Test whether it appears to be a JavaScript iterator.
-    //@param it {*} JavaScript object or value
-    //@return {boolean} true if it is an object with a next method, otherwise false
-    isIteratorLike: it => !!it && I.isClosure(it.next),
     //@ Test whether it is a table container.
     //@param it {*} JavaScript object or value
     //@return {boolean} true if it is a table, otherwise false
@@ -77,15 +73,11 @@ function refine(I) {
     //@param end {integer?} first offset not included in slice (default array.length)
     //@return {[*]} new array with sliced elements
     sliceArray: Function.prototype.call.bind(Array.prototype.slice),
-    //@ If necessary, throw and catch exception. Otherwise pass existing exception.
+    //@ If necessary, create new exception. Otherwise pass existing exception.
     //@param error {error|*} existing exception or error message
     //@return {error} runtime exception
-    throw: error => {
-      if (I.isError(error)) {
-        return error;
-      } else {
-        try { throw new Error(error); } catch (exception) { return exception; }
-      }
+    threw: error => {
+      return I.isError(error) ? error : new Error(error);
     }
   });
 }

@@ -379,21 +379,19 @@ function boot(bundleName, bootModuleName) {
         } while (loading < limit && (limit = loading));
       }
       loadModules();
-      // promise to load remaining modules, although most or all modules should be loaded by now
-      return function() {
-        let retriesLeft = 100;
-        const finishModules = () => {
-          loadModules();
-          if (!loading) {
-            return runtimeBundle;
-          } else if (--retriesLeft) {
-            // 100 stage breaks give parent environment opportunity to register service providers
-            return this.$theater.stageBreak().triggers(finishModules);
-          } else {
-            this.$rt.asap(() => { throw new Error('unbootable runtime'); });
-          }
-        };
-        return finishModules();
+      // promise to load remaining modules, although most modules should be loaded by now
+      let remainingAttempts = 100;
+      return function finishLoading() {
+        loadModules();
+        if (!loading) {
+          // runtime is operational if all modules are loaded
+          return runtimeBundle;
+        }
+        if (--remainingAttempts) {
+          // stage breaks provide opportunity to register service providers asynchronously
+          return this.$theater.stageBreak().triggers(finishLoading);
+        }
+        this.$rt.asap(() => { throw new Error('unbootable runtime'); });
       }.play();
     }
   };
